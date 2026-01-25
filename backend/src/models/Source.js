@@ -1,0 +1,84 @@
+const pool = require('../config/database');
+
+class Source {
+  /**
+   * Tüm kaynakları getirir
+   * @returns {Promise<Array>}
+   */
+  static async findAll() {
+    const query = `
+      SELECT 
+        s.*,
+        COALESCE(
+          json_agg(
+            json_build_object(
+              'id', seg.id,
+              'name', seg.name,
+              'isSelected', false
+            )
+          ) FILTER (WHERE seg.id IS NOT NULL),
+          '[]'::json
+        ) as segments
+      FROM sources s
+      LEFT JOIN source_segments seg ON s.id = seg.source_id
+      WHERE s.is_active = true
+      GROUP BY s.id
+      ORDER BY s.type, s.name
+    `;
+
+    const result = await pool.query(query);
+    return result.rows.map((row) => ({
+      ...row,
+      segments: row.segments || [],
+    }));
+  }
+
+  /**
+   * ID'ye göre kaynak getirir
+   * @param {string} id
+   * @returns {Promise<Object|null>}
+   */
+  static async findById(id) {
+    const query = `
+      SELECT 
+        s.*,
+        COALESCE(
+          json_agg(
+            json_build_object(
+              'id', seg.id,
+              'name', seg.name,
+              'isSelected', false
+            )
+          ) FILTER (WHERE seg.id IS NOT NULL),
+          '[]'::json
+        ) as segments
+      FROM sources s
+      LEFT JOIN source_segments seg ON s.id = seg.source_id
+      WHERE s.id = $1
+      GROUP BY s.id
+    `;
+
+    const result = await pool.query(query, [id]);
+    return result.rows[0] || null;
+  }
+
+  /**
+   * Yeni kaynak oluşturur
+   * @param {Object} sourceData
+   * @returns {Promise<Object>}
+   */
+  static async create(sourceData) {
+    const { name, type, logoUrl, websiteUrl, isActive = true } = sourceData;
+
+    const query = `
+      INSERT INTO sources (name, type, logo_url, website_url, is_active, created_at, updated_at)
+      VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+      RETURNING *
+    `;
+
+    const result = await pool.query(query, [name, type, logoUrl, websiteUrl, isActive]);
+    return result.rows[0];
+  }
+}
+
+module.exports = Source;
