@@ -2,7 +2,8 @@ const pool = require('../config/database');
 
 class Source {
   /**
-   * Tüm kaynakları getirir
+   * Tüm kaynakları getirir (Public API - sadece active status)
+   * HARD_BACKLOG sources excluded from public API
    * @returns {Promise<Array>}
    */
   static async findAll() {
@@ -22,8 +23,40 @@ class Source {
       FROM sources s
       LEFT JOIN source_segments seg ON s.id = seg.source_id
       WHERE s.is_active = true
+        AND (s.source_status = 'active' OR s.source_status IS NULL)
       GROUP BY s.id
       ORDER BY s.type, s.name
+    `;
+
+    const result = await pool.query(query);
+    return result.rows.map((row) => ({
+      ...row,
+      segments: row.segments || [],
+    }));
+  }
+  
+  /**
+   * Tüm kaynakları getirir (Admin-only - tüm status'ler)
+   * @returns {Promise<Array>}
+   */
+  static async findAllForAdmin() {
+    const query = `
+      SELECT 
+        s.*,
+        COALESCE(
+          json_agg(
+            json_build_object(
+              'id', seg.id,
+              'name', seg.name,
+              'isSelected', false
+            )
+          ) FILTER (WHERE seg.id IS NOT NULL),
+          '[]'::json
+        ) as segments
+      FROM sources s
+      LEFT JOIN source_segments seg ON s.id = seg.source_id
+      GROUP BY s.id
+      ORDER BY s.source_status, s.type, s.name
     `;
 
     const result = await pool.query(query);

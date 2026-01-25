@@ -25,6 +25,7 @@ app.use(express.urlencoded({ extended: true })); // URL encoded body parser
 app.use('/api/campaigns', campaignsRouter);
 app.use('/api/sources', sourcesRouter);
 app.use('/api/health', healthRouter);
+app.use('/api/admin', adminRouter); // FAZ 10: Admin & Control Layer
 
 // Root endpoint
 app.get('/', (req, res) => {

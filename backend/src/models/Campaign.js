@@ -1,14 +1,29 @@
 const pool = require('../config/database');
+const { 
+  buildMainFeedQuery, 
+  assertMainFeedIntegrity,
+  validateMainFeedResults 
+} = require('../utils/mainFeedGuard');
+const { runSafetyChecks } = require('../utils/safetyGuards');
 
 class Campaign {
   /**
    * Tüm aktif kampanyaları getirir (SADECE campaign_type = 'main')
    * FAZ 7.3: Ana akış sadece main kampanyaları gösterir
+   * 
+   * PROTECTED BY MAIN FEED GUARD:
+   * - campaign_type = 'main' OR NULL (enforced)
+   * - value_level = 'high' OR NULL (enforced)
+   * - is_hidden = false OR NULL (enforced)
+   * 
+   * These rules CANNOT be bypassed, even by admin actions
+   * 
    * @param {Array<string>} sourceIds - Filtreleme için source ID'leri (opsiyonel)
    * @returns {Promise<Array>}
    */
   static async findAll(sourceIds = null) {
-    let query = `
+    // Base query (SELECT and JOIN)
+    const baseQuery = `
       SELECT 
         c.*,
         s.name as source_name,
@@ -16,25 +31,48 @@ class Campaign {
         s.logo_url as source_logo_url
       FROM campaigns c
       INNER JOIN sources s ON c.source_id = s.id
-      WHERE c.is_active = true
-        AND c.expires_at > NOW()
-        AND (c.campaign_type = 'main' OR c.campaign_type IS NULL)
-        AND (c.campaign_type != 'category' OR c.campaign_type IS NULL)
-        AND (c.campaign_type != 'light' OR c.campaign_type IS NULL)
-        AND (c.value_level = 'high' OR c.value_level IS NULL)
     `;
 
-    const params = [];
+    // Build query with guard (ensures main feed rules are ALWAYS enforced)
+    const { query, params } = buildMainFeedQuery(baseQuery, [], sourceIds);
 
-    if (sourceIds && sourceIds.length > 0) {
-      query += ` AND c.source_id = ANY($1::uuid[])`;
-      params.push(sourceIds);
+    // Execute query
+    const result = await pool.query(query, params);
+    const campaigns = result.rows;
+
+    // Validate results (assertion - throws error if pollution detected)
+    // In production, this ensures main feed integrity
+    const validation = validateMainFeedResults(campaigns);
+    if (!validation.valid) {
+      // Log error for monitoring
+      console.error('❌ MAIN FEED POLLUTION DETECTED:', validation.errors);
+      // Assert integrity (throws error in development, logs in production)
+      if (process.env.NODE_ENV === 'development') {
+        assertMainFeedIntegrity(campaigns);
+      }
+      // In production, return empty array as fail-safe
+      // This prevents polluted campaigns from reaching users
+      return [];
+    }
+    
+    // Runtime safety check (FAZ 10: Final Safety Validation)
+    try {
+      runSafetyChecks({
+        campaigns,
+        feedType: 'main',
+        context: 'Campaign.findAll()',
+      });
+    } catch (error) {
+      console.error('❌ SAFETY CHECK FAILED:', error.message);
+      // In production, return empty array as fail-safe
+      if (process.env.NODE_ENV === 'production') {
+        return [];
+      }
+      // In development, throw error to fail fast
+      throw error;
     }
 
-    query += ` ORDER BY c.created_at DESC`;
-
-    const result = await pool.query(query, params);
-    return result.rows;
+    return campaigns;
   }
 
   /**
@@ -64,10 +102,29 @@ class Campaign {
       params.push(sourceIds);
     }
 
-    query += ` ORDER BY c.created_at DESC`;
+    query += ` ORDER BY c.is_pinned DESC, c.pinned_at DESC NULLS LAST, c.created_at DESC`;
 
     const result = await pool.query(query, params);
-    return result.rows;
+    const campaigns = result.rows;
+    
+    // Runtime safety check (FAZ 10: Final Safety Validation)
+    try {
+      runSafetyChecks({
+        campaigns,
+        feedType: 'light',
+        context: 'Campaign.findAllLight()',
+      });
+    } catch (error) {
+      console.error('❌ SAFETY CHECK FAILED:', error.message);
+      // In production, return empty array as fail-safe
+      if (process.env.NODE_ENV === 'production') {
+        return [];
+      }
+      // In development, throw error to fail fast
+      throw error;
+    }
+    
+    return campaigns;
   }
 
   /**
@@ -86,6 +143,8 @@ class Campaign {
       INNER JOIN sources s ON c.source_id = s.id
       WHERE c.is_active = true
         AND c.expires_at > NOW()
+        AND (c.is_hidden = false OR c.is_hidden IS NULL)
+        AND (c.campaign_type != 'hidden' OR c.campaign_type IS NULL)
         AND c.campaign_type = 'category'
         AND c.show_in_category_feed = true
     `;
@@ -97,10 +156,29 @@ class Campaign {
       params.push(sourceIds);
     }
 
-    query += ` ORDER BY c.created_at DESC`;
+    query += ` ORDER BY c.is_pinned DESC, c.pinned_at DESC NULLS LAST, c.created_at DESC`;
 
     const result = await pool.query(query, params);
-    return result.rows;
+    const campaigns = result.rows;
+    
+    // Runtime safety check (FAZ 10: Final Safety Validation)
+    try {
+      runSafetyChecks({
+        campaigns,
+        feedType: 'category',
+        context: 'Campaign.findAllCategory()',
+      });
+    } catch (error) {
+      console.error('❌ SAFETY CHECK FAILED:', error.message);
+      // In production, return empty array as fail-safe
+      if (process.env.NODE_ENV === 'production') {
+        return [];
+      }
+      // In development, throw error to fail fast
+      throw error;
+    }
+    
+    return campaigns;
   }
 
   /**
@@ -119,6 +197,8 @@ class Campaign {
       INNER JOIN sources s ON c.source_id = s.id
       WHERE c.is_active = true
         AND c.expires_at > NOW()
+        AND (c.is_hidden = false OR c.is_hidden IS NULL)
+        AND (c.campaign_type != 'hidden' OR c.campaign_type IS NULL)
         AND c.value_level = 'low'
     `;
 
@@ -129,10 +209,29 @@ class Campaign {
       params.push(sourceIds);
     }
 
-    query += ` ORDER BY c.created_at DESC`;
+    query += ` ORDER BY c.is_pinned DESC, c.pinned_at DESC NULLS LAST, c.created_at DESC`;
 
     const result = await pool.query(query, params);
-    return result.rows;
+    const campaigns = result.rows;
+    
+    // Runtime safety check (FAZ 10: Final Safety Validation)
+    try {
+      runSafetyChecks({
+        campaigns,
+        feedType: 'low',
+        context: 'Campaign.findAllLowValue()',
+      });
+    } catch (error) {
+      console.error('❌ SAFETY CHECK FAILED:', error.message);
+      // In production, return empty array as fail-safe
+      if (process.env.NODE_ENV === 'production') {
+        return [];
+      }
+      // In development, throw error to fail fast
+      throw error;
+    }
+    
+    return campaigns;
   }
 
   /**

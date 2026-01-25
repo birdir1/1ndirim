@@ -3,6 +3,7 @@ const router = express.Router();
 const Campaign = require('../models/Campaign');
 const CampaignClick = require('../models/CampaignClick');
 const { validateCampaignQuality } = require('../middleware/campaignQualityFilter');
+const { assertBotPipelineUntouched, assertFetchPipelineIsolated } = require('../utils/safetyGuards');
 
 /**
  * GET /campaigns
@@ -584,6 +585,24 @@ router.post('/', validateCampaignQuality, async (req, res) => {
     // startDate varsa ekle (DB'de starts_at kolonu olmalı)
     if (startsAt) {
       campaignData.startsAt = startsAt;
+    }
+
+    // Runtime safety check (FAZ 10: Final Safety Validation)
+    // Bot pipeline should not send invalid states
+    try {
+      assertBotPipelineUntouched(campaignData, 'POST /campaigns');
+      
+      // If this is a fetch pipeline campaign (light/category), check isolation
+      if (campaignData.campaignType === 'light' || campaignData.campaignType === 'category') {
+        assertFetchPipelineIsolated([campaignData], 'POST /campaigns');
+      }
+    } catch (error) {
+      console.error('❌ SAFETY CHECK FAILED:', error.message);
+      return res.status(400).json({
+        success: false,
+        error: 'Bot pipeline safety check failed',
+        message: error.message,
+      });
     }
 
     const newCampaign = await Campaign.create(campaignData);

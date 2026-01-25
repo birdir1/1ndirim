@@ -12,15 +12,22 @@ class AuditLogService {
   /**
    * Admin action'ı loglar
    * 
+   * IMMUTABLE LOG RULES:
+   * - Logs are read-only after write
+   * - No UPDATE or DELETE allowed
+   * - Complete audit trail preserved
+   * 
    * @param {Object} params - Log parametreleri
-   * @param {string} params.adminId - Admin ID
-   * @param {string} params.action - Action tipi (update_campaign_type, pin_campaign, etc.)
+   * @param {string} params.adminId - Admin ID (who)
+   * @param {string} params.action - Action tipi (what) - update_campaign_type, pin_campaign, etc.
    * @param {string} params.entityType - Entity tipi (campaign, source, etc.)
-   * @param {string} params.entityId - Entity ID
-   * @param {Object} params.oldValue - Eski değer
-   * @param {Object} params.newValue - Yeni değer
+   * @param {string} params.entityId - Entity ID (target)
+   * @param {Object} params.oldValue - Eski değer (before_state)
+   * @param {Object} params.newValue - Yeni değer (after_state)
    * @param {string} params.reason - Değişiklik nedeni (opsiyonel)
    * @param {Object} params.metadata - Ek metadata (opsiyonel)
+   * @param {string} params.ipAddress - IP address (opsiyonel)
+   * @param {string} params.userAgent - User agent (opsiyonel)
    * @returns {Promise<Object>} Log kaydı
    */
   static async logAdminAction({
@@ -32,6 +39,8 @@ class AuditLogService {
     newValue = null,
     reason = null,
     metadata = null,
+    ipAddress = null,
+    userAgent = null,
   }) {
     const client = await pool.connect();
     
@@ -64,7 +73,11 @@ class AuditLogService {
         CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON admin_audit_logs(created_at);
       `);
       
-      // Log kaydı ekle
+      // Log kaydı ekle (immutable - no UPDATE/DELETE after insert)
+      // before_state ve after_state old_value ve new_value'ya ek olarak saklanır
+      const beforeState = oldValue || null;
+      const afterState = newValue || null;
+      
       const result = await client.query(`
         INSERT INTO admin_audit_logs (
           admin_id,
@@ -73,9 +86,13 @@ class AuditLogService {
           entity_id,
           old_value,
           new_value,
+          before_state,
+          after_state,
           reason,
-          metadata
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+          metadata,
+          ip_address,
+          user_agent
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
         RETURNING *
       `, [
         adminId,
@@ -84,8 +101,12 @@ class AuditLogService {
         entityId,
         oldValue ? JSON.stringify(oldValue) : null,
         newValue ? JSON.stringify(newValue) : null,
+        beforeState ? JSON.stringify(beforeState) : null,
+        afterState ? JSON.stringify(afterState) : null,
         reason,
         metadata ? JSON.stringify(metadata) : null,
+        ipAddress,
+        userAgent,
       ]);
       
       await client.query('COMMIT');
@@ -161,6 +182,8 @@ class AuditLogService {
       ...row,
       old_value: row.old_value ? JSON.parse(row.old_value) : null,
       new_value: row.new_value ? JSON.parse(row.new_value) : null,
+      before_state: row.before_state ? JSON.parse(row.before_state) : null,
+      after_state: row.after_state ? JSON.parse(row.after_state) : null,
       metadata: row.metadata ? JSON.parse(row.metadata) : null,
     }));
   }
