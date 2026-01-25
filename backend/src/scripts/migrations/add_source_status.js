@@ -1,7 +1,8 @@
 /**
  * FAZ 10: Source Status Migration
- * 
- * Hard backlog metadata for sources
+ *
+ * REQUIRES: sources table (run 000_init_core_schema.js first).
+ *
  * - source_status enum: active, backlog, hard_backlog
  * - reason field for explaining why blocked
  * - Admin-only edit

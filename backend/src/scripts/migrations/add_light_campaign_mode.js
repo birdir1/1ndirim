@@ -1,6 +1,6 @@
 /**
- * Migration: Light Campaign Mode
- * FAZ 7.3: campaign_type ve show_in_light_feed kolonları ekle
+ * Migration: Light Campaign Mode (FAZ 7.3).
+ * REQUIRES: campaigns table (run 000_init_core_schema.js first).
  */
 
 const pool = require('../../config/database');

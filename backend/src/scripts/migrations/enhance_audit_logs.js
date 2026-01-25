@@ -1,7 +1,8 @@
 /**
  * FAZ 10: Enhance Admin Audit Logs
- * 
- * Audit log tablosunu immutable ve read-only yap
+ *
+ * REQUIRES: admin_audit_logs table (run add_admin_control_layer.js first).
+ *
  * - before_state ve after_state field'ları ekle
  * - Immutable constraints ekle
  * - Read-only protection

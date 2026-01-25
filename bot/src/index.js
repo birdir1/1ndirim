@@ -38,10 +38,20 @@ const SCRAPER_DELAY_MS = parseInt(process.env.SCRAPER_DELAY_MS || '3000', 10);
 const SCHEDULER_INTERVAL_MINUTES = parseInt(process.env.SCHEDULER_INTERVAL_MINUTES || '30', 10);
 
 /**
- * Tüm scraper'ları çalıştırır
+ * Tüm scraper'ları çalıştırır.
+ * Admin authority: source_status (hard_backlog -> skip, backlog -> allow+warning, active -> normal).
  */
 async function runScrapers() {
   const apiClient = new ApiClient();
+
+  // Source lifecycle: backend is authority. Bot skips hard_backlog and respects admin state.
+  let sourceStatusMap = {};
+  try {
+    sourceStatusMap = await apiClient.getSourceStatusList();
+  } catch (_) {
+    sourceStatusMap = {};
+  }
+
   // FAZ 6: Tüm mevcut scraper'lar aktif
   // FAZ 6.2: Ziraat Bankası eklendi
   // FAZ 6.3: Halkbank eklendi (pasif - backlog), VakıfBank eklendi
@@ -74,12 +84,25 @@ async function runScrapers() {
 
   console.log(`\n🤖 Bot başlatıldı: ${scrapers.length} scraper çalıştırılacak\n`);
 
+  const runSummary = { total: scrapers.length, skippedHardBacklog: [], scraped: [], errors: [] };
+
   for (const scraper of scrapers) {
     try {
+      const status = (sourceStatusMap[scraper.sourceName] || 'active').toLowerCase();
+      if (status === 'hard_backlog') {
+        console.log(`⏭️ ${scraper.sourceName} skipped (hard_backlog)`);
+        runSummary.skippedHardBacklog.push(scraper.sourceName);
+        continue;
+      }
+      if (status === 'backlog') {
+        console.warn(`⚠️ ${scraper.sourceName} status=backlog (scraping allowed for now)`);
+      }
+
       console.log(`\n📡 ${scraper.sourceName} scraper çalışıyor...`);
 
       // Scraper'ı çalıştır (retry ile)
       const campaigns = await scraper.runWithRetry(3);
+      runSummary.scraped.push(scraper.sourceName);
 
       if (campaigns.length === 0) {
         console.log(`⚠️ ${scraper.sourceName}: Kampanya bulunamadı (bu normal olabilir)`);
@@ -238,19 +261,35 @@ async function runScrapers() {
       }
     } catch (error) {
       console.error(`❌ ${scraper.sourceName} scraper hatası:`, error.message);
+      runSummary.errors.push(scraper.sourceName);
     }
   }
 
-  console.log('\n✅ Bot çalışması tamamlandı\n');
+  console.log('\n--- Bot run summary ---');
+  console.log(`Total sources: ${runSummary.total}`);
+  console.log(`Skipped (hard_backlog): ${runSummary.skippedHardBacklog.length} [${runSummary.skippedHardBacklog.join(', ') || '-'}]`);
+  console.log(`Scraped: ${runSummary.scraped.length} [${runSummary.scraped.join(', ') || '-'}]`);
+  if (runSummary.errors.length) {
+    console.log(`Errors: ${runSummary.errors.length} [${runSummary.errors.join(', ')}]`);
+  }
+  console.log('------------------------\n');
+  console.log('✅ Bot çalışması tamamlandı\n');
 }
 
 /**
  * FAZ 7: Fetch-based scraper'ları çalıştırır (SPA kaynaklar için)
- * Ana bot'tan izole, fail ederse ana sistemi etkilemez
+ * Admin authority: source_status (hard_backlog -> skip) aynı kurallar geçerli.
  */
 async function runFetchScrapers() {
   const apiClient = new ApiClient();
-  
+
+  let sourceStatusMap = {};
+  try {
+    sourceStatusMap = await apiClient.getSourceStatusList();
+  } catch (_) {
+    sourceStatusMap = {};
+  }
+
   // FAZ 7.1: Fetch-based scraper'lar (SPA/Dinamik yapı kaynakları)
   const fetchScrapers = [
     new TebFetchScraper(), // FAZ 7.1: TEB fetch scraper (XML endpoint)
@@ -265,6 +304,15 @@ async function runFetchScrapers() {
 
   for (const scraper of fetchScrapers) {
     try {
+      const status = (sourceStatusMap[scraper.sourceName] || 'active').toLowerCase();
+      if (status === 'hard_backlog') {
+        console.log(`⏭️ [FAZ7] ${scraper.sourceName} skipped (hard_backlog)`);
+        continue;
+      }
+      if (status === 'backlog') {
+        console.warn(`⚠️ [FAZ7] ${scraper.sourceName} status=backlog (scraping allowed for now)`);
+      }
+
       console.log(`\n📡 [FAZ7] ${scraper.sourceName} fetch scraper çalışıyor...`);
 
       // Scraper'ı çalıştır (retry ile)

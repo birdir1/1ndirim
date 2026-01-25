@@ -1,6 +1,6 @@
 /**
- * Migration: Category Campaign Mode
- * FAZ 7.2: show_in_category_feed kolonu ekle
+ * Migration: Category Campaign Mode (FAZ 7.2).
+ * REQUIRES: campaigns table, campaign_type_enum (run 000_init_core_schema.js, add_light_campaign_mode.js first).
  */
 
 const pool = require('../../config/database');

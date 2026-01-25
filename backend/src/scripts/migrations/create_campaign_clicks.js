@@ -1,7 +1,8 @@
 const pool = require('../../config/database');
 
 /**
- * Migration: campaign_clicks tablosu oluştur (sadeleştirilmiş)
+ * Migration: campaign_clicks tablosu.
+ * REQUIRES: campaigns table (run 000_init_core_schema.js first).
  */
 async function createCampaignClicks() {
   const client = await pool.connect();

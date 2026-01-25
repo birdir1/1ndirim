@@ -96,6 +96,20 @@ class Source {
   }
 
   /**
+   * Bot routing: name -> source_status for all sources.
+   * Used by bot to decide whether to scrape (e.g. skip hard_backlog).
+   * Requires source_status column (add_source_status migration).
+   * @returns {Promise<Array<{name:string, source_status:string}>>}
+   */
+  static async getSourceStatusForBot() {
+    const result = await pool.query(`
+      SELECT name, COALESCE(source_status::text, 'active') AS source_status
+      FROM sources
+    `);
+    return result.rows;
+  }
+
+  /**
    * Yeni kaynak oluşturur
    * @param {Object} sourceData
    * @returns {Promise<Object>}

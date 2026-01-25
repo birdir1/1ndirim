@@ -3,6 +3,27 @@ const router = express.Router();
 const Source = require('../models/Source');
 
 /**
+ * GET /sources/status
+ * Bot routing: name + source_status for all sources.
+ * No auth. Used by bot to respect admin authority (skip hard_backlog).
+ * Does not change existing API contract.
+ */
+router.get('/status', async (req, res) => {
+  try {
+    const rows = await Source.getSourceStatusForBot();
+    const data = rows.map((r) => ({ name: r.name, source_status: r.source_status }));
+    res.json({ success: true, data });
+  } catch (error) {
+    console.error('Sources status error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Source status yüklenemedi',
+      message: error.message,
+    });
+  }
+});
+
+/**
  * GET /sources
  * Tüm aktif kaynakları getirir
  */

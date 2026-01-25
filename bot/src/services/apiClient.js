@@ -138,6 +138,30 @@ class ApiClient {
   }
 
   /**
+   * Source status listesi alır (bot routing: hangi kaynaklar scrape edilebilir).
+   * Backend GET /sources/status. Hata durumunda boş obje döner (mevcut davranış korunur).
+   * @returns {Promise<Object<string,string>>} - name -> source_status map
+   */
+  async getSourceStatusList() {
+    try {
+      const response = await this.client.get('/sources/status');
+      if (!response.data || !response.data.success || !Array.isArray(response.data.data)) {
+        return {};
+      }
+      const map = {};
+      for (const row of response.data.data) {
+        if (row && row.name != null) {
+          map[String(row.name).trim()] = (row.source_status || 'active').toLowerCase();
+        }
+      }
+      return map;
+    } catch (error) {
+      console.warn('⚠️ Source status alınamadı, tüm kaynaklar active kabul edilecek:', error.message || error);
+      return {};
+    }
+  }
+
+  /**
    * Birden fazla kampanyayı gönderir
    * @param {Array<Object>} campaigns
    * @returns {Promise<Array>} - Sonuçlar
@@ -159,7 +183,5 @@ class ApiClient {
     return results;
   }
 }
-
-module.exports = ApiClient;
 
 module.exports = ApiClient;

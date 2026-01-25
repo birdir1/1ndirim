@@ -1,7 +1,8 @@
 /**
  * FAZ 10: Admin Overrides Migration
- * 
- * Admin override işlemleri için database schema'ları
+ *
+ * REQUIRES: campaigns table (run 000_init_core_schema.js first).
+ *
  * - Campaign is_hidden kolonu
  * - Campaign pinned_at kolonu
  * - Index'ler

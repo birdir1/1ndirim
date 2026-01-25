@@ -1,7 +1,8 @@
 /**
  * FAZ 10: Admin & Control Layer Migration
- * 
- * Admin işlemleri için gerekli database schema'ları
+ *
+ * REQUIRES: campaigns table (run 000_init_core_schema.js first).
+ *
  * - Admin audit logs tablosu
  * - Campaign is_pinned kolonu
  */

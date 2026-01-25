@@ -1,6 +1,6 @@
 /**
- * Migration: Low Value Campaign Mode
- * FAZ 7.5: value_level kolonu ekle
+ * Migration: Low Value Campaign Mode (FAZ 7.5).
+ * REQUIRES: campaigns table (run 000_init_core_schema.js first).
  */
 
 const pool = require('../../config/database');
