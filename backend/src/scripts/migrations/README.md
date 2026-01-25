@@ -29,6 +29,8 @@ Run migrations **in this order**. Dependencies are enforced only by documentatio
 | 10 | `enhance_audit_logs.js` | `admin_audit_logs` | `before_state`, `after_state`, immutability trigger |
 | 11 | `add_source_status.js` | `sources` | `source_status_enum`, `sources.source_status`, `sources.status_reason` |
 | 12 | `create_campaign_clicks.js` | `campaigns` | `campaign_clicks` |
+| 13 | `add_admin_suggestions.js` | (core) | `admin_suggestions` – FAZ 18.4 passive storage, no triggers |
+| 14 | `add_admin_suggestions_execution.js` | `admin_suggestions` | `executed_at`, `executed_by` – FAZ 20 execution bridge |
 
 ---
 
@@ -66,7 +68,9 @@ node src/scripts/migrations/add_admin_control_layer.js && \
 node src/scripts/migrations/add_admin_overrides.js && \
 node src/scripts/migrations/enhance_audit_logs.js && \
 node src/scripts/migrations/add_source_status.js && \
-node src/scripts/migrations/create_campaign_clicks.js
+node src/scripts/migrations/create_campaign_clicks.js && \
+node src/scripts/migrations/add_admin_suggestions.js && \
+node src/scripts/migrations/add_admin_suggestions_execution.js
 ```
 
 Ensure `backend/.env` (or env) has correct `DB_*` settings and the database exists before running.
