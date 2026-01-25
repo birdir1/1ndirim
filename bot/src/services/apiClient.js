@@ -44,6 +44,9 @@ class ApiClient {
           success: true,
           data: response.data,
           isUpdate: response.data.isUpdate || false,
+          low_confidence: response.data.low_confidence || false,
+          applied_action: response.data.applied_action || 'allow',
+          freeze_learning: !!response.data.freeze_learning, // FAZ 14.5
         };
       } catch (error) {
         lastError = error;

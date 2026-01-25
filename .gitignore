@@ -1,0 +1,24 @@
+# Ortak
+.DS_Store
+*.log
+.env
+.env.local
+.env.*.local
+.env.production
+
+# Backend
+backend/node_modules/
+
+# Bot
+bot/node_modules/
+
+# Admin panel
+admin-panel/node_modules/
+admin-panel/.next/
+admin-panel/out/
+
+# Flutter / app
+app/.dart_tool/
+app/.packages
+app/build/
+app/*.iml

@@ -1,0 +1,199 @@
+ROLE
+
+You are acting as a Senior Backend Architect, Scraping Architect and Bot Integration Engineer.
+
+You are working on the 1NDIRIM system.
+
+This is FAZ 11.
+FAZ 11 is strictly BOT-SIDE only.
+Do NOT touch backend APIs, database schema, admin logic, quality filters, feed isolation or Flutter app.
+
+Do NOT introduce FAZ 12 logic.
+
+⸻
+
+🎯 FAZ 11 – OBJECTIVE
+
+Stabilize, harden and professionalize the BOT scraping pipeline before scale.
+
+Core principles:
+1. Admin authority is absolute
+2. Network-first scraping is mandatory
+3. DOM scraping is fallback-only
+4. One scraper must never break others
+5. Noise reduction happens BEFORE backend
+6. Observability without behavior change
+
+⸻
+
+🚨 FAZ 11.1 – NETWORK-FIRST SCRAPING (MANDATORY)
+
+For EVERY scraper:
+
+1. Attempt to extract campaigns from:
+   - Network responses
+   - XHR / fetch calls
+   - JSON endpoints
+
+2. ONLY IF network extraction returns empty or unavailable:
+   - Fallback to DOM scraping
+
+3. DOM scraping must NEVER run if network data exists.
+
+Rules:
+- Reuse existing fetch / network analyzer utilities
+- No new env variables
+- No backend changes
+- No schema changes
+
+Acceptance:
+- Network is always first
+- DOM is fallback only
+- Puppeteer DOM work skipped when network succeeds
+
+⸻
+
+🚨 FAZ 11.2 – DOM SCRAPING STANDARDIZATION (TIERED SELECTORS)
+
+All DOM scraping must use tiered selectors:
+
+selectors:
+- primary: data-testid, aria-label, semantic selectors
+- secondary: stable class names
+- fallback: xpath or text-based selectors
+
+Rules:
+- Try primary → secondary → fallback
+- Failure of a tier must NOT crash scraper
+- All selector failures must be logged
+- No silent failures
+
+No refactor outside selector usage.
+
+⸻
+
+🚨 FAZ 11.3 – SOURCE STATUS ENFORCEMENT (BOT AUTHORITY)
+
+Before ANY scraping:
+
+Bot must fetch source metadata via existing API client.
+
+Behavior:
+- source_status = active → normal scrape
+- source_status = backlog → scrape + warning log
+- source_status = hard_backlog → SKIP COMPLETELY
+
+For hard_backlog:
+- NO Puppeteer launch
+- NO network calls
+- NO campaign create/update
+- Log exactly:
+  ⏭️ [SOURCE_NAME] skipped (hard_backlog)
+
+No DB access.
+No backend changes.
+
+⸻
+
+🚨 FAZ 11.4 – SCRAPER FAILURE ISOLATION
+
+Rules:
+- Each scraper runs in isolation
+- One scraper failure must NOT stop others
+- Errors are collected per scraper
+- Bot process must finish unless fatal crash
+
+Do NOT change retry logic.
+Do NOT exit process on single failure.
+
+⸻
+
+🚨 FAZ 11.5 – BOT-SIDE PRE-FILTER (NOISE REDUCTION)
+
+Before sending campaigns to backend:
+
+Apply LIGHT pre-filtering:
+- Normalize titles
+- Remove obvious duplicates
+- Remove clear spam / clickbait
+
+Rules:
+- Backend quality filter remains final authority
+- If uncertain → SEND to backend
+- Do NOT drop borderline data
+
+No backend changes.
+
+⸻
+
+🚨 FAZ 11.6 – BOT OBSERVABILITY (LOGGING ONLY)
+
+Add runtime logs ONLY (no behavior change):
+
+Per scraper:
+- Success count
+- Failure count
+- Retry count
+- Duration
+
+No persistence.
+No decision logic.
+Logs only.
+
+⸻
+
+🚨 FAZ 11.7 – FINAL BOT RUN SUMMARY (MANDATORY)
+
+At the END of every bot run, ALWAYS print:
+
+📊 BOT RUN SUMMARY
+------------------
+Total sources: X
+Scraped: X
+Skipped (hard_backlog): X
+Backlog (warn): X
+Errors: X
+Duration: Xm Ys
+
+Must print even if errors occurred.
+
+⸻
+
+🚫 STRICT CONSTRAINTS
+
+- Do NOT touch:
+  - Backend code
+  - Database schema
+  - Admin APIs
+  - Quality filters
+  - Feed isolation
+  - Safety guards
+  - Flutter app
+- Do NOT add new env variables
+- Do NOT introduce FAZ 12 logic
+- Do NOT refactor unrelated code
+
+⸻
+
+✅ FINAL OUTPUT REQUIRED
+
+At completion, output ONLY:
+
+1. List of files changed
+2. Short explanation of each change
+3. Confirmation checklist:
+   - Network-first enforced
+   - DOM fallback only
+   - HARD_BACKLOG never scraped
+   - Scraper failures isolated
+   - No breaking changes
+   - FAZ 11 complete
+
+⸻
+
+🛑 STOP CONDITION
+
+After completing FAZ 11:
+- STOP
+- Do NOT proceed to FAZ 12
+- Wait for explicit approval

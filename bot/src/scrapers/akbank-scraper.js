@@ -25,57 +25,30 @@ class AkbankScraper extends BaseScraper {
       });
       await this.page.waitForTimeout(3000);
 
-      // Dropdown menüdeki kampanya linklerini bul
-      const campaignLinks = await this.page.evaluate(() => {
-        const links = Array.from(document.querySelectorAll('a.dropdown__item[href*="/kampanyalar/"]'));
-        return links.map(a => ({
-          href: a.href,
-          text: a.textContent.trim(),
-        }));
+      // FAZ 11.2: Tiered selectors — primary: semantic/testid, secondary: stable class, fallback: generic
+      const tiered = await this.tryTieredLinks({
+        primary: ['[data-testid*="kampanya"] a', '[data-testid*="campaign"] a', '[aria-label*="kampanya"]'],
+        secondary: ['a.dropdown__item[href*="/kampanyalar/"]'],
+        fallback: ['a[href*="/kampanyalar/"]'],
       });
+      const campaignLinks = tiered ? tiered.links.filter((l) => !l.href.includes('#') && l.text.length > 1) : [];
 
       if (campaignLinks.length === 0) {
-        // Fallback: Tüm kampanya linklerini bul
-        const allLinks = await this.page.evaluate(() => {
-          const links = Array.from(document.querySelectorAll('a[href*="/kampanyalar/"]'));
-          return links
-            .filter(a => !a.href.includes('#') && a.textContent.trim().length > 5)
-            .map(a => ({
-              href: a.href,
-              text: a.textContent.trim(),
-            }))
-            .filter((link, index, self) => 
-              index === self.findIndex(l => l.href === link.href)
-            ); // Duplicate'leri kaldır
-        });
-        
-        if (allLinks.length === 0) {
-          console.warn(`⚠️ ${this.sourceName}: Kampanya linki bulunamadı`);
-          return campaigns;
-        }
-        
-        // İlk 10 linki kullan
-        for (const link of allLinks.slice(0, 10)) {
-          try {
-            const campaign = await this.parseCampaignFromLink(link.href, link.text);
-            if (campaign) {
-              campaigns.push(campaign);
-            }
-          } catch (error) {
-            console.error(`❌ ${this.sourceName}: Link parse hatası (${link.href}):`, error.message);
+        console.warn(`⚠️ ${this.sourceName}: Kampanya linki bulunamadı`);
+        return campaigns;
+      }
+
+      const linksToUse = campaignLinks.slice(0, 15);
+      const tierUsed = tiered ? tiered.tier : null;
+      for (const link of linksToUse) {
+        try {
+          const campaign = await this.parseCampaignFromLink(link.href, link.text);
+          if (campaign) {
+            if (tierUsed) campaign.selectorTier = tierUsed;
+            campaigns.push(campaign);
           }
-        }
-      } else {
-        // Dropdown linklerini kullan
-        for (const link of campaignLinks.slice(0, 15)) {
-          try {
-            const campaign = await this.parseCampaignFromLink(link.href, link.text);
-            if (campaign) {
-              campaigns.push(campaign);
-            }
-          } catch (error) {
-            console.error(`❌ ${this.sourceName}: Link parse hatası (${link.href}):`, error.message);
-          }
+        } catch (error) {
+          console.error(`❌ ${this.sourceName}: Link parse hatası (${link.href}):`, error.message);
         }
       }
 

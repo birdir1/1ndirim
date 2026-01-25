@@ -128,6 +128,7 @@ class BaseFetchScraper {
       tags: data.tags || [this.sourceName],
       channel: data.channel || 'online',
       value: data.value || null,
+      _fromNetwork: true, // FAZ 13: fetch = network-derived
     };
   }
 

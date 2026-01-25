@@ -4,6 +4,7 @@ const Campaign = require('../models/Campaign');
 const CampaignClick = require('../models/CampaignClick');
 const { validateCampaignQuality } = require('../middleware/campaignQualityFilter');
 const { assertBotPipelineUntouched, assertFetchPipelineIsolated } = require('../utils/safetyGuards');
+const AuditLogService = require('../services/auditLogService');
 
 /**
  * GET /campaigns
@@ -419,7 +420,11 @@ router.post('/', validateCampaignQuality, async (req, res) => {
       showInLightFeed, // FAZ 7.3: boolean
       showInCategoryFeed, // FAZ 7.2: boolean
       valueLevel, // FAZ 7.5: 'high' | 'low'
+      confidence_score: bodyConfidence,
+      confidence_reasons: bodyReasons,
     } = req.body;
+    const confidence_score = bodyConfidence != null ? Number(bodyConfidence) : 50;
+    const confidence_reasons = Array.isArray(bodyReasons) ? bodyReasons : ['fallback_default'];
 
     // Validasyon: Zorunlu alanlar
     if (!sourceName || !title || !campaignUrl || !endDate) {
@@ -544,23 +549,51 @@ router.post('/', validateCampaignQuality, async (req, res) => {
         updates.tags = duplicate.tags;
       }
 
-      // startDate varsa ekle
       if (startsAt) {
         updates.starts_at = startsAt;
       }
 
+      let applied_action = 'allow';
+      if (confidence_score < 40) {
+        updates.value_level = 'low';
+        applied_action = 'downgrade';
+      } else if (confidence_score >= 40 && confidence_score <= 70) {
+        console.log('low confidence campaign accepted (40–70):', { title: trimmedTitle, score: confidence_score });
+      }
+
       const updated = await Campaign.update(duplicate.id, updates);
+
+      if (applied_action === 'downgrade') {
+        try {
+          await AuditLogService.logAdminAction({
+            adminId: 'system_confidence_guard',
+            action: 'confidence_downgrade',
+            entityType: 'campaign',
+            entityId: duplicate.id,
+            newValue: { original_confidence_score: confidence_score, applied_action: 'downgrade' },
+            reason: 'low_confidence',
+            metadata: { original_confidence_score: confidence_score, applied_action: 'downgrade' },
+          });
+        } catch (_) {}
+      }
 
       return res.json({
         success: true,
         data: updated,
         message: 'Kampanya güncellendi (duplicate)',
         isUpdate: true,
+        low_confidence: applied_action === 'downgrade' || applied_action === 'hide',
+        applied_action,
       });
     }
 
-    // Yeni kampanya oluştur
-    // Canonical field names (DB kolon isimleri)
+    let applied_action = 'allow';
+    if (confidence_score < 40) {
+      applied_action = 'downgrade';
+    } else if (confidence_score >= 40 && confidence_score <= 70) {
+      console.log('low confidence campaign accepted (40–70):', { title: trimmedTitle, score: confidence_score });
+    }
+
     const campaignData = {
       sourceId,
       title: trimmedTitle,
@@ -579,10 +612,9 @@ router.post('/', validateCampaignQuality, async (req, res) => {
       campaignType: campaignType || 'main', // FAZ 7.3: default 'main'
       showInLightFeed: showInLightFeed || false, // FAZ 7.3: default false
       showInCategoryFeed: showInCategoryFeed || false, // FAZ 7.2: default false
-      valueLevel: valueLevel || 'high', // FAZ 7.5: default 'high'
+      valueLevel: applied_action === 'downgrade' ? 'low' : (valueLevel || 'high'), // FAZ 13.3: confidence < 40 → low
     };
 
-    // startDate varsa ekle (DB'de starts_at kolonu olmalı)
     if (startsAt) {
       campaignData.startsAt = startsAt;
     }
@@ -607,11 +639,27 @@ router.post('/', validateCampaignQuality, async (req, res) => {
 
     const newCampaign = await Campaign.create(campaignData);
 
+    if (applied_action === 'downgrade') {
+      try {
+        await AuditLogService.logAdminAction({
+          adminId: 'system_confidence_guard',
+          action: 'confidence_downgrade',
+          entityType: 'campaign',
+          entityId: newCampaign.id,
+          newValue: { original_confidence_score: confidence_score, applied_action: 'downgrade' },
+          reason: 'low_confidence',
+          metadata: { original_confidence_score: confidence_score, applied_action: 'downgrade' },
+        });
+      } catch (_) {}
+    }
+
     res.status(201).json({
       success: true,
       data: newCampaign,
       message: 'Kampanya oluşturuldu',
       isUpdate: false,
+      low_confidence: applied_action === 'downgrade' || applied_action === 'hide',
+      applied_action,
     });
   } catch (error) {
     console.error('Campaign create error:', error);
