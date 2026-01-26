@@ -1,6 +1,6 @@
 # Dependencies
 node_modules/
-package-lock.json
+# package-lock.json — repoda tutulur (production build için gerekli)
 
 # Environment variables
 .env
