@@ -706,7 +706,6 @@ router.get('/governance/metrics', requireViewerOrAbove(), async (req, res) => {
     const rejected = (countRejected.rows[0] && countRejected.rows[0].c) ?? 0;
     const avg_confidence_executed = (avgConf.rows[0] && avgConf.rows[0].avg) ?? 0;
     const totalDecided = applied + rejected;
-    const totalDecided = applied + rejected;
     const execution_rate = applied > 0 ? Math.round((100 * executed) / applied) : 0;
     const override_rate = totalDecided > 0 ? Math.round((100 * rejected) / totalDecided) : 0;
     const most_common_execution_action = (actionRows.rows[0] && actionRows.rows[0].action) || null;
