@@ -104,15 +104,14 @@
    - ✅ API client (`lib/api.ts`)
 
 **Eksikler:**
-   - ❌ Dashboard/ana sayfa yok (sadece redirect var)
+   - ✅ Dashboard/ana sayfa eklendi (27 Ocak 2026)
+   - ✅ Filtreleme/arama eklendi (27 Ocak 2026) — Campaigns ve Sources sayfalarında
+   - ✅ Pagination iyileştirildi (27 Ocak 2026) — Sayfa numarası, ilk/önceki/sonraki/son butonları
    - ❌ UI/UX çok basit (tablo + modal, modern tasarım yok)
    - ❌ Responsive tasarım eksik
    - ❌ Loading states minimal
    - ❌ Error handling görsel olarak zayıf
-   - ❌ Pagination sadece offset/limit (sayfa numarası yok)
-   - ❌ Filtreleme/arama yok (sadece state filter var)
    - ❌ Export/import yok
-   - ❌ Grafik/istatistik görselleştirme yok
 
 ---
 
@@ -582,10 +581,9 @@ Bu 3 adım tamamlanınca sistem **%90 production-ready** olur.
 - [x] Bot'u deploy et ✅ (PM2 ile çalışıyor, her 30 dakikada bir)
 - [x] Puppeteer bağımlılıkları kur ✅ (Tüm kütüphaneler kuruldu)
 - [x] Kaynakları veritabanına ekle ✅ (24 kaynak eklendi)
+- [x] **Admin panel dashboard ekle** ✅ (27 Ocak 2026) — İstatistikler, grafikler, quick actions eklendi
 
 ### Kısa Vadeli (1-2 Hafta) — YÜKSEK ÖNCELİK
-
-- [ ] **Admin panel dashboard ekle** (1 hafta) — İstatistikler, grafikler, quick actions
 - [ ] **Admin panel filtreleme/arama ekle** (1 hafta) — Tarih, source, type filtreleri
 - [ ] **Admin panel responsive tasarım** (3-5 gün) — Mobil uyum
 - [ ] **Loading/error states iyileştir** (2-3 gün) — Skeleton loaders, toast notifications
@@ -609,21 +607,31 @@ Bu 3 adım tamamlanınca sistem **%90 production-ready** olur.
 
 ## 🎯 SIRADAKİ İŞLEM (EN ÖNCELİKLİ)
 
-### Admin Panel Dashboard Ekleme
+### Admin Panel Filtreleme ve Arama Özellikleri
 
 **Öncelik:** Yüksek  
 **Süre:** 1 hafta (5-7 gün)  
-**Etki:** Admin verimliliği artar, veriler görselleştirilir
+**Etki:** Admin verimliliği artar, kampanya ve kaynak yönetimi kolaylaşır
 
 **Yapılacaklar:**
-1. Dashboard sayfası oluştur (`/dashboard` veya ana sayfa)
-2. İstatistik kartları ekle:
-   - Toplam kampanya sayısı
-   - Aktif kaynak sayısı
-   - Bugün eklenen kampanyalar
-   - Son 7 gün kampanya trendi
-3. Grafikler ekle (Chart.js veya Recharts):
-   - Kampanya sayısı grafiği (zaman içinde)
+1. **Campaigns sayfasına filtreleme ekle:**
+   - Tarih aralığı filtresi (başlangıç-bitiş tarihi)
+   - Source filtresi (dropdown ile kaynak seçimi)
+   - Campaign type filtresi (main, light, category, low, hidden)
+   - Status filtresi (active, inactive, expired)
+   - Arama kutusu (başlık, açıklama içinde arama)
+2. **Sources sayfasına filtreleme ekle:**
+   - Source type filtresi (bank, operator)
+   - Status filtresi (active, backlog, hard_backlog)
+   - Arama kutusu (kaynak adı içinde arama)
+3. **Suggestions sayfasına gelişmiş filtreleme:**
+   - Confidence score filtresi (min-max slider)
+   - Tarih filtresi
+   - Action type filtresi
+4. **Pagination iyileştirme:**
+   - Sayfa numarası gösterimi
+   - "İlk", "Önceki", "Sonraki", "Son" butonları
+   - Sayfa başına kayıt sayısı seçimi
    - Kaynak bazlı kampanya dağılımı (pie chart)
    - Kampanya tipi dağılımı
 4. Quick actions:
