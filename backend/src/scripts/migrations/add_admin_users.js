@@ -33,6 +33,7 @@ async function addAdminUsers() {
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         email VARCHAR(255) UNIQUE NOT NULL,
         role admin_role_enum NOT NULL DEFAULT 'viewer',
+        admin_api_key VARCHAR(255) UNIQUE,
         is_active BOOLEAN DEFAULT true,
         created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW()
@@ -46,6 +47,7 @@ async function addAdminUsers() {
       CREATE INDEX IF NOT EXISTS idx_admin_users_email ON admin_users(email);
       CREATE INDEX IF NOT EXISTS idx_admin_users_role ON admin_users(role);
       CREATE INDEX IF NOT EXISTS idx_admin_users_is_active ON admin_users(is_active) WHERE is_active = true;
+      CREATE INDEX IF NOT EXISTS idx_admin_users_api_key ON admin_users(admin_api_key) WHERE admin_api_key IS NOT NULL;
     `);
     
     console.log('✅ Admin users index\'leri oluşturuldu');
