@@ -19,22 +19,27 @@ router.get('/', async (req, res) => {
 
     // sourceNames parametresi varsa (Flutter'dan geliyor)
     if (req.query.sourceNames) {
-      const sourceNames = req.query.sourceNames
-        .split(',')
-        .map((name) => name.trim().toLowerCase())
-        .filter((name) => name.length > 0);
-      
-      // Source name'lerden ID'lere çevir (case-insensitive)
-      const Source = require('../models/Source');
-      const allSources = await Source.findAll();
-      sourceIds = allSources
-        .filter((source) => {
-          const normalizedSourceName = (source.name || '').trim().toLowerCase();
-          return sourceNames.includes(normalizedSourceName);
-        })
-        .map((source) => source.id);
+      try {
+        const sourceNames = req.query.sourceNames
+          .split(',')
+          .map((name) => name.trim().toLowerCase())
+          .filter((name) => name.length > 0);
+        
+        if (sourceNames.length > 0) {
+          const Source = require('../models/Source');
+          const allSources = await Source.findAll();
+          sourceIds = allSources
+            .filter((source) => {
+              const normalizedSourceName = (source.name || '').trim().toLowerCase();
+              return sourceNames.includes(normalizedSourceName);
+            })
+            .map((source) => source.id);
+        }
+      } catch (sourceErr) {
+        console.warn('Campaigns/: sourceNames filter failed, falling back to all', sourceErr.message);
+        sourceIds = null;
+      }
     } else if (req.query.sourceIds) {
-      // sourceIds parametresi varsa (gelecekte bot için)
       sourceIds = req.query.sourceIds.split(',').filter((id) => id.trim());
     }
 
@@ -88,22 +93,27 @@ router.get('/all', async (req, res) => {
 
     // sourceNames parametresi varsa (Flutter'dan geliyor)
     if (req.query.sourceNames) {
-      const sourceNames = req.query.sourceNames
-        .split(',')
-        .map((name) => name.trim().toLowerCase())
-        .filter((name) => name.length > 0);
-      
-      // Source name'lerden ID'lere çevir (case-insensitive)
-      const Source = require('../models/Source');
-      const allSources = await Source.findAll();
-      sourceIds = allSources
-        .filter((source) => {
-          const normalizedSourceName = (source.name || '').trim().toLowerCase();
-          return sourceNames.includes(normalizedSourceName);
-        })
-        .map((source) => source.id);
+      try {
+        const sourceNames = req.query.sourceNames
+          .split(',')
+          .map((name) => name.trim().toLowerCase())
+          .filter((name) => name.length > 0);
+        
+        if (sourceNames.length > 0) {
+          const Source = require('../models/Source');
+          const allSources = await Source.findAll();
+          sourceIds = allSources
+            .filter((source) => {
+              const normalizedSourceName = (source.name || '').trim().toLowerCase();
+              return sourceNames.includes(normalizedSourceName);
+            })
+            .map((source) => source.id);
+        }
+      } catch (sourceErr) {
+        console.warn('Campaigns/all: sourceNames filter failed, falling back to all campaigns', sourceErr.message);
+        sourceIds = null;
+      }
     } else if (req.query.sourceIds) {
-      // sourceIds parametresi varsa
       sourceIds = req.query.sourceIds.split(',').filter((id) => id.trim());
     }
 
@@ -139,7 +149,8 @@ router.get('/all', async (req, res) => {
       count: formattedCampaigns.length,
     });
   } catch (error) {
-    console.error('Campaigns/all list error:', error);
+    console.error('Campaigns/all list error:', error.message);
+    console.error('Campaigns/all stack:', error.stack);
     res.status(500).json({
       success: false,
       error: 'Kampanyalar yüklenirken bir hata oluştu',
