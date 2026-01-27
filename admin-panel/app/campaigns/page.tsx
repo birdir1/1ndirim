@@ -4,6 +4,8 @@ import { useEffect, useState, useMemo } from 'react';
 import AdminLayout from '@/components/AdminLayout';
 import { getAuth } from '@/lib/auth';
 import { apiFetch } from '@/lib/api';
+import { showToast } from '@/components/Toast';
+import { TableSkeleton, FilterSkeleton } from '@/components/SkeletonLoader';
 
 type Campaign = {
   id: string;
@@ -93,7 +95,9 @@ export default function CampaignsPage() {
           setPagination((r as any).pagination);
         }
       } else {
-        setErr(r.error || 'Yüklenemedi');
+        const errorMsg = r.error || 'Yüklenemedi';
+        setErr(errorMsg);
+        showToast(errorMsg, 'error');
       }
     });
   };
@@ -141,11 +145,13 @@ export default function CampaignsPage() {
     setSaving(false);
     if (res.error) {
       setErr(res.error);
+      showToast(res.error, 'error');
       return;
     }
     setAction(null);
     setReason('');
     setErr('');
+    showToast('İşlem başarıyla tamamlandı', 'success');
     if (res.data) setList((prev) => prev.map((c) => (c.id === id ? { ...c, ...res!.data } : c)));
     else load();
   };
@@ -160,11 +166,24 @@ export default function CampaignsPage() {
   return (
     <AdminLayout>
       <h1 className="text-2xl font-semibold mb-4">Kampanyalar</h1>
-      {err && <p className="text-red-600 mb-2">{err}</p>}
+      {err && (
+        <div className="bg-red-50 border border-red-200 text-red-800 rounded-lg p-4 mb-4">
+          <div className="flex items-center justify-between">
+            <span>{err}</span>
+            <button
+              type="button"
+              onClick={() => setErr('')}
+              className="text-red-600 hover:text-red-800"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}}
 
       {/* Filtreler ve Arama */}
       <div className="bg-white border rounded-lg p-4 mb-4 space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Arama */}
           <div>
             <label className="block text-sm font-medium mb-1">Ara</label>
@@ -280,12 +299,16 @@ export default function CampaignsPage() {
         </div>
       </div>
 
-      {/* Tablo */}
+      {/* Tablo ve Mobil Kart Görünümü */}
       {loading ? (
-        <div className="text-center py-8">Yükleniyor...</div>
+        <>
+          <FilterSkeleton />
+          <TableSkeleton rows={5} cols={7} />
+        </>
       ) : (
         <>
-          <div className="overflow-x-auto rounded border">
+          {/* Desktop Table View */}
+          <div className="hidden lg:block overflow-x-auto rounded border">
             <table className="w-full text-left text-sm">
               <thead className="bg-gray-100">
                 <tr>
@@ -353,44 +376,113 @@ export default function CampaignsPage() {
             </table>
           </div>
 
+          {/* Mobile Card View */}
+          <div className="lg:hidden space-y-4">
+            {displayList.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">Kampanya bulunamadı</div>
+            ) : (
+              displayList.map((c) => (
+                <div key={c.id} className="bg-white border rounded-lg p-4 shadow-sm">
+                  <h3 className="font-semibold mb-2 truncate" title={c.title}>
+                    {c.title}
+                  </h3>
+                  <div className="space-y-1 text-sm text-gray-600 mb-3">
+                    <div className="flex justify-between">
+                      <span>Kaynak:</span>
+                      <span className="font-medium">{c.source_name ?? '-'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Tip:</span>
+                      <span className="font-medium">{c.campaign_type ?? '-'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Değer:</span>
+                      <span className="font-medium">{c.value_level ?? '-'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Durum:</span>
+                      <span className="font-medium">
+                        {c.is_hidden ? 'Gizli' : 'Görünür'} / {c.is_active ? 'Aktif' : 'Pasif'}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-2 pt-2 border-t">
+                    <button
+                      type="button"
+                      onClick={() => setAction({ campaign: c, kind: 'hide' })}
+                      className="text-xs px-2 py-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-100"
+                    >
+                      {c.is_hidden ? 'Göster' : 'Gizle'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAction({ campaign: c, kind: 'active' })}
+                      className="text-xs px-2 py-1 bg-green-50 text-green-600 rounded hover:bg-green-100"
+                    >
+                      {c.is_active ? 'Pasif' : 'Aktif'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAction({ campaign: c, kind: 'type', value: 'low' })}
+                      className="text-xs px-2 py-1 bg-yellow-50 text-yellow-600 rounded hover:bg-yellow-100"
+                    >
+                      → low
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAction({ campaign: c, kind: 'type', value: 'hidden' })}
+                      className="text-xs px-2 py-1 bg-red-50 text-red-600 rounded hover:bg-red-100"
+                    >
+                      → hidden
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
           {/* Pagination */}
           {!searchQuery && pagination && pagination.total_pages > 1 && (
-            <div className="mt-4 flex items-center justify-center gap-2">
-              <button
-                type="button"
-                onClick={() => setCurrentPage(1)}
-                disabled={currentPage === 1}
-                className="px-3 py-1 border rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                İlk
-              </button>
-              <button
-                type="button"
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="px-3 py-1 border rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Önceki
-              </button>
+            <div className="mt-4 flex flex-col sm:flex-row items-center justify-center gap-2">
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage(1)}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 border rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  İlk
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 border rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Önceki
+                </button>
+              </div>
               <span className="px-4 py-1 text-sm">
                 Sayfa {pagination.current_page} / {pagination.total_pages}
               </span>
-              <button
-                type="button"
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                disabled={currentPage >= pagination.total_pages}
-                className="px-3 py-1 border rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Sonraki
-              </button>
-              <button
-                type="button"
-                onClick={() => setCurrentPage(pagination.total_pages)}
-                disabled={currentPage >= pagination.total_pages}
-                className="px-3 py-1 border rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Son
-              </button>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage >= pagination.total_pages}
+                  className="px-3 py-1 border rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Sonraki
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage(pagination.total_pages)}
+                  disabled={currentPage >= pagination.total_pages}
+                  className="px-3 py-1 border rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Son
+                </button>
+              </div>
             </div>
           )}
         </>

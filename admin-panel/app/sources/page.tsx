@@ -4,6 +4,8 @@ import { useEffect, useState, useMemo } from 'react';
 import AdminLayout from '@/components/AdminLayout';
 import { getAuth } from '@/lib/auth';
 import { apiFetch } from '@/lib/api';
+import { showToast } from '@/components/Toast';
+import { TableSkeleton, FilterSkeleton } from '@/components/SkeletonLoader';
 
 type Source = {
   id: string;
@@ -51,7 +53,9 @@ export default function SourcesPage() {
         setList(sources);
         setFilteredList(sources);
       } else {
-        setErr(r.error || 'Yüklenemedi');
+        const errorMsg = r.error || 'Yüklenemedi';
+        setErr(errorMsg);
+        showToast(errorMsg, 'error');
       }
     });
   }, [statusFilter, typeFilter, isActiveFilter]);
@@ -81,10 +85,12 @@ export default function SourcesPage() {
     setSaving(false);
     if (res.error) {
       setErr(res.error);
+      showToast(res.error, 'error');
       return;
     }
     setModal(null);
     setErr('');
+    showToast('Kaynak durumu başarıyla güncellendi', 'success');
     setList((prev) => prev.map((s) => (s.id === modal.source.id && res.data ? { ...s, ...res.data } : s)));
     setFilteredList((prev) => prev.map((s) => (s.id === modal.source.id && res.data ? { ...s, ...res.data } : s)));
   };
@@ -96,11 +102,24 @@ export default function SourcesPage() {
   return (
     <AdminLayout>
       <h1 className="text-2xl font-semibold mb-4">Kaynaklar</h1>
-      {err && <p className="text-red-600 mb-2">{err}</p>}
+      {err && (
+        <div className="bg-red-50 border border-red-200 text-red-800 rounded-lg p-4 mb-4">
+          <div className="flex items-center justify-between">
+            <span>{err}</span>
+            <button
+              type="button"
+              onClick={() => setErr('')}
+              className="text-red-600 hover:text-red-800"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Filtreler ve Arama */}
       <div className="bg-white border rounded-lg p-4 mb-4 space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Arama */}
           <div>
             <label className="block text-sm font-medium mb-1">Ara</label>
@@ -190,37 +209,100 @@ export default function SourcesPage() {
           : `${filteredList.length} kaynak gösteriliyor`}
       </div>
 
-      {/* Tablo */}
+      {/* Tablo ve Mobil Kart Görünümü */}
       {loading ? (
-        <div className="text-center py-8">Yükleniyor...</div>
+        <>
+          <FilterSkeleton />
+          <TableSkeleton rows={5} cols={6} />
+        </>
       ) : (
-        <div className="overflow-x-auto rounded border">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="p-2">Ad</th>
-                <th className="p-2">Tip</th>
-                <th className="p-2">Durum</th>
-                <th className="p-2">Durum Nedeni</th>
-                <th className="p-2">Aktif</th>
-                <th className="p-2">İşlem</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredList.length === 0 ? (
+        <>
+          {/* Desktop Table View */}
+          <div className="hidden lg:block overflow-x-auto rounded border">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-gray-100">
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-gray-500">
-                    Kaynak bulunamadı
-                  </td>
+                  <th className="p-2">Ad</th>
+                  <th className="p-2">Tip</th>
+                  <th className="p-2">Durum</th>
+                  <th className="p-2">Durum Nedeni</th>
+                  <th className="p-2">Aktif</th>
+                  <th className="p-2">İşlem</th>
                 </tr>
-              ) : (
-                filteredList.map((s) => (
-                  <tr key={s.id} className="border-t hover:bg-gray-50">
-                    <td className="p-2 font-medium">{s.name}</td>
-                    <td className="p-2">{s.type}</td>
-                    <td className="p-2">
+              </thead>
+              <tbody>
+                {filteredList.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="p-8 text-center text-gray-500">
+                      Kaynak bulunamadı
+                    </td>
+                  </tr>
+                ) : (
+                  filteredList.map((s) => (
+                    <tr key={s.id} className="border-t hover:bg-gray-50">
+                      <td className="p-2 font-medium">{s.name}</td>
+                      <td className="p-2">{s.type}</td>
+                      <td className="p-2">
+                        <span
+                          className={`px-2 py-1 rounded text-xs ${
+                            s.source_status === 'active' || !s.source_status
+                              ? 'bg-green-100 text-green-800'
+                              : s.source_status === 'backlog'
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : 'bg-red-100 text-red-800'
+                          }`}
+                        >
+                          {s.source_status || 'active'}
+                        </span>
+                      </td>
+                      <td className="p-2 max-w-[200px] truncate" title={s.status_reason ?? ''}>
+                        {s.status_reason ?? '-'}
+                      </td>
+                      <td className="p-2">
+                        <span
+                          className={`px-2 py-1 rounded text-xs ${
+                            s.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                          }`}
+                        >
+                          {s.is_active ? 'Evet' : 'Hayır'}
+                        </span>
+                      </td>
+                      <td className="p-2">
+                        {STATUS_OPTIONS.filter((x) => x !== (s.source_status || 'active')).map((st) => (
+                          <button
+                            key={st}
+                            type="button"
+                            onClick={() => openModal(s, st)}
+                            className="mr-2 text-blue-600 hover:underline text-xs"
+                          >
+                            → {st}
+                          </button>
+                        ))}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile Card View */}
+          <div className="lg:hidden space-y-4">
+            {filteredList.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">Kaynak bulunamadı</div>
+            ) : (
+              filteredList.map((s) => (
+                <div key={s.id} className="bg-white border rounded-lg p-4 shadow-sm">
+                  <h3 className="font-semibold mb-2">{s.name}</h3>
+                  <div className="space-y-1 text-sm text-gray-600 mb-3">
+                    <div className="flex justify-between">
+                      <span>Tip:</span>
+                      <span className="font-medium">{s.type}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Durum:</span>
                       <span
-                        className={`px-2 py-1 rounded text-xs ${
+                        className={`px-2 py-1 rounded text-xs font-medium ${
                           s.source_status === 'active' || !s.source_status
                             ? 'bg-green-100 text-green-800'
                             : s.source_status === 'backlog'
@@ -230,37 +312,41 @@ export default function SourcesPage() {
                       >
                         {s.source_status || 'active'}
                       </span>
-                    </td>
-                    <td className="p-2 max-w-[200px] truncate" title={s.status_reason ?? ''}>
-                      {s.status_reason ?? '-'}
-                    </td>
-                    <td className="p-2">
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Aktif:</span>
                       <span
-                        className={`px-2 py-1 rounded text-xs ${
+                        className={`px-2 py-1 rounded text-xs font-medium ${
                           s.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
                         }`}
                       >
                         {s.is_active ? 'Evet' : 'Hayır'}
                       </span>
-                    </td>
-                    <td className="p-2">
-                      {STATUS_OPTIONS.filter((x) => x !== (s.source_status || 'active')).map((st) => (
-                        <button
-                          key={st}
-                          type="button"
-                          onClick={() => openModal(s, st)}
-                          className="mr-2 text-blue-600 hover:underline text-xs"
-                        >
-                          → {st}
-                        </button>
-                      ))}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                    </div>
+                    {s.status_reason && (
+                      <div className="pt-2 border-t">
+                        <span className="text-xs text-gray-500">Neden:</span>
+                        <p className="text-xs mt-1">{s.status_reason}</p>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-2 pt-2 border-t">
+                    {STATUS_OPTIONS.filter((x) => x !== (s.source_status || 'active')).map((st) => (
+                      <button
+                        key={st}
+                        type="button"
+                        onClick={() => openModal(s, st)}
+                        className="text-xs px-2 py-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-100"
+                      >
+                        → {st}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </>
       )}
 
       {/* Modal */}
