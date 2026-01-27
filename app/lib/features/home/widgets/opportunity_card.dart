@@ -41,38 +41,50 @@ class OpportunityCard extends StatelessWidget {
           color: AppColors.cardBackground,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: SourceLogoHelper.getLogoBackgroundColor(opportunity.sourceName).withOpacity(0.1),
-            width: 1,
+            color: SourceLogoHelper.getLogoBackgroundColor(opportunity.sourceName).withOpacity(0.2),
+            width: 1.5,
           ),
           boxShadow: [
             BoxShadow(
-              color: AppColors.shadowDark.withOpacity(0.08),
-              blurRadius: 16,
-              offset: const Offset(0, 4),
+              color: SourceLogoHelper.getLogoBackgroundColor(opportunity.sourceName).withOpacity(0.08),
+              blurRadius: 20,
+              offset: const Offset(0, 6),
+            ),
+            BoxShadow(
+              color: AppColors.shadowDark.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
             ),
           ],
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Source Logo Box
+            // Source Logo Box - Daha büyük ve net
             Container(
-              width: 56,
-              height: 56,
+              width: 72,
+              height: 72,
               decoration: BoxDecoration(
-                color: SourceLogoHelper.getLogoBackgroundColor(opportunity.sourceName).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: SourceLogoHelper.getLogoBackgroundColor(opportunity.sourceName).withOpacity(0.2),
-                  width: 1,
+                  color: SourceLogoHelper.getLogoBackgroundColor(opportunity.sourceName).withOpacity(0.3),
+                  width: 2,
                 ),
+                boxShadow: [
+                  BoxShadow(
+                    color: SourceLogoHelper.getLogoBackgroundColor(opportunity.sourceName).withOpacity(0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
               child: Padding(
-                padding: const EdgeInsets.all(8.0),
+                padding: const EdgeInsets.all(12.0),
                 child: SourceLogoHelper.getLogoWidget(
                   opportunity.sourceName,
-                  width: 40,
-                  height: 40,
+                  width: 48,
+                  height: 48,
                 ),
               ),
             ),
@@ -82,65 +94,78 @@ class OpportunityCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Title - Daha büyük ve belirgin
                   Text(
                     opportunity.title,
                     style: AppTextStyles.cardTitle(isDark: false).copyWith(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.3,
                       // İndirim yüzdesi varsa kan kırmızısı
                       color: opportunity.title.contains('%') || opportunity.title.toLowerCase().contains('indirim')
                           ? AppColors.discountRed
                           : AppColors.textPrimaryLight,
                       height: 1.3,
                     ),
-                    maxLines: 2,
+                    maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    opportunity.subtitle,
-                    style: AppTextStyles.cardSubtitle(isDark: false).copyWith(
-                      fontSize: 13,
-                      height: 1.4,
+                  const SizedBox(height: 8),
+                  // Subtitle - Daha okunabilir
+                  if (opportunity.subtitle.isNotEmpty)
+                    Text(
+                      opportunity.subtitle,
+                      style: AppTextStyles.cardSubtitle(isDark: false).copyWith(
+                        fontSize: 14,
+                        height: 1.5,
+                        color: AppColors.textSecondaryLight,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 10),
-                  // Source reference with logo
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: SourceLogoHelper.getLogoBackgroundColor(opportunity.sourceName).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: SourceLogoHelper.getLogoWidget(
-                            opportunity.sourceName,
-                            width: 16,
-                            height: 16,
+                  const SizedBox(height: 12),
+                  // Source name - Daha belirgin
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: SourceLogoHelper.getLogoBackgroundColor(opportunity.sourceName).withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: SourceLogoHelper.getLogoBackgroundColor(opportunity.sourceName).withOpacity(0.3),
+                            width: 1,
                           ),
                         ),
-                        const SizedBox(width: 6),
-                        Text(
-                          opportunity.sourceName,
-                          style: AppTextStyles.small(isDark: false).copyWith(
-                            color: SourceLogoHelper.getLogoBackgroundColor(opportunity.sourceName),
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: SourceLogoHelper.getLogoWidget(
+                                opportunity.sourceName,
+                                width: 20,
+                                height: 20,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              opportunity.sourceName,
+                              style: AppTextStyles.small(isDark: false).copyWith(
+                                color: SourceLogoHelper.getLogoBackgroundColor(opportunity.sourceName),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 16),
                   // Tags - İndirim içerenler kan kırmızısı
                   Wrap(
                     spacing: 6,

@@ -88,24 +88,37 @@ class SourceLogoHelper {
         logoPath,
         width: width,
         height: height,
+        fit: BoxFit.contain, // Logo'nun tam görünmesi için
         colorFilter: color != null ? ColorFilter.mode(color, BlendMode.srcIn) : null,
-        placeholderBuilder: (context) => Icon(
-          Icons.business,
-          size: width ?? 24,
-          color: color,
+        placeholderBuilder: (context) => Container(
+          width: width,
+          height: height,
+          color: Colors.grey[200],
+          child: Icon(
+            Icons.business,
+            size: (width ?? 24) * 0.6,
+            color: color ?? Colors.grey[400],
+          ),
         ),
       );
     } else {
-      // PNG/JPG
+      // PNG/JPG - Daha net görünmesi için fit: BoxFit.contain
       return Image.asset(
         logoPath,
         width: width,
         height: height,
+        fit: BoxFit.contain, // Logo'nun tam görünmesi için
         color: color,
-        errorBuilder: (context, error, stackTrace) => Icon(
-          Icons.business,
-          size: width ?? 24,
-          color: color,
+        filterQuality: FilterQuality.high, // Daha net görünüm
+        errorBuilder: (context, error, stackTrace) => Container(
+          width: width,
+          height: height,
+          color: Colors.grey[200],
+          child: Icon(
+            Icons.business,
+            size: (width ?? 24) * 0.6,
+            color: color ?? Colors.grey[400],
+          ),
         ),
       );
     }
