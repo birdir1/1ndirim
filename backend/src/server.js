@@ -22,14 +22,7 @@ app.use(morgan('combined')); // Logging
 app.use(express.json()); // JSON body parser
 app.use(express.urlencoded({ extended: true })); // URL encoded body parser
 
-// Routes
-app.use('/api/campaigns', campaignsRouter);
-app.use('/api/sources', sourcesRouter);
-app.use('/api/health', healthRouter);
-app.use('/api/admin', adminRouter); // FAZ 10: Admin & Control Layer
-app.use('/', legalRouter); // Privacy Policy & Terms of Use (root level)
-
-// Root endpoint
+// Root endpoint (legal router'dan önce)
 app.get('/', (req, res) => {
   res.json({
     success: true,
@@ -43,6 +36,13 @@ app.get('/', (req, res) => {
     },
   });
 });
+
+// Routes
+app.use('/api/campaigns', campaignsRouter);
+app.use('/api/sources', sourcesRouter);
+app.use('/api/health', healthRouter);
+app.use('/api/admin', adminRouter); // FAZ 10: Admin & Control Layer
+app.use('/', legalRouter); // Privacy Policy & Terms of Use (root level)
 
 // 404 handler
 app.use((req, res) => {
