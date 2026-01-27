@@ -9,8 +9,36 @@ const path = require('path');
  */
 router.get('/privacy-policy', (req, res) => {
   try {
-    const filePath = path.join(__dirname, '../../../../app/PRIVACY_POLICY.md');
-    const content = fs.readFileSync(filePath, 'utf8');
+    // Monorepo yapısında app klasörü root'ta, backend ise backend/ klasöründe
+    // Server'da: /var/www/1indirim-api/backend/src/routes/legal.js
+    // Dosya: /var/www/1indirim-api/../app/PRIVACY_POLICY.md (eğer monorepo ise)
+    // VEYA backend dizinine kopyalanmış olabilir
+    const possiblePaths = [
+      path.join(__dirname, '../../../../app/PRIVACY_POLICY.md'), // Monorepo
+      path.join(__dirname, '../../../app/PRIVACY_POLICY.md'), // Backend/app
+      path.join(__dirname, '../../PRIVACY_POLICY.md'), // Backend root
+      '/var/www/1indirim-api/../app/PRIVACY_POLICY.md', // Server monorepo
+      '/var/www/1indirim-api/app/PRIVACY_POLICY.md', // Server backend/app
+    ];
+    
+    let filePath = null;
+    let content = null;
+    
+    for (const p of possiblePaths) {
+      try {
+        if (fs.existsSync(p)) {
+          filePath = p;
+          content = fs.readFileSync(p, 'utf8');
+          break;
+        }
+      } catch (e) {
+        // Devam et
+      }
+    }
+    
+    if (!content) {
+      throw new Error(`Privacy Policy dosyası bulunamadı. Denenen yollar: ${possiblePaths.join(', ')}`);
+    }
     
     // Markdown'ı basit HTML'e çevir (basit regex ile)
     const html = convertMarkdownToHTML(content);
@@ -37,8 +65,36 @@ router.get('/privacy-policy', (req, res) => {
  */
 router.get('/terms-of-use', (req, res) => {
   try {
-    const filePath = path.join(__dirname, '../../../../app/TERMS_OF_USE.md');
-    const content = fs.readFileSync(filePath, 'utf8');
+    // Monorepo yapısında app klasörü root'ta, backend ise backend/ klasöründe
+    // Server'da: /var/www/1indirim-api/backend/src/routes/legal.js
+    // Dosya: /var/www/1indirim-api/../app/TERMS_OF_USE.md (eğer monorepo ise)
+    // VEYA backend dizinine kopyalanmış olabilir
+    const possiblePaths = [
+      path.join(__dirname, '../../../../app/TERMS_OF_USE.md'), // Monorepo
+      path.join(__dirname, '../../../app/TERMS_OF_USE.md'), // Backend/app
+      path.join(__dirname, '../../TERMS_OF_USE.md'), // Backend root
+      '/var/www/1indirim-api/../app/TERMS_OF_USE.md', // Server monorepo
+      '/var/www/1indirim-api/app/TERMS_OF_USE.md', // Server backend/app
+    ];
+    
+    let filePath = null;
+    let content = null;
+    
+    for (const p of possiblePaths) {
+      try {
+        if (fs.existsSync(p)) {
+          filePath = p;
+          content = fs.readFileSync(p, 'utf8');
+          break;
+        }
+      } catch (e) {
+        // Devam et
+      }
+    }
+    
+    if (!content) {
+      throw new Error(`Terms of Use dosyası bulunamadı. Denenen yollar: ${possiblePaths.join(', ')}`);
+    }
     
     // Markdown'ı basit HTML'e çevir
     const html = convertMarkdownToHTML(content);
