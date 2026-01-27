@@ -29,13 +29,28 @@ cd bot
 echo "📦 Bağımlılıklar yükleniyor..."
 npm install
 
-# 5. Puppeteer için Chromium kurulumu kontrol et
-echo "🔍 Chromium kontrol ediliyor..."
-if ! command -v chromium &> /dev/null && ! command -v chromium-browser &> /dev/null; then
-    echo "⚠️ Chromium bulunamadı, kuruluyor..."
-    apt-get update -qq
-    apt-get install -y chromium-browser
-fi
+# 5. Puppeteer için gerekli sistem kütüphanelerini kur
+echo "🔍 Puppeteer bağımlılıkları kontrol ediliyor..."
+apt-get update -qq
+apt-get install -y \
+    chromium-browser \
+    libatk1.0-0 \
+    libatk-bridge2.0-0 \
+    libcups2 \
+    libdrm2 \
+    libgbm1 \
+    libgtk-3-0 \
+    libnspr4 \
+    libnss3 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxfixes3 \
+    libxkbcommon0 \
+    libxrandr2 \
+    xdg-utils \
+    libasound2 \
+    libatspi2.0-0 \
+    libxshmfence1
 
 # 6. Environment variables ayarla
 echo "⚙️ Environment variables ayarlanıyor..."
