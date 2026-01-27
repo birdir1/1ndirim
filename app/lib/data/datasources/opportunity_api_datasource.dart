@@ -188,17 +188,20 @@ class OpportunityApiDataSource {
 
   /// Seçili kaynaklara göre fırsatları filtreler
   /// Backend'de sourceNames parametresi ile filtreleme yapılır
+  /// TÜM kampanyaları getirmek için /campaigns/all endpoint'ini kullanır
   Future<List<OpportunityModel>> getOpportunitiesBySources(
     List<String> sourceNames,
   ) async {
     try {
       // Backend'de sourceNames parametresi ile filtreleme
+      // TÜM kampanyaları getirmek için /all endpoint'ini kullan
       final queryParams = sourceNames.isNotEmpty
           ? {'sourceNames': sourceNames.join(',')}
           : null;
 
+      // Tüm kampanyaları getir (feed type'a bakmaz)
       final response = await _dio.get(
-        ApiConfig.campaigns,
+        '${ApiConfig.campaigns}/all',
         queryParameters: queryParams,
       );
 

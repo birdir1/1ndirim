@@ -77,6 +77,78 @@ router.get('/', async (req, res) => {
 });
 
 /**
+ * GET /campaigns/all
+ * TÜM aktif kampanyaları getirir (feed type'a bakmaz)
+ * Main feed guard'ı bypass eder
+ * Sadece is_active = true ve expires_at > NOW() kontrol eder
+ */
+router.get('/all', async (req, res) => {
+  try {
+    let sourceIds = null;
+
+    // sourceNames parametresi varsa (Flutter'dan geliyor)
+    if (req.query.sourceNames) {
+      const sourceNames = req.query.sourceNames
+        .split(',')
+        .map((name) => name.trim().toLowerCase())
+        .filter((name) => name.length > 0);
+      
+      // Source name'lerden ID'lere çevir (case-insensitive)
+      const Source = require('../models/Source');
+      const allSources = await Source.findAll();
+      sourceIds = allSources
+        .filter((source) => {
+          const normalizedSourceName = (source.name || '').trim().toLowerCase();
+          return sourceNames.includes(normalizedSourceName);
+        })
+        .map((source) => source.id);
+    } else if (req.query.sourceIds) {
+      // sourceIds parametresi varsa
+      sourceIds = req.query.sourceIds.split(',').filter((id) => id.trim());
+    }
+
+    // Tüm aktif kampanyaları getir (feed type'a bakmaz)
+    const campaigns = await Campaign.findAllActive(sourceIds);
+
+    // Flutter uygulaması için format
+    const formattedCampaigns = campaigns.map((campaign) => ({
+      id: campaign.id,
+      title: campaign.title,
+      subtitle: campaign.description || `${campaign.source_name}`,
+      sourceName: campaign.source_name,
+      sourceId: campaign.source_id,
+      icon: campaign.icon_name || 'local_offer',
+      iconColor: campaign.icon_color || '#DC2626',
+      iconBgColor: campaign.icon_bg_color || '#FEE2E2',
+      tags: campaign.tags || [],
+      description: campaign.description,
+      detailText: campaign.detail_text,
+      originalUrl: campaign.original_url,
+      affiliateUrl: campaign.affiliate_url || null,
+      expiresAt: campaign.expires_at,
+      howToUse: campaign.how_to_use || [],
+      validityChannels: campaign.validity_channels || [],
+      status: campaign.status,
+      campaignType: campaign.campaign_type, // Feed type bilgisi
+      valueLevel: campaign.value_level, // Value level bilgisi
+    }));
+
+    res.json({
+      success: true,
+      data: formattedCampaigns,
+      count: formattedCampaigns.length,
+    });
+  } catch (error) {
+    console.error('Campaigns/all list error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Kampanyalar yüklenirken bir hata oluştu',
+      message: error.message,
+    });
+  }
+});
+
+/**
  * GET /campaigns/low-value
  * FAZ 7.5: Low value feed kampanyalarını getirir
  * Sadece value_level = 'low' olanları döndürür

@@ -76,6 +76,41 @@ class Campaign {
   }
 
   /**
+   * TÜM aktif kampanyaları getirir (feed type'a bakmaz)
+   * Main feed guard'ı bypass eder
+   * Sadece is_active = true ve expires_at > NOW() kontrol eder
+   * 
+   * @param {Array<string>} sourceIds - Filtreleme için source ID'leri (opsiyonel)
+   * @returns {Promise<Array>}
+   */
+  static async findAllActive(sourceIds = null) {
+    let query = `
+      SELECT 
+        c.*,
+        s.name as source_name,
+        s.type as source_type,
+        s.logo_url as source_logo_url
+      FROM campaigns c
+      INNER JOIN sources s ON c.source_id = s.id
+      WHERE c.is_active = true
+        AND c.expires_at > NOW()
+        AND (c.is_hidden = false OR c.is_hidden IS NULL)
+    `;
+
+    const params = [];
+
+    if (sourceIds && sourceIds.length > 0) {
+      query += ` AND c.source_id = ANY($${params.length + 1}::uuid[])`;
+      params.push(sourceIds);
+    }
+
+    query += ` ORDER BY c.is_pinned DESC, c.pinned_at DESC NULLS LAST, c.created_at DESC`;
+
+    const result = await pool.query(query, params);
+    return result.rows;
+  }
+
+  /**
    * Light feed kampanyalarını getirir (FAZ 7.3)
    * @param {Array<string>} sourceIds - Filtreleme için source ID'leri (opsiyonel)
    * @returns {Promise<Array>}
