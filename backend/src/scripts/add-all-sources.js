@@ -1,0 +1,103 @@
+/**
+ * Tüm bot scraper'ları için kaynakları veritabanına ekler
+ * Bot'taki tüm scraper'lar için source oluşturur
+ */
+
+require('dotenv').config();
+const pool = require('../config/database');
+const Source = require('../models/Source');
+
+// Bot'taki tüm scraper'lar ve kaynak bilgileri
+const sources = [
+  { name: 'Akbank', type: 'bank', websiteUrl: 'https://www.akbank.com' },
+  { name: 'Turkcell', type: 'operator', websiteUrl: 'https://www.turkcell.com.tr' },
+  { name: 'Garanti BBVA', type: 'bank', websiteUrl: 'https://www.garantibbva.com.tr' },
+  { name: 'Yapı Kredi', type: 'bank', websiteUrl: 'https://www.yapikredi.com.tr' },
+  { name: 'İş Bankası', type: 'bank', websiteUrl: 'https://www.isbank.com.tr' },
+  { name: 'Vodafone', type: 'operator', websiteUrl: 'https://www.vodafone.com.tr' },
+  { name: 'Türk Telekom', type: 'operator', websiteUrl: 'https://www.turktelekom.com.tr' },
+  { name: 'Ziraat Bankası', type: 'bank', websiteUrl: 'https://www.ziraatbank.com.tr' },
+  { name: 'Halkbank', type: 'bank', websiteUrl: 'https://www.halkbank.com.tr' },
+  { name: 'VakıfBank', type: 'bank', websiteUrl: 'https://www.vakifbank.com.tr' },
+  { name: 'DenizBank', type: 'bank', websiteUrl: 'https://www.denizbank.com' },
+  { name: 'QNB Finansbank', type: 'bank', websiteUrl: 'https://www.qnbfinansbank.com' },
+  { name: 'TEB', type: 'bank', websiteUrl: 'https://www.teb.com.tr' },
+  { name: 'ING Bank', type: 'bank', websiteUrl: 'https://www.ingbank.com.tr' },
+  { name: 'Kuveyt Türk', type: 'bank', websiteUrl: 'https://www.kuveytturk.com.tr' },
+  { name: 'Albaraka Türk', type: 'bank', websiteUrl: 'https://www.albaraka.com.tr' },
+  { name: 'Türkiye Finans', type: 'bank', websiteUrl: 'https://www.turkiyefinans.com.tr' },
+  { name: 'Vakıf Katılım', type: 'bank', websiteUrl: 'https://www.vakifkatilim.com.tr' },
+  { name: 'Ziraat Katılım', type: 'bank', websiteUrl: 'https://www.ziraatkatilim.com.tr' },
+  { name: 'Emlak Katılım', type: 'bank', websiteUrl: 'https://www.emlakkatilim.com.tr' },
+  { name: 'Enpara', type: 'bank', websiteUrl: 'https://www.enpara.com' },
+  { name: 'CEPTETEB', type: 'bank', websiteUrl: 'https://www.cepteteb.com' },
+  { name: 'N Kolay', type: 'bank', websiteUrl: 'https://www.nkolay.com' },
+  { name: 'PTTcell', type: 'operator', websiteUrl: 'https://www.pttcell.com.tr' },
+];
+
+async function addAllSources() {
+  try {
+    // Veritabanı bağlantısını test et
+    await pool.query('SELECT 1');
+    console.log('✅ Veritabanı bağlantısı başarılı\n');
+
+    // Mevcut kaynakları al
+    const existingSources = await Source.findAll();
+    const existingNames = existingSources.map(s => s.name.toLowerCase().trim());
+    
+    console.log(`📊 Mevcut kaynak sayısı: ${existingSources.length}\n`);
+
+    let added = 0;
+    let skipped = 0;
+
+    for (const sourceData of sources) {
+      const normalizedName = sourceData.name.toLowerCase().trim();
+      
+      // Eğer zaten varsa atla
+      if (existingNames.includes(normalizedName)) {
+        console.log(`⏭️  Kaynak zaten mevcut: ${sourceData.name}`);
+        skipped++;
+        continue;
+      }
+
+      // Yeni kaynak oluştur
+      try {
+        const source = await Source.create({
+          name: sourceData.name,
+          type: sourceData.type,
+          logoUrl: null,
+          websiteUrl: sourceData.websiteUrl,
+          isActive: true,
+        });
+        console.log(`✅ Kaynak eklendi: ${source.name} (${source.type})`);
+        added++;
+      } catch (error) {
+        if (error.message.includes('duplicate') || error.message.includes('UNIQUE')) {
+          console.log(`⚠️  Kaynak zaten mevcut (duplicate): ${sourceData.name}`);
+          skipped++;
+        } else {
+          console.error(`❌ Hata (${sourceData.name}):`, error.message);
+          throw error;
+        }
+      }
+    }
+
+    console.log('\n' + '='.repeat(60));
+    console.log(`✅ Toplam ${added} kaynak eklendi`);
+    console.log(`⏭️  ${skipped} kaynak zaten mevcuttu`);
+    console.log(`📊 Toplam kaynak sayısı: ${existingSources.length + added}`);
+    console.log('='.repeat(60) + '\n');
+
+    await pool.end();
+  } catch (error) {
+    console.error('❌ Hata:', error.message);
+    if (error.code === '42P01') {
+      console.error('\n⚠️ sources tablosu bulunamadı!');
+      console.error('   Önce migration\'ları çalıştırın:');
+      console.error('   node src/scripts/run-all-migrations.js\n');
+    }
+    process.exit(1);
+  }
+}
+
+addAllSources();
