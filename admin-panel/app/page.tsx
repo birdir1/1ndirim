@@ -8,7 +8,7 @@ export default function Home() {
   const router = useRouter();
   useEffect(() => {
     const a = getAuth();
-    if (a?.admin_email && a?.admin_api_key) router.replace('/sources');
+    if (a?.admin_email && a?.admin_api_key) router.replace('/dashboard');
     else router.replace('/login');
   }, [router]);
   return <div className="p-8">Yönlendiriliyor...</div>;

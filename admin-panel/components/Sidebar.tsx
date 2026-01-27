@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { clearAuth } from '@/lib/auth';
 
 const nav = [
+  { href: '/dashboard', label: 'Dashboard' },
   { href: '/sources', label: 'Kaynaklar' },
   { href: '/campaigns', label: 'Kampanyalar' },
   { href: '/suggestions', label: 'Öneriler' },
