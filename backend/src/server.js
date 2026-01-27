@@ -9,6 +9,7 @@ const campaignsRouter = require('./routes/campaigns');
 const sourcesRouter = require('./routes/sources');
 const healthRouter = require('./routes/health');
 const adminRouter = require('./routes/admin'); // FAZ 10: Admin & Control Layer
+const legalRouter = require('./routes/legal'); // Privacy Policy & Terms of Use
 const { deactivateExpiredCampaigns } = require('./jobs/deactivateExpiredCampaigns');
 
 const app = express();
@@ -26,6 +27,7 @@ app.use('/api/campaigns', campaignsRouter);
 app.use('/api/sources', sourcesRouter);
 app.use('/api/health', healthRouter);
 app.use('/api/admin', adminRouter); // FAZ 10: Admin & Control Layer
+app.use('/', legalRouter); // Privacy Policy & Terms of Use (root level)
 
 // Root endpoint
 app.get('/', (req, res) => {
