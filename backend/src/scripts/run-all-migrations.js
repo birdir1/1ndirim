@@ -26,7 +26,7 @@ const migrations = [
   'add_admin_suggestions_execution.js',
 ];
 
-console.log('🚀 Migration'lar başlatılıyor...\n');
+console.log('🚀 Migration\'lar başlatılıyor...\n');
 console.log(`📁 Migration dizini: ${migrationsDir}\n`);
 
 let successCount = 0;
