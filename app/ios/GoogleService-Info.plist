@@ -9,7 +9,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>app.indirim.indirimApp</string>
+	<string>com.birdir1.1ndirim</string>
 	<key>PROJECT_ID</key>
 	<string>indirim-1</string>
 	<key>STORAGE_BUCKET</key>
