@@ -24,9 +24,8 @@ class ApiConfig {
   static const String _devBaseUrl = 'http://192.168.0.2:3000/api';
 
   /// Production API Base URL
-  /// Production domain belirlendiğinde buraya eklenecek
-  /// Örnek: 'https://api.1ndirim.com/api'
-  static const String _prodBaseUrl = 'https://api.1ndirim.com/api';
+  /// Production domain: api.1indirim.birdir1.com
+  static const String _prodBaseUrl = 'https://api.1indirim.birdir1.com/api';
 
   /// Base URL getter (environment-based)
   static String get baseUrl {
