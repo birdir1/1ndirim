@@ -107,10 +107,10 @@
    - ✅ Dashboard/ana sayfa eklendi (27 Ocak 2026)
    - ✅ Filtreleme/arama eklendi (27 Ocak 2026) — Campaigns ve Sources sayfalarında
    - ✅ Pagination iyileştirildi (27 Ocak 2026) — Sayfa numarası, ilk/önceki/sonraki/son butonları
-   - ❌ UI/UX çok basit (tablo + modal, modern tasarım yok)
-   - ❌ Responsive tasarım eksik
-   - ❌ Loading states minimal
-   - ❌ Error handling görsel olarak zayıf
+   - ✅ Responsive tasarım eklendi (27 Ocak 2026) — Mobil hamburger menü, kart görünümü
+   - ✅ Loading states iyileştirildi (27 Ocak 2026) — Skeleton loaders
+   - ✅ Error handling iyileştirildi (27 Ocak 2026) — Toast notifications, görsel hata mesajları
+   - ❌ UI/UX hala basit (tablo + modal, daha modern tasarım yapılabilir)
    - ❌ Export/import yok
 
 ---
@@ -585,8 +585,8 @@ Bu 3 adım tamamlanınca sistem **%90 production-ready** olur.
 
 ### Kısa Vadeli (1-2 Hafta) — YÜKSEK ÖNCELİK
 - [x] **Admin panel filtreleme/arama ekle** ✅ (27 Ocak 2026) — Campaigns ve Sources sayfalarına filtreleme, arama ve pagination eklendi
-- [ ] **Admin panel responsive tasarım** (3-5 gün) — Mobil uyum
-- [ ] **Loading/error states iyileştir** (2-3 gün) — Skeleton loaders, toast notifications
+- [x] **Admin panel responsive tasarım** ✅ (27 Ocak 2026) — Mobil hamburger menü, kart görünümü, responsive layout
+- [x] **Loading/error states iyileştir** ✅ (27 Ocak 2026) — Skeleton loaders, toast notifications, görsel hata mesajları
 
 ### Orta Vadeli (1-2 Ay) — ÇOK YÜKSEK ÖNCELİK
 
