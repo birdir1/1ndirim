@@ -584,7 +584,7 @@ Bu 3 adım tamamlanınca sistem **%90 production-ready** olur.
 - [x] **Admin panel dashboard ekle** ✅ (27 Ocak 2026) — İstatistikler, grafikler, quick actions eklendi
 
 ### Kısa Vadeli (1-2 Hafta) — YÜKSEK ÖNCELİK
-- [ ] **Admin panel filtreleme/arama ekle** (1 hafta) — Tarih, source, type filtreleri
+- [x] **Admin panel filtreleme/arama ekle** ✅ (27 Ocak 2026) — Campaigns ve Sources sayfalarına filtreleme, arama ve pagination eklendi
 - [ ] **Admin panel responsive tasarım** (3-5 gün) — Mobil uyum
 - [ ] **Loading/error states iyileştir** (2-3 gün) — Skeleton loaders, toast notifications
 
