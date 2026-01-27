@@ -574,25 +574,28 @@ Bu 3 adım tamamlanınca sistem **%90 production-ready** olur.
 
 ## 📝 CHECKLIST (Sırayla Yapılacaklar)
 
-### Hemen (Bu Hafta)
+### ✅ Tamamlananlar (Bu Hafta - 27 Ocak 2026)
 
-- [ ] Migration'ları çalıştır (`backend/src/scripts/migrations/README.md`)
-- [ ] İlk admin user ekle (`INSERT INTO admin_users`)
-- [ ] Admin panel'i build et ve deploy et
-- [ ] Bot'u deploy et (Railway veya sunucuda)
+- [x] Migration'ları çalıştır ✅ (14 migration başarıyla çalıştırıldı)
+- [x] İlk admin user ekle ✅ (umitgulcuk680@gmail.com, super_admin)
+- [x] Admin panel'i build et ve deploy et ✅ (https://admin.1indirim.birdir1.com)
+- [x] Bot'u deploy et ✅ (PM2 ile çalışıyor, her 30 dakikada bir)
+- [x] Puppeteer bağımlılıkları kur ✅ (Tüm kütüphaneler kuruldu)
+- [x] Kaynakları veritabanına ekle ✅ (24 kaynak eklendi)
 
-### Kısa Vadeli (1-2 Hafta)
+### Kısa Vadeli (1-2 Hafta) — YÜKSEK ÖNCELİK
 
-- [ ] Admin panel dashboard ekle
-- [ ] Admin panel filtreleme/arama ekle
-- [ ] Landing sayfası tasarla
-- [ ] Monitoring ekle (Sentry, uptime)
+- [ ] **Admin panel dashboard ekle** (1 hafta) — İstatistikler, grafikler, quick actions
+- [ ] **Admin panel filtreleme/arama ekle** (1 hafta) — Tarih, source, type filtreleri
+- [ ] **Admin panel responsive tasarım** (3-5 gün) — Mobil uyum
+- [ ] **Loading/error states iyileştir** (2-3 gün) — Skeleton loaders, toast notifications
 
-### Orta Vadeli (1-2 Ay)
+### Orta Vadeli (1-2 Ay) — ÇOK YÜKSEK ÖNCELİK
 
-- [ ] Flutter app'i store'a çıkar (Apple + Google)
-- [ ] Admin panel UI/UX iyileştir (modern tasarım)
-- [ ] Monetization modeli belirle ve implement et
+- [ ] **Flutter app'i store'a çıkar** (2-3 hafta) — Apple Developer + Google Play
+- [ ] **Monitoring ekle** (1 hafta) — Sentry, uptime monitoring
+- [ ] **Landing sayfası tasarla** (1 hafta) — Profesyonel tasarım, SEO
+- [ ] **Monetization modeli belirle ve implement et** (1-2 ay) — Affiliate + Premium
 
 ### Uzun Vadeli (3-6 Ay)
 
@@ -602,6 +605,37 @@ Bu 3 adım tamamlanınca sistem **%90 production-ready** olur.
 
 ---
 
+---
+
+## 🎯 SIRADAKİ İŞLEM (EN ÖNCELİKLİ)
+
+### Admin Panel Dashboard Ekleme
+
+**Öncelik:** Yüksek  
+**Süre:** 1 hafta (5-7 gün)  
+**Etki:** Admin verimliliği artar, veriler görselleştirilir
+
+**Yapılacaklar:**
+1. Dashboard sayfası oluştur (`/dashboard` veya ana sayfa)
+2. İstatistik kartları ekle:
+   - Toplam kampanya sayısı
+   - Aktif kaynak sayısı
+   - Bugün eklenen kampanyalar
+   - Son 7 gün kampanya trendi
+3. Grafikler ekle (Chart.js veya Recharts):
+   - Kampanya sayısı grafiği (zaman içinde)
+   - Kaynak bazlı kampanya dağılımı (pie chart)
+   - Kampanya tipi dağılımı
+4. Quick actions:
+   - Yeni kampanya ekle (manuel)
+   - Kaynak durumu değiştir
+   - Toplu işlemler
+5. Son eklenen kampanyalar listesi (widget)
+
+**Başlangıç:** Hemen başlanabilir, admin panel zaten çalışıyor.
+
+---
+
 **Rapor Hazırlayan:** Teknik Değerlendirme  
 **Tarih:** 27 Ocak 2026  
-**Son Güncelleme:** Sunucu deploy sonrası
+**Son Güncelleme:** Bot deploy ve kampanya ekleme sonrası (27 Ocak 2026, 13:30 UTC)
