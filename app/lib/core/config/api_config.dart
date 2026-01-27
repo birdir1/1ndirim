@@ -16,12 +16,10 @@ class ApiConfig {
       kDebugMode ? Environment.development : Environment.production;
 
   /// Development API Base URL
-  /// iOS cihazda localhost çalışmaz, bilgisayarın IP adresini kullan
-  /// Mac IP adresi: 192.168.0.2 (otomatik bulundu)
-  /// 
-  /// IP adresi değişirse bu değeri güncelleyin:
-  /// Terminal: ifconfig | grep "inet " | grep -v 127.0.0.1 | awk '{print $2}'
-  static const String _devBaseUrl = 'http://192.168.0.2:3000/api';
+  /// Geçici olarak production URL kullanıyoruz (development için)
+  /// Local development için: http://192.168.0.2:3000/api
+  /// Mac IP adresi değişirse: ifconfig | grep "inet " | grep -v 127.0.0.1 | awk '{print $2}'
+  static const String _devBaseUrl = 'https://api.1indirim.birdir1.com/api';
 
   /// Production API Base URL
   /// Production domain: api.1indirim.birdir1.com
