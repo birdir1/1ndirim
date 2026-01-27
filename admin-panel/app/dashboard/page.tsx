@@ -7,17 +7,9 @@ import { getAuth } from '@/lib/auth';
 import { apiFetch } from '@/lib/api';
 import Link from 'next/link';
 
-// Recharts bileşenlerini dynamic import ile yükle (SSR'i devre dışı bırak)
-const ResponsiveContainer = dynamic(() => import('recharts').then((mod) => mod.ResponsiveContainer), { ssr: false });
-const PieChart = dynamic(() => import('recharts').then((mod) => mod.PieChart), { ssr: false });
-const Pie = dynamic(() => import('recharts').then((mod) => mod.Pie), { ssr: false });
-const Cell = dynamic(() => import('recharts').then((mod) => mod.Cell), { ssr: false });
-const Tooltip = dynamic(() => import('recharts').then((mod) => mod.Tooltip), { ssr: false });
-const BarChart = dynamic(() => import('recharts').then((mod) => mod.BarChart), { ssr: false });
-const Bar = dynamic(() => import('recharts').then((mod) => mod.Bar), { ssr: false });
-const CartesianGrid = dynamic(() => import('recharts').then((mod) => mod.CartesianGrid), { ssr: false });
-const XAxis = dynamic(() => import('recharts').then((mod) => mod.XAxis), { ssr: false });
-const YAxis = dynamic(() => import('recharts').then((mod) => mod.YAxis), { ssr: false });
+// Grafik bileşenlerini dynamic import ile yükle (SSR'i devre dışı bırak)
+const FeedDistributionChart = dynamic(() => import('@/components/DashboardCharts').then((mod) => ({ default: mod.FeedDistributionChart })), { ssr: false });
+const TopSourcesChart = dynamic(() => import('@/components/DashboardCharts').then((mod) => ({ default: mod.TopSourcesChart })), { ssr: false });
 
 type Overview = {
   totals: { active: number; inactive: number; total: number };
@@ -33,8 +25,6 @@ type Stats = {
   expiring_breakdown: Array<{ campaign_type: string | null; count: number }>;
   top_sources: Array<{ source_name: string; count: number }>;
 };
-
-const COLORS = ['#007AFF', '#5AC8FA', '#34C759', '#FF9500', '#FF3B30', '#AF52DE'];
 
 export default function DashboardPage() {
   const [overview, setOverview] = useState<Overview | null>(null);
@@ -156,55 +146,13 @@ export default function DashboardPage() {
           {/* Feed Distribution Pie Chart */}
           <div className="bg-white rounded-lg border p-6">
             <h2 className="text-xl font-semibold mb-4">Feed Dağılımı</h2>
-            {feedData.some((d) => d.value > 0) ? (
-              typeof window !== 'undefined' ? (
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={feedData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {feedData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              ) : (
-                <p className="text-gray-500 text-center py-12">Yükleniyor...</p>
-              )
-            ) : (
-              <p className="text-gray-500 text-center py-12">Henüz veri yok</p>
-            )}
+            <FeedDistributionChart data={feedData} />
           </div>
 
           {/* Top Sources Bar Chart */}
           <div className="bg-white rounded-lg border p-6">
             <h2 className="text-xl font-semibold mb-4">En Çok Kampanya Olan Kaynaklar</h2>
-            {sourceData.length > 0 ? (
-              typeof window !== 'undefined' ? (
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={sourceData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="source_name" angle={-45} textAnchor="end" height={100} />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="count" fill="#007AFF" />
-                  </BarChart>
-                </ResponsiveContainer>
-              ) : (
-                <p className="text-gray-500 text-center py-12">Yükleniyor...</p>
-              )
-            ) : (
-              <p className="text-gray-500 text-center py-12">Henüz veri yok</p>
-            )}
+            <TopSourcesChart data={sourceData} />
           </div>
         </div>
 
