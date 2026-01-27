@@ -9,6 +9,7 @@ import '../../data/models/opportunity_model.dart';
 import '../../data/repositories/opportunity_repository.dart';
 import '../sources/edit_sources_screen.dart';
 import 'widgets/opportunity_card.dart';
+import 'widgets/opportunity_card_enhanced.dart';
 import 'widgets/filter_chip_item.dart';
 import 'widgets/home_header.dart';
 
@@ -303,8 +304,10 @@ class _HomeScreenState extends State<HomeScreen> {
         itemBuilder: (context, index) {
           final opportunity = filtered[index];
           return RepaintBoundary(
-            child: OpportunityCard(
+            child: OpportunityCardEnhanced(
               opportunity: opportunity,
+              // Backend'den image_url geliyorsa buraya ekle
+              // imageUrl: opportunity.imageUrl,
             ),
           );
         },
