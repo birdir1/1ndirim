@@ -23,7 +23,9 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   String _selectedFilter = 'Tümü';
   NetworkResult<List<OpportunityModel>> _opportunitiesResult = const NetworkLoading();
+  NetworkResult<List<OpportunityModel>> _expiringSoonResult = const NetworkLoading();
   List<OpportunityModel> _allOpportunities = [];
+  List<OpportunityModel> _expiringSoonOpportunities = [];
   List<Map<String, dynamic>> _filters = [];
   List<OpportunityModel>? _cachedFilteredOpportunities;
   String? _cachedFilterKey;
@@ -41,8 +43,43 @@ class _HomeScreenState extends State<HomeScreen> {
       if (!sourcesProvider.isLoading) {
         _updateFilters();
         _loadOpportunities();
+        _loadExpiringSoon();
       }
     });
+  }
+
+  /// Yakında bitecek kampanyaları yükler
+  Future<void> _loadExpiringSoon() async {
+    if (!mounted) return;
+
+    final sourcesProvider = Provider.of<SelectedSourcesProvider>(context, listen: false);
+    final selectedSourceNames = sourcesProvider.getSelectedSourceNames();
+
+    setState(() {
+      _expiringSoonResult = const NetworkLoading();
+    });
+
+    try {
+      final result = await _opportunityRepository.getExpiringSoon(
+        days: 7,
+        sourceNames: selectedSourceNames.isNotEmpty ? selectedSourceNames : null,
+      );
+
+      if (mounted) {
+        setState(() {
+          _expiringSoonResult = result;
+          if (result is NetworkSuccess) {
+            _expiringSoonOpportunities = result.data;
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _expiringSoonResult = NetworkError.general('Yakında bitecek kampanyalar yüklenirken bir hata oluştu');
+        });
+      }
+    }
   }
 
   /// Repository'den fırsatları yükler
@@ -298,22 +335,104 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       }
       
-      return ListView.builder(
-        padding: const EdgeInsets.fromLTRB(24, 4, 24, 80),
-        itemCount: filtered.length,
-        itemBuilder: (context, index) {
-          final opportunity = filtered[index];
-          return RepaintBoundary(
-            child: OpportunityCardV2(
-              opportunity: opportunity,
+      return CustomScrollView(
+        slivers: [
+          // Yakında Bitecek Bölümü
+          if (_expiringSoonOpportunities.isNotEmpty)
+            SliverToBoxAdapter(
+              child: _buildExpiringSoonSection(),
             ),
-          );
-        },
+          
+          // Ana Kampanyalar Listesi
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(24, 4, 24, 80),
+            sliver: SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, index) {
+                  final opportunity = filtered[index];
+                  return RepaintBoundary(
+                    child: OpportunityCardV2(
+                      opportunity: opportunity,
+                    ),
+                  );
+                },
+                childCount: filtered.length,
+              ),
+            ),
+          ),
+        ],
       );
     }
     
     // Fallback (olmayacak ama güvenlik için)
     return const SizedBox.shrink();
+  }
+
+  /// Yakında Bitecek kampanyalar bölümü
+  Widget _buildExpiringSoonSection() {
+    if (_expiringSoonOpportunities.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.warning.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: AppColors.warning.withOpacity(0.3),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.access_time,
+                color: AppColors.warning,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Yakında Bitecek',
+                style: AppTextStyles.body(isDark: false).copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.warning,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                '${_expiringSoonOpportunities.length} kampanya',
+                style: AppTextStyles.caption(isDark: false).copyWith(
+                  color: AppColors.textSecondaryLight,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 120,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: _expiringSoonOpportunities.length,
+              itemBuilder: (context, index) {
+                final opportunity = _expiringSoonOpportunities[index];
+                return Container(
+                  width: 280,
+                  margin: const EdgeInsets.only(right: 12),
+                  child: OpportunityCardV2(
+                    opportunity: opportunity,
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   /// Loading skeleton gösterir

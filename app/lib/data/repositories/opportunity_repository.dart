@@ -106,4 +106,27 @@ class OpportunityRepository {
       );
     }
   }
+
+  /// Yakında bitecek kampanyaları getirir
+  Future<NetworkResult<List<OpportunityModel>>> getExpiringSoon({
+    int days = 7,
+    List<String>? sourceNames,
+  }) async {
+    try {
+      final opportunities = await _apiDataSource.getExpiringSoon(
+        days: days,
+        sourceNames: sourceNames,
+      );
+      return NetworkSuccess(opportunities);
+    } catch (e) {
+      final errorMessage = e is Exception 
+          ? e.toString().replaceFirst('Exception: ', '')
+          : 'Yakında bitecek kampanyalar yüklenirken bir hata oluştu';
+      
+      return NetworkError.general(
+        errorMessage,
+        error: e,
+      );
+    }
+  }
 }

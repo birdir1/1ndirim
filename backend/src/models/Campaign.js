@@ -365,6 +365,81 @@ class Campaign {
   }
 
   /**
+   * Yakında bitecek kampanyaları getirir (sonraki N gün içinde)
+   * @param {number} days - Kaç gün içinde bitecek (varsayılan: 7)
+   * @param {Array<string>} sourceIds - Filtreleme için source ID'leri (opsiyonel)
+   * @returns {Promise<Array>}
+   */
+  static async findExpiringSoon(days = 7, sourceIds = null) {
+    let query = `
+      SELECT 
+        c.*,
+        s.name as source_name,
+        s.type as source_type,
+        s.logo_url as source_logo_url
+      FROM campaigns c
+      INNER JOIN sources s ON c.source_id = s.id
+      WHERE c.is_active = true
+        AND c.expires_at > NOW()
+        AND c.expires_at <= NOW() + INTERVAL '${days} days'
+        AND (c.is_hidden = false OR c.is_hidden IS NULL)
+    `;
+
+    const params = [];
+    let paramIndex = 1;
+
+    // Source filtreleme
+    if (sourceIds && sourceIds.length > 0) {
+      query += ` AND c.source_id = ANY($${paramIndex}::uuid[])`;
+      params.push(sourceIds);
+      paramIndex++;
+    }
+
+    query += ` ORDER BY c.expires_at ASC, c.is_pinned DESC, c.created_at DESC`;
+
+    const result = await pool.query(query, params);
+    return result.rows;
+  }
+
+  /**
+   * Belirli bir tarih aralığındaki kampanyaları getirir
+   * @param {Date} startDate - Başlangıç tarihi
+   * @param {Date} endDate - Bitiş tarihi
+   * @param {Array<string>} sourceIds - Filtreleme için source ID'leri (opsiyonel)
+   * @returns {Promise<Array>}
+   */
+  static async findByDateRange(startDate, endDate, sourceIds = null) {
+    let query = `
+      SELECT 
+        c.*,
+        s.name as source_name,
+        s.type as source_type,
+        s.logo_url as source_logo_url
+      FROM campaigns c
+      INNER JOIN sources s ON c.source_id = s.id
+      WHERE c.is_active = true
+        AND c.expires_at >= $1
+        AND c.expires_at <= $2
+        AND (c.is_hidden = false OR c.is_hidden IS NULL)
+    `;
+
+    const params = [startDate, endDate];
+    let paramIndex = 3;
+
+    // Source filtreleme
+    if (sourceIds && sourceIds.length > 0) {
+      query += ` AND c.source_id = ANY($${paramIndex}::uuid[])`;
+      params.push(sourceIds);
+      paramIndex++;
+    }
+
+    query += ` ORDER BY c.expires_at ASC, c.is_pinned DESC, c.created_at DESC`;
+
+    const result = await pool.query(query, params);
+    return result.rows;
+  }
+
+  /**
    * ID'ye göre kampanya getirir
    * @param {string} id - Campaign UUID
    * @returns {Promise<Object|null>}

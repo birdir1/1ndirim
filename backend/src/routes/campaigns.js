@@ -472,6 +472,72 @@ router.get('/light', async (req, res) => {
 });
 
 /**
+ * GET /campaigns/expiring-soon
+ * Yakında bitecek kampanyaları getirir
+ * Query params: ?days=7 (varsayılan: 7 gün), ?sourceNames=Akbank,Yapı Kredi (opsiyonel)
+ */
+router.get('/expiring-soon', async (req, res) => {
+  try {
+    const days = parseInt(req.query.days) || 7;
+    let sourceIds = null;
+
+    // sourceNames parametresi varsa
+    if (req.query.sourceNames) {
+      const sourceNames = req.query.sourceNames
+        .split(',')
+        .map((name) => name.trim().toLowerCase())
+        .filter((name) => name.length > 0);
+      
+      const Source = require('../models/Source');
+      const allSources = await Source.findAll();
+      sourceIds = allSources
+        .filter((source) => {
+          const normalizedSourceName = (source.name || '').trim().toLowerCase();
+          return sourceNames.includes(normalizedSourceName);
+        })
+        .map((source) => source.id);
+    }
+
+    const campaigns = await Campaign.findExpiringSoon(days, sourceIds);
+
+    // Flutter uygulaması için format
+    const formattedCampaigns = campaigns.map((campaign) => ({
+      id: campaign.id,
+      title: campaign.title,
+      subtitle: campaign.description || `${campaign.source_name}`,
+      sourceName: campaign.source_name,
+      sourceId: campaign.source_id,
+      icon: campaign.icon_name || 'local_offer',
+      iconColor: campaign.icon_color || '#DC2626',
+      iconBgColor: campaign.icon_bg_color || '#FEE2E2',
+      tags: campaign.tags || [],
+      description: campaign.description,
+      detailText: campaign.detail_text,
+      originalUrl: campaign.original_url,
+      affiliateUrl: campaign.affiliate_url || null,
+      expiresAt: campaign.expires_at,
+      howToUse: campaign.how_to_use || [],
+      validityChannels: campaign.validity_channels || [],
+      status: campaign.status,
+    }));
+
+    res.json({
+      success: true,
+      data: formattedCampaigns,
+      count: formattedCampaigns.length,
+      days,
+    });
+  } catch (error) {
+    console.error('Expiring soon campaigns error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Yakında bitecek kampanyalar yüklenirken bir hata oluştu',
+      message: error.message,
+    });
+  }
+});
+
+/**
  * GET /campaigns/:id
  * Tek bir kampanyanın detayını getirir
  */
