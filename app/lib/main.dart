@@ -101,6 +101,15 @@ class _AppNavigatorState extends State<AppNavigator> {
       final firebaseUser = authService.getCurrentFirebaseUser();
       final isLoggedIn = firebaseUser != null;
       
+      // Eğer otomatik giriş yapılmışsa bildirim izni iste
+      if (isLoggedIn) {
+        try {
+          await NotificationService().requestPermissionAndSetup();
+        } catch (e) {
+          AppLogger.warning('Bildirim izni istenemedi: $e');
+        }
+      }
+      
       final prefsService = PreferencesService.instance;
       final onboardingComplete = await prefsService.isOnboardingComplete();
       
@@ -129,6 +138,13 @@ class _AppNavigatorState extends State<AppNavigator> {
     Future.microtask(() async {
       // Biraz bekle ki PreferencesService güncellemesi tamamlansın
       await Future.delayed(const Duration(milliseconds: 100));
+      
+      // Giriş yaptıktan sonra bildirim izni iste
+      try {
+        await NotificationService().requestPermissionAndSetup();
+      } catch (e) {
+        AppLogger.warning('Bildirim izni istenemedi: $e');
+      }
       
       final prefsService = PreferencesService.instance;
       final onboardingComplete = await prefsService.isOnboardingComplete();

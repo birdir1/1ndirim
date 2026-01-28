@@ -15,10 +15,39 @@ class NotificationService {
   String? _fcmToken;
   bool _initialized = false;
 
-  /// Servisi başlatır
+  /// Servisi başlatır (izin istemez, sadece handler'ları ayarlar)
   Future<void> initialize() async {
     if (_initialized) return;
 
+    try {
+      // Token yenilendiğinde güncelle
+      _messaging.onTokenRefresh.listen((newToken) {
+        _fcmToken = newToken;
+        AppLogger.info('🔄 FCM Token yenilendi');
+        _sendTokenToServer(newToken);
+      });
+
+      // Foreground mesajları için handler
+      FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
+
+      // Background'da mesaj geldiğinde handler
+      FirebaseMessaging.onMessageOpenedApp.listen(_handleBackgroundMessage);
+
+      // Uygulama kapalıyken mesaj geldiğinde kontrol et
+      RemoteMessage? initialMessage = await _messaging.getInitialMessage();
+      if (initialMessage != null) {
+        _handleBackgroundMessage(initialMessage);
+      }
+
+      _initialized = true;
+      AppLogger.info('✅ NotificationService başlatıldı (izin henüz istenmedi)');
+    } catch (e) {
+      AppLogger.error('❌ NotificationService initialize hatası: $e');
+    }
+  }
+
+  /// İzin ister ve token'ı kaydeder (giriş yaptıktan sonra çağrılmalı)
+  Future<void> requestPermissionAndSetup() async {
     try {
       // İzin iste (iOS için)
       NotificationSettings settings = await _messaging.requestPermission(
@@ -43,29 +72,8 @@ class NotificationService {
         AppLogger.info('📱 FCM Token alındı: ${_fcmToken!.substring(0, 20)}...');
         await _sendTokenToServer(_fcmToken!);
       }
-
-      // Token yenilendiğinde güncelle
-      _messaging.onTokenRefresh.listen((newToken) {
-        _fcmToken = newToken;
-        AppLogger.info('🔄 FCM Token yenilendi');
-        _sendTokenToServer(newToken);
-      });
-
-      // Foreground mesajları için handler
-      FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
-
-      // Background'da mesaj geldiğinde handler
-      FirebaseMessaging.onMessageOpenedApp.listen(_handleBackgroundMessage);
-
-      // Uygulama kapalıyken mesaj geldiğinde kontrol et
-      RemoteMessage? initialMessage = await _messaging.getInitialMessage();
-      if (initialMessage != null) {
-        _handleBackgroundMessage(initialMessage);
-      }
-
-      _initialized = true;
     } catch (e) {
-      AppLogger.error('❌ NotificationService initialize hatası: $e');
+      AppLogger.error('❌ İzin isteme ve token kaydetme hatası: $e');
     }
   }
 
