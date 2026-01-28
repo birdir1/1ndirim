@@ -79,6 +79,15 @@ router.post('/:campaignId', firebaseAuth, async (req, res) => {
     // Favoriye ekle
     const favorite = await UserFavorite.create(userId, campaignId);
 
+    // Puan ekle (async, hata olsa bile devam et)
+    GamificationService.addPoints(
+      userId,
+      GamificationService.POINTS.FAVORITE,
+      'favorite',
+      favorite.id,
+      'Favori kampanya eklendi'
+    ).catch(err => console.error('Puan ekleme hatası (favori):', err));
+
     res.status(201).json({
       success: true,
       data: {

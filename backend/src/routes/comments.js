@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../config/database');
 const { firebaseAuth, optionalFirebaseAuth } = require('../middleware/firebaseAuth');
+const GamificationService = require('../services/gamificationService');
 
 /**
  * GET /api/comments/:campaignId
@@ -133,6 +134,15 @@ router.post('/:campaignId', firebaseAuth, async (req, res) => {
     );
 
     const comment = result.rows[0];
+
+    // Puan ekle (async, hata olsa bile devam et)
+    GamificationService.addPoints(
+      userId,
+      GamificationService.POINTS.COMMENT,
+      'comment',
+      comment.id,
+      'Yorum yapıldı'
+    ).catch(err => console.error('Puan ekleme hatası (yorum):', err));
 
     res.status(201).json({
       success: true,

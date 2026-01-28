@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../config/database');
 const { firebaseAuth } = require('../middleware/firebaseAuth');
+const GamificationService = require('../services/gamificationService');
 
 /**
  * POST /api/users/fcm-token
@@ -158,6 +159,50 @@ router.get('/stats', firebaseAuth, async (req, res) => {
     });
   } finally {
     client.release();
+  }
+});
+
+/**
+ * GET /api/users/points
+ * Kullanıcının puanlarını getirir
+ */
+router.get('/points', firebaseAuth, async (req, res) => {
+  try {
+    const userId = req.user.uid;
+    const points = await GamificationService.getUserPoints(userId);
+
+    res.json({
+      success: true,
+      data: points,
+    });
+  } catch (error) {
+    console.error('❌ Puan getirme hatası:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Puanlar getirilemedi',
+    });
+  }
+});
+
+/**
+ * GET /api/users/badges
+ * Kullanıcının rozetlerini getirir
+ */
+router.get('/badges', firebaseAuth, async (req, res) => {
+  try {
+    const userId = req.user.uid;
+    const badges = await GamificationService.getUserBadges(userId);
+
+    res.json({
+      success: true,
+      data: badges,
+    });
+  } catch (error) {
+    console.error('❌ Rozet getirme hatası:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Rozetler getirilemedi',
+    });
   }
 });
 

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../config/database');
 const { firebaseAuth, optionalFirebaseAuth } = require('../middleware/firebaseAuth');
+const GamificationService = require('../services/gamificationService');
 
 /**
  * GET /api/ratings/:campaignId
