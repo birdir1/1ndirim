@@ -294,9 +294,15 @@ class Campaign {
     let paramIndex = 1;
     let searchPattern = null;
 
-    // Arama terimi ekle (title, description, source_name'de ara)
+    // Arama terimi ekle (title, description, detail_text, source_name'de ara)
+    // Öncelik: Başlık > Açıklama > Detay Metni > Kaynak Adı
     if (searchTerm && searchTerm.trim().length > 0) {
-      searchPattern = `%${searchTerm.trim().toLowerCase()}%`;
+      const trimmedTerm = searchTerm.trim().toLowerCase();
+      searchPattern = `%${trimmedTerm}%`;
+      
+      // Başlıkta tam kelime veya kısmi eşleşme
+      // Açıklamada veya detay metninde eşleşme
+      // Kaynak adında eşleşme
       query += ` AND (
         LOWER(c.title) LIKE $${paramIndex}
         OR LOWER(c.description) LIKE $${paramIndex}
@@ -333,16 +339,20 @@ class Campaign {
       paramIndex++;
     }
 
-    // Sıralama: önce pinned, sonra relevance (title match > description match), sonra tarih
+    // Sıralama: önce pinned, sonra relevance (başlık öncelikli), sonra tarih
     if (searchPattern) {
-      // Arama terimi varsa relevance'e göre sırala
+      // searchPattern params[0]'da (paramIndex 1)
+      // Başlıkta eşleşme en yüksek öncelik, sonra açıklama, sonra detay metni, en son kaynak adı
+      const searchParamIndex = params.length - (paramIndex - 1) + 1; // searchPattern'in gerçek index'i
+      // searchPattern ilk parametre olduğu için index 1
       query += ` ORDER BY 
         c.is_pinned DESC,
         CASE 
           WHEN LOWER(c.title) LIKE $1 THEN 1
           WHEN LOWER(c.description) LIKE $1 THEN 2
           WHEN LOWER(c.detail_text) LIKE $1 THEN 3
-          ELSE 4
+          WHEN LOWER(s.name) LIKE $1 THEN 4
+          ELSE 5
         END,
         c.created_at DESC`;
     } else {
