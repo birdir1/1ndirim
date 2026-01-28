@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/empty_state.dart' show AppEmptyState;
 import '../../core/utils/network_result.dart';
+import '../../core/l10n/app_localizations.dart';
 import '../../data/models/opportunity_model.dart';
 import '../../data/repositories/favorite_repository.dart';
 import '../home/widgets/opportunity_card_v2.dart';
@@ -20,8 +21,9 @@ class FavoritesScreen extends StatefulWidget {
 class _FavoritesScreenState extends State<FavoritesScreen> {
   final FavoriteRepository _favoriteRepository = FavoriteRepository.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  
-  NetworkResult<List<OpportunityModel>> _favoritesResult = const NetworkLoading();
+
+  NetworkResult<List<OpportunityModel>> _favoritesResult =
+      const NetworkLoading();
   List<OpportunityModel> _favorites = [];
   bool _isLoading = false;
 
@@ -33,9 +35,12 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
   /// Kullanıcı giriş kontrolü ve favorileri yükle
   Future<void> _checkAuthAndLoadFavorites() async {
+    final l10n = AppLocalizations.of(context);
     if (_auth.currentUser == null) {
       setState(() {
-        _favoritesResult = NetworkError.general('Giriş yapmanız gerekiyor');
+        _favoritesResult = NetworkError.general(
+          l10n?.loginRequired ?? 'Giriş yapmanız gerekiyor',
+        );
       });
       return;
     }
@@ -66,42 +71,44 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
       }
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context);
         setState(() {
-          _favoritesResult = NetworkError.general('Favoriler yüklenirken bir hata oluştu');
+          _favoritesResult = NetworkError.general(
+            l10n?.errorLoadingFavorites ??
+                'Favoriler yüklenirken bir hata oluştu',
+          );
           _isLoading = false;
         });
       }
     }
   }
 
-  /// Favoriden çıkarıldığında listeden kaldır
-  void _onFavoriteRemoved(String campaignId) {
-    setState(() {
-      _favorites.removeWhere((campaign) => campaign.id == campaignId);
-      _favoritesResult = NetworkSuccess(_favorites);
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     // Kullanıcı giriş yapmamışsa login ekranına yönlendir
     if (_auth.currentUser == null) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('Favorilerim'),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          title: Text(l10n?.myFavorites ?? 'Favorilerim'),
           backgroundColor: Colors.white,
           elevation: 0,
         ),
         body: AppEmptyState(
           icon: Icons.favorite_border,
-          title: 'Giriş Yapın',
-          description: 'Favorilerinizi görmek için giriş yapmanız gerekiyor',
-          actionText: 'Giriş Yap',
+          title: l10n?.signIn ?? 'Giriş Yapın',
+          description:
+              l10n?.loginRequiredForFavorites ??
+              'Favorilerinizi görmek için giriş yapmanız gerekiyor',
+          actionText: l10n?.signIn ?? 'Giriş Yap',
           onAction: () {
             Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) => const LoginScreen(),
-              ),
+              MaterialPageRoute(builder: (context) => const LoginScreen()),
             );
           },
         ),
@@ -110,12 +117,13 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Favorilerim',
-          style: TextStyle(
-            fontWeight: FontWeight.w700,
-            fontSize: 24,
-          ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: Text(
+          l10n?.myFavorites ?? 'Favorilerim',
+          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 24),
         ),
         backgroundColor: Colors.white,
         elevation: 0,
@@ -128,7 +136,9 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                 height: 20,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.discountRed),
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    AppColors.discountRed,
+                  ),
                 ),
               ),
             )
@@ -136,7 +146,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
             IconButton(
               icon: const Icon(Icons.refresh),
               onPressed: () => _loadFavorites(force: true),
-              tooltip: 'Yenile',
+              tooltip: l10n?.refresh ?? 'Yenile',
             ),
         ],
       ),
@@ -149,6 +159,8 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   }
 
   Widget _buildBody() {
+    final l10n = AppLocalizations.of(context);
+
     if (_favoritesResult is NetworkLoading) {
       return const Center(
         child: CircularProgressIndicator(
@@ -161,9 +173,9 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
       final error = _favoritesResult as NetworkError<List<OpportunityModel>>;
       return AppEmptyState(
         icon: Icons.error_outline,
-        title: 'Bir Hata Oluştu',
+        title: l10n?.errorOccurred ?? 'Bir Hata Oluştu',
         description: error.message,
-        actionText: 'Tekrar Dene',
+        actionText: l10n?.retry ?? 'Tekrar Dene',
         onAction: () => _loadFavorites(force: true),
       );
     }
@@ -172,9 +184,11 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
       if (_favorites.isEmpty) {
         return AppEmptyState(
           icon: Icons.favorite_border,
-          title: 'Henüz Favoriniz Yok',
-          description: 'Beğendiğiniz kampanyaları favorilere ekleyerek burada görebilirsiniz',
-          actionText: 'Kampanyaları Keşfet',
+          title: l10n?.noFavoritesYet ?? 'Henüz Favoriniz Yok',
+          description:
+              l10n?.noFavoritesDescription ??
+              'Beğendiğiniz kampanyaları favorilere ekleyerek burada görebilirsiniz',
+          actionText: l10n?.exploreCampaigns ?? 'Kampanyaları Keşfet',
           onAction: () {
             Navigator.of(context).pop();
           },

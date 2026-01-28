@@ -10,11 +10,9 @@ import '../../core/config/api_config.dart';
 import '../../core/utils/network_result.dart';
 import '../../data/repositories/comment_repository.dart';
 import '../../data/repositories/rating_repository.dart';
-import '../../data/repositories/price_tracking_repository.dart';
 import '../../data/models/comment_model.dart';
 import '../../data/models/rating_model.dart';
 import '../../core/services/auth_service.dart';
-import '../../core/utils/network_result.dart';
 
 class CampaignDetailScreen extends StatefulWidget {
   final String title;
@@ -67,7 +65,6 @@ class CampaignDetailScreen extends StatefulWidget {
 class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
   final CommentRepository _commentRepository = CommentRepository.instance;
   final RatingRepository _ratingRepository = RatingRepository.instance;
-  final PriceTrackingRepository _priceTrackingRepository = PriceTrackingRepository.instance;
   final AuthService _authService = AuthService.instance;
   
   List<CommentModel> _comments = [];
@@ -83,10 +80,6 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
   VideoPlayerController? _videoController;
   bool _isVideoInitialized = false;
   bool _isVideoPlaying = false;
-  
-  // Price tracking
-  bool _isPriceTracking = false;
-  bool _isLoadingPriceTracking = false;
 
   @override
   void initState() {
@@ -97,77 +90,8 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
     _loadComments();
     _loadRatingStats();
     _initializeVideo();
-    _checkPriceTracking();
   }
 
-  Future<void> _checkPriceTracking() async {
-    if (_authService.currentUser == null) return;
-
-    try {
-      final result = await _priceTrackingRepository.getPriceTracking();
-      if (result is NetworkSuccess) {
-        final tracking = result.data;
-        setState(() {
-          _isPriceTracking = tracking.any((t) => t.campaignId == widget.campaignId);
-        });
-      }
-    } catch (e) {
-      // Hata durumunda sessizce devam et
-    }
-  }
-
-  Future<void> _togglePriceTracking() async {
-    if (_authService.currentUser == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Fiyat takibi için giriş yapmanız gerekiyor'),
-          backgroundColor: AppColors.error,
-        ),
-      );
-      return;
-    }
-
-    setState(() {
-      _isLoadingPriceTracking = true;
-    });
-
-    NetworkResult result;
-    if (_isPriceTracking) {
-      result = await _priceTrackingRepository.removePriceTracking(widget.campaignId);
-    } else {
-      result = await _priceTrackingRepository.addPriceTracking(
-        campaignId: widget.campaignId,
-        notifyOnDrop: true,
-        notifyOnIncrease: false,
-      );
-    }
-
-    if (mounted) {
-      setState(() {
-        _isLoadingPriceTracking = false;
-        if (result is NetworkSuccess) {
-          _isPriceTracking = !_isPriceTracking;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                _isPriceTracking
-                    ? 'Fiyat takibi başlatıldı'
-                    : 'Fiyat takibi durduruldu',
-              ),
-              backgroundColor: AppColors.success,
-            ),
-          );
-        } else if (result is NetworkError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(result.message),
-              backgroundColor: AppColors.error,
-            ),
-          );
-        }
-      });
-    }
-  }
 
   @override
   void dispose() {
@@ -219,7 +143,7 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
     setState(() {
       _commentsResult = result;
       _isLoadingComments = false;
-      if (result is NetworkSuccess) {
+      if (result is NetworkSuccess<List<CommentModel>>) {
         _comments = result.data;
       }
     });
@@ -235,7 +159,7 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
     setState(() {
       _ratingResult = result;
       _isLoadingRating = false;
-      if (result is NetworkSuccess) {
+      if (result is NetworkSuccess<RatingModel>) {
         _ratingStats = result.data;
         _selectedRating = result.data.userRating;
       }
@@ -253,7 +177,7 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
       commentText: commentText,
     );
 
-    if (result is NetworkSuccess) {
+    if (result is NetworkSuccess<CommentModel>) {
       _loadComments();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -264,7 +188,7 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
           ),
         );
       }
-    } else if (result is NetworkError && mounted) {
+    } else if (result is NetworkError<CommentModel> && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(result.message),
@@ -285,7 +209,7 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
       rating: rating,
     );
 
-    if (result is NetworkSuccess) {
+    if (result is NetworkSuccess<void>) {
       _loadRatingStats();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -296,7 +220,7 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
           ),
         );
       }
-    } else if (result is NetworkError && mounted) {
+    } else if (result is NetworkError<void> && mounted) {
       setState(() {
         _selectedRating = _ratingStats?.userRating;
       });
@@ -349,7 +273,7 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.textPrimaryLight.withOpacity(0.08),
+                      color: AppColors.textPrimaryLight.withValues(alpha: 0.08),
                       blurRadius: 16,
                       offset: const Offset(0, 4),
                       spreadRadius: 0,
@@ -392,9 +316,6 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
                       _buildCTAButton(),
                       
                       const SizedBox(height: 12),
-                      
-                      // Fiyat Takibi Butonu
-                      _buildPriceTrackingButton(),
                     ],
                   ),
                 ),
@@ -425,10 +346,10 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
             width: 80,
             height: 80,
             decoration: BoxDecoration(
-              color: widget.logoColor.withOpacity(0.15),
+              color: widget.logoColor.withValues(alpha: 0.15),
               shape: BoxShape.circle,
               border: Border.all(
-                color: widget.logoColor.withOpacity(0.3),
+                color: widget.logoColor.withValues(alpha: 0.3),
                 width: 2,
               ),
             ),
@@ -607,7 +528,7 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
                 color: AppColors.cardBackground,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: AppColors.textSecondaryLight.withOpacity(0.3),
+                  color: AppColors.textSecondaryLight.withValues(alpha: 0.3),
                   width: 1,
                 ),
               ),
@@ -760,7 +681,7 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
                 icon: Icon(
                   _isVideoPlaying ? Icons.pause_circle : Icons.play_circle,
                   size: 64,
-                  color: Colors.white.withOpacity(0.9),
+                  color: Colors.white.withValues(alpha: 0.9),
                 ),
                 onPressed: () {
                   setState(() {
@@ -798,49 +719,6 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
     return '${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
   }
 
-  Widget _buildPriceTrackingButton() {
-    if (_authService.currentUser == null) {
-      return const SizedBox.shrink();
-    }
-
-    return OutlinedButton.icon(
-      onPressed: _isLoadingPriceTracking ? null : _togglePriceTracking,
-      icon: _isLoadingPriceTracking
-          ? const SizedBox(
-              width: 16,
-              height: 16,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: AppColors.primaryLight,
-              ),
-            )
-          : Icon(
-              _isPriceTracking ? Icons.track_changes : Icons.track_changes_outlined,
-              color: _isPriceTracking ? AppColors.primaryLight : AppColors.textSecondaryLight,
-            ),
-      label: Text(
-        _isPriceTracking ? 'Fiyat Takibi Aktif' : 'Fiyat Takibini Başlat',
-        style: AppTextStyles.body(isDark: false).copyWith(
-          color: _isPriceTracking ? AppColors.primaryLight : AppColors.textSecondaryLight,
-        ),
-      ),
-      style: OutlinedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        side: BorderSide(
-          color: _isPriceTracking
-              ? AppColors.primaryLight
-              : AppColors.textSecondaryLight.withOpacity(0.3),
-          width: 1.5,
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        backgroundColor: _isPriceTracking
-            ? AppColors.primaryLight.withOpacity(0.1)
-            : Colors.transparent,
-      ),
-    );
-  }
 
   Widget _buildCTAButton() {
     return SizedBox(
@@ -994,7 +872,7 @@ ${shareUrl}
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: AppColors.textPrimaryLight.withOpacity(0.08),
+            color: AppColors.textPrimaryLight.withValues(alpha: 0.08),
             blurRadius: 16,
             offset: const Offset(0, 4),
             spreadRadius: 0,
@@ -1116,7 +994,7 @@ ${shareUrl}
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: AppColors.textPrimaryLight.withOpacity(0.08),
+            color: AppColors.textPrimaryLight.withValues(alpha: 0.08),
             blurRadius: 16,
             offset: const Offset(0, 4),
             spreadRadius: 0,
@@ -1148,7 +1026,7 @@ ${shareUrl}
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide(
-                    color: AppColors.textSecondaryLight.withOpacity(0.3),
+                    color: AppColors.textSecondaryLight.withValues(alpha: 0.3),
                   ),
                 ),
                 filled: true,
@@ -1240,7 +1118,7 @@ ${shareUrl}
             children: [
               CircleAvatar(
                 radius: 16,
-                backgroundColor: AppColors.primaryLight.withOpacity(0.2),
+                backgroundColor: AppColors.primaryLight.withValues(alpha: 0.2),
                 child: Text(
                   comment.userId.substring(0, 1).toUpperCase(),
                   style: AppTextStyles.body(isDark: false).copyWith(
@@ -1303,7 +1181,7 @@ ${shareUrl}
   Future<void> _deleteComment(String commentId) async {
     final result = await _commentRepository.deleteComment(commentId);
     
-    if (result is NetworkSuccess) {
+    if (result is NetworkSuccess<void>) {
       _loadComments();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1314,7 +1192,7 @@ ${shareUrl}
           ),
         );
       }
-    } else if (result is NetworkError && mounted) {
+    } else if (result is NetworkError<void> && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(result.message),

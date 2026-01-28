@@ -50,6 +50,14 @@ class AppLocalizations {
       'view_all': 'Tümünü Gör',
       'no_campaigns': 'Kampanya bulunamadı',
       'no_favorites': 'Henüz favori kampanyanız yok',
+      'my_favorites': 'Favorilerim',
+      'login_required': 'Giriş yapmanız gerekiyor',
+      'login_required_for_favorites': 'Favorilerinizi görmek için giriş yapmanız gerekiyor',
+      'error_occurred': 'Bir Hata Oluştu',
+      'no_favorites_yet': 'Henüz Favoriniz Yok',
+      'no_favorites_description': 'Beğendiğiniz kampanyaları favorilere ekleyerek burada görebilirsiniz',
+      'explore_campaigns': 'Kampanyaları Keşfet',
+      'error_loading_favorites': 'Favoriler yüklenirken bir hata oluştu',
       
       // Kampanya Detay
       'campaign_details': 'Kampanya Detayları',
@@ -221,6 +229,14 @@ class AppLocalizations {
       'view_all': 'View All',
       'no_campaigns': 'No campaigns found',
       'no_favorites': 'You have no favorite campaigns yet',
+      'my_favorites': 'My Favorites',
+      'login_required': 'Login required',
+      'login_required_for_favorites': 'Please sign in to view your favorites',
+      'error_occurred': 'An Error Occurred',
+      'no_favorites_yet': 'No Favorites Yet',
+      'no_favorites_description': 'Add campaigns you like to favorites to see them here',
+      'explore_campaigns': 'Explore Campaigns',
+      'error_loading_favorites': 'An error occurred while loading favorites',
       
       // Campaign Detail
       'campaign_details': 'Campaign Details',
@@ -399,6 +415,14 @@ class AppLocalizations {
   String get viewAll => translate('view_all');
   String get noCampaigns => translate('no_campaigns');
   String get noFavorites => translate('no_favorites');
+  String get myFavorites => translate('my_favorites');
+  String get loginRequired => translate('login_required');
+  String get loginRequiredForFavorites => translate('login_required_for_favorites');
+  String get errorOccurred => translate('error_occurred');
+  String get noFavoritesYet => translate('no_favorites_yet');
+  String get noFavoritesDescription => translate('no_favorites_description');
+  String get exploreCampaigns => translate('explore_campaigns');
+  String get errorLoadingFavorites => translate('error_loading_favorites');
   
   // Campaign Detail
   String get campaignDetails => translate('campaign_details');

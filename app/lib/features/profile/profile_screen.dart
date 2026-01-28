@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/services/preferences_service.dart';
-import '../../core/services/auth_service.dart';
 import '../../core/utils/page_transitions.dart';
-import '../../main.dart';
 import 'widgets/profile_header.dart';
 import 'widgets/profile_menu_item.dart';
 import 'widgets/sources_section.dart';
@@ -62,9 +60,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _loadNotificationSettings() async {
     try {
       final prefsService = PreferencesService.instance;
-      final newOpportunities = await prefsService.isNotificationNewOpportunitiesEnabled();
+      final newOpportunities = await prefsService
+          .isNotificationNewOpportunitiesEnabled();
       final expiring = await prefsService.isNotificationExpiringEnabled();
-      
+
       if (mounted) {
         setState(() {
           _newOpportunitiesEnabled = newOpportunities;
@@ -81,43 +80,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  Future<void> _handleLogout() async {
-    try {
-      // Firebase'den çıkış yap
-      final authService = AuthService.instance;
-      await authService.signOutFirebase();
-      await authService.clearAuthData();
-      
-      // Preferences temizle
-      final prefsService = PreferencesService.instance;
-      await prefsService.clearAuthData();
-      
-      if (mounted) {
-        // AppNavigator'a geri dön ve state'i sıfırla
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(
-            builder: (context) => const AppNavigator(),
-          ),
-          (route) => false,
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Çıkış yapılırken bir hata oluştu: ${e.toString()}'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-    }
-  }
-
   Future<void> _updateNotificationNewOpportunities(bool value) async {
     setState(() {
       _newOpportunitiesEnabled = value;
     });
-    
+
     try {
       final prefsService = PreferencesService.instance;
       await prefsService.setNotificationNewOpportunities(value);
@@ -141,7 +108,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() {
       _expiringOpportunitiesEnabled = value;
     });
-    
+
     try {
       final prefsService = PreferencesService.instance;
       await prefsService.setNotificationExpiring(value);
@@ -169,10 +136,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         backgroundColor: AppColors.backgroundLight,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back,
-            color: AppColors.textPrimaryLight,
-          ),
+          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimaryLight),
           onPressed: () {
             Navigator.of(context).pop();
           },
@@ -183,7 +147,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: [
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 0,
+                ),
                 child: Column(
                   children: [
                     const SizedBox(height: 20),
@@ -200,9 +167,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     const SizedBox(height: 20),
                     NotificationsSection(
                       newOpportunitiesEnabled: _newOpportunitiesEnabled,
-                      expiringOpportunitiesEnabled: _expiringOpportunitiesEnabled,
+                      expiringOpportunitiesEnabled:
+                          _expiringOpportunitiesEnabled,
                       isLoading: _isLoading,
-                      onNewOpportunitiesChanged: _updateNotificationNewOpportunities,
+                      onNewOpportunitiesChanged:
+                          _updateNotificationNewOpportunities,
                       onExpiringChanged: _updateNotificationExpiring,
                     ),
                     const SizedBox(height: 12),
@@ -303,7 +272,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           '1ndirim v1.0',
                           style: AppTextStyles.small(isDark: false).copyWith(
                             fontWeight: FontWeight.bold,
-                            color: AppColors.textSecondaryLight.withOpacity(0.8),
+                            color: AppColors.textSecondaryLight.withValues(
+                              alpha: 0.8,
+                            ),
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -311,7 +282,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           'birdir1 tarafından geliştirilmiştir',
                           style: AppTextStyles.small(isDark: false).copyWith(
                             fontSize: 10,
-                            color: AppColors.textSecondaryLight.withOpacity(0.6),
+                            color: AppColors.textSecondaryLight.withValues(
+                              alpha: 0.6,
+                            ),
                           ),
                         ),
                       ],
