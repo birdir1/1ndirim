@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/page_transitions.dart';
+import '../../../core/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../../core/widgets/app_logo.dart';
 import '../../../core/providers/compare_provider.dart';
@@ -78,9 +79,9 @@ class HomeHeader extends StatelessWidget {
                         onTap: () {
                           if (compareProvider.isEmpty) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Karşılaştırmak için kampanya seçin'),
-                                duration: Duration(seconds: 2),
+                              SnackBar(
+                                content: Text(l10n.selectCampaigns),
+                                duration: const Duration(seconds: 2),
                               ),
                             );
                           } else {

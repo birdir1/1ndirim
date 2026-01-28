@@ -6,6 +6,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:provider/provider.dart';
 import 'core/providers/compare_provider.dart';
 import 'core/providers/locale_provider.dart';
+import 'core/providers/premium_provider.dart';
 import 'core/theme/app_theme.dart';
 import 'core/l10n/app_localizations.dart';
 import 'core/services/preferences_service.dart';
@@ -66,6 +67,9 @@ class IndirimApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(
           create: (_) => LocaleProvider(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => PremiumProvider()..loadPremiumStatus(),
         ),
         ChangeNotifierProvider(
           create: (_) => SelectedSourcesProvider()..loadSelectedSources(),
