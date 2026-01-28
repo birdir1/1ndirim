@@ -19,9 +19,7 @@ import '../settings/kvkk_screen.dart';
 import '../settings/terms_of_use_screen.dart';
 import '../settings/language_settings_screen.dart';
 import '../community/community_screen.dart';
-import '../price_tracking/price_tracking_screen.dart';
 import '../blog/blog_screen.dart';
-import '../referral/referral_screen.dart';
 import '../premium/premium_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -223,36 +221,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           },
                         ),
                         ProfileMenuItem(
-                          icon: Icons.track_changes,
-                          title: 'Fiyat Takibi',
-                          onTap: () {
-                            Navigator.of(context).push(
-                              SlidePageRoute(
-                                child: const PriceTrackingScreen(),
-                                direction: SlideDirection.right,
-                              ),
-                            );
-                          },
-                        ),
-                        ProfileMenuItem(
                           icon: Icons.article,
                           title: 'Blog & Rehberler',
                           onTap: () {
                             Navigator.of(context).push(
                               SlidePageRoute(
                                 child: const BlogScreen(),
-                                direction: SlideDirection.right,
-                              ),
-                            );
-                          },
-                        ),
-                        ProfileMenuItem(
-                          icon: Icons.card_giftcard,
-                          title: 'Referans Programı',
-                          onTap: () {
-                            Navigator.of(context).push(
-                              SlidePageRoute(
-                                child: const ReferralScreen(),
                                 direction: SlideDirection.right,
                               ),
                             );

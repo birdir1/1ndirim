@@ -4,7 +4,6 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/services/preferences_service.dart';
 import '../../core/services/auth_service.dart';
-import '../../data/repositories/referral_repository.dart';
 import '../../features/main_shell/main_shell.dart';
 import '../../features/onboarding/onboarding_screen.dart';
 
@@ -19,8 +18,6 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
-  final TextEditingController _referralCodeController = TextEditingController();
-  final ReferralRepository _referralRepository = ReferralRepository();
 
   /// Apple Sign-In handler
   Future<void> _handleAppleSignIn() async {
@@ -144,9 +141,6 @@ class _LoginScreenState extends State<LoginScreen> {
         await prefsService.setUserName(result.name!);
       }
 
-      // Referans kodunu işle (varsa)
-      await _processReferralCode();
-
       if (!mounted) return;
 
       setState(() {
@@ -211,31 +205,8 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  /// Referans kodunu işler
-  Future<void> _processReferralCode() async {
-    final referralCode = _referralCodeController.text.trim().toUpperCase();
-    if (referralCode.isEmpty) return;
-
-    try {
-      final result = await _referralRepository.processReferral(referralCode);
-      if (result is NetworkSuccess && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Referans kodu başarıyla uygulandı! +${result.data['rewardPoints'] ?? 0} puan kazandınız.'),
-            backgroundColor: AppColors.success,
-            duration: const Duration(seconds: 3),
-          ),
-        );
-      }
-    } catch (e) {
-      // Referans kodu hatası sessizce göz ardı edilir (kullanıcı deneyimini bozmamak için)
-      // İsteğe bağlı olarak loglanabilir
-    }
-  }
-
   @override
   void dispose() {
-    _referralCodeController.dispose();
     super.dispose();
   }
 
