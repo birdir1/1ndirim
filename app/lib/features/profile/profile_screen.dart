@@ -10,6 +10,7 @@ import 'widgets/profile_menu_item.dart';
 import 'widgets/sources_section.dart';
 import 'widgets/notifications_section.dart';
 import 'widgets/stats_section.dart';
+import 'widgets/gamification_section.dart';
 import '../../data/repositories/user_stats_repository.dart';
 import '../../data/models/user_stats_model.dart';
 import '../../core/utils/network_result.dart';
@@ -188,6 +189,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       statsResult: _statsResult,
                       isLoading: _isLoadingStats,
                     ),
+                    const SizedBox(height: 20),
+                    const GamificationSection(),
                     const SizedBox(height: 20),
                     const SourcesSection(),
                     const SizedBox(height: 20),
