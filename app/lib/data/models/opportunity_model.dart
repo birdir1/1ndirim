@@ -16,6 +16,9 @@ class OpportunityModel {
   final double? sourceLatitude; // Kaynak konumu - enlem
   final double? sourceLongitude; // Kaynak konumu - boylam
   final String? sourceCity; // Kaynak şehri
+  final String? videoUrl; // Kampanya video URL'i
+  final String? videoThumbnailUrl; // Video thumbnail URL'i
+  final int? videoDuration; // Video süresi (saniye)
 
   const OpportunityModel({
     required this.id,
@@ -32,6 +35,9 @@ class OpportunityModel {
     this.sourceLatitude,
     this.sourceLongitude,
     this.sourceCity,
+    this.videoUrl,
+    this.videoThumbnailUrl,
+    this.videoDuration,
   });
 
   /// Map'ten model oluşturur
@@ -55,6 +61,11 @@ class OpportunityModel {
           ? (map['sourceLongitude'] as num).toDouble()
           : null,
       sourceCity: map['sourceCity'] as String?,
+      videoUrl: map['videoUrl'] as String?,
+      videoThumbnailUrl: map['videoThumbnailUrl'] as String?,
+      videoDuration: map['videoDuration'] != null
+          ? map['videoDuration'] as int
+          : null,
     );
   }
 

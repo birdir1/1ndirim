@@ -67,6 +67,9 @@ router.get('/', async (req, res) => {
       sourceLatitude: campaign.source_latitude,
       sourceLongitude: campaign.source_longitude,
       sourceCity: campaign.source_city,
+      videoUrl: campaign.video_url,
+      videoThumbnailUrl: campaign.video_thumbnail_url,
+      videoDuration: campaign.video_duration,
     }));
 
     res.json({
@@ -170,6 +173,9 @@ router.get('/search', async (req, res) => {
       sourceLatitude: campaign.source_latitude,
       sourceLongitude: campaign.source_longitude,
       sourceCity: campaign.source_city,
+      videoUrl: campaign.video_url,
+      videoThumbnailUrl: campaign.video_thumbnail_url,
+      videoDuration: campaign.video_duration,
     }));
 
     res.json({
@@ -528,6 +534,9 @@ router.get('/expiring-soon', async (req, res) => {
       sourceLatitude: campaign.source_latitude,
       sourceLongitude: campaign.source_longitude,
       sourceCity: campaign.source_city,
+      videoUrl: campaign.video_url,
+      videoThumbnailUrl: campaign.video_thumbnail_url,
+      videoDuration: campaign.video_duration,
     }));
 
     res.json({

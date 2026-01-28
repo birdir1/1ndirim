@@ -431,6 +431,11 @@ class OpportunityApiDataSource {
           ? (json['sourceLongitude'] as num).toDouble()
           : null,
       sourceCity: json['sourceCity'] as String?,
+      videoUrl: json['videoUrl'] as String?,
+      videoThumbnailUrl: json['videoThumbnailUrl'] as String?,
+      videoDuration: json['videoDuration'] != null
+          ? json['videoDuration'] as int
+          : null,
     );
   }
 
