@@ -436,6 +436,16 @@ class OpportunityApiDataSource {
       videoDuration: json['videoDuration'] != null
           ? json['videoDuration'] as int
           : null,
+      currentPrice: json['currentPrice'] != null
+          ? (json['currentPrice'] as num).toDouble()
+          : null,
+      originalPrice: json['originalPrice'] != null
+          ? (json['originalPrice'] as num).toDouble()
+          : null,
+      discountPercentage: json['discountPercentage'] != null
+          ? (json['discountPercentage'] as num).toDouble()
+          : null,
+      priceCurrency: json['priceCurrency'] as String?,
     );
   }
 

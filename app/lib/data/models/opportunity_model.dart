@@ -19,6 +19,10 @@ class OpportunityModel {
   final String? videoUrl; // Kampanya video URL'i
   final String? videoThumbnailUrl; // Video thumbnail URL'i
   final int? videoDuration; // Video süresi (saniye)
+  final double? currentPrice; // Güncel fiyat
+  final double? originalPrice; // Orijinal fiyat
+  final double? discountPercentage; // İndirim yüzdesi
+  final String? priceCurrency; // Para birimi
 
   const OpportunityModel({
     required this.id,
@@ -38,6 +42,10 @@ class OpportunityModel {
     this.videoUrl,
     this.videoThumbnailUrl,
     this.videoDuration,
+    this.currentPrice,
+    this.originalPrice,
+    this.discountPercentage,
+    this.priceCurrency,
   });
 
   /// Map'ten model oluşturur
@@ -66,6 +74,16 @@ class OpportunityModel {
       videoDuration: map['videoDuration'] != null
           ? map['videoDuration'] as int
           : null,
+      currentPrice: map['currentPrice'] != null
+          ? (map['currentPrice'] as num).toDouble()
+          : null,
+      originalPrice: map['originalPrice'] != null
+          ? (map['originalPrice'] as num).toDouble()
+          : null,
+      discountPercentage: map['discountPercentage'] != null
+          ? (map['discountPercentage'] as num).toDouble()
+          : null,
+      priceCurrency: map['priceCurrency'] as String?,
     );
   }
 

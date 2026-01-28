@@ -70,6 +70,10 @@ router.get('/', async (req, res) => {
       videoUrl: campaign.video_url,
       videoThumbnailUrl: campaign.video_thumbnail_url,
       videoDuration: campaign.video_duration,
+      currentPrice: campaign.current_price,
+      originalPrice: campaign.original_price,
+      discountPercentage: campaign.discount_percentage,
+      priceCurrency: campaign.price_currency,
     }));
 
     res.json({
@@ -176,6 +180,10 @@ router.get('/search', async (req, res) => {
       videoUrl: campaign.video_url,
       videoThumbnailUrl: campaign.video_thumbnail_url,
       videoDuration: campaign.video_duration,
+      currentPrice: campaign.current_price,
+      originalPrice: campaign.original_price,
+      discountPercentage: campaign.discount_percentage,
+      priceCurrency: campaign.price_currency,
     }));
 
     res.json({
@@ -537,6 +545,10 @@ router.get('/expiring-soon', async (req, res) => {
       videoUrl: campaign.video_url,
       videoThumbnailUrl: campaign.video_thumbnail_url,
       videoDuration: campaign.video_duration,
+      currentPrice: campaign.current_price,
+      originalPrice: campaign.original_price,
+      discountPercentage: campaign.discount_percentage,
+      priceCurrency: campaign.price_currency,
     }));
 
     res.json({
