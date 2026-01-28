@@ -2,9 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:dio/dio.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:intl/intl.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/config/api_config.dart';
+import '../../core/utils/network_result.dart';
+import '../../data/repositories/comment_repository.dart';
+import '../../data/repositories/rating_repository.dart';
+import '../../data/models/comment_model.dart';
+import '../../data/models/rating_model.dart';
+import '../../core/services/auth_service.dart';
 
 class CampaignDetailScreen extends StatefulWidget {
   final String title;
@@ -31,6 +38,138 @@ class CampaignDetailScreen extends StatefulWidget {
 }
 
 class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
+  final CommentRepository _commentRepository = CommentRepository.instance;
+  final RatingRepository _ratingRepository = RatingRepository.instance;
+  final AuthService _authService = AuthService.instance;
+  
+  List<CommentModel> _comments = [];
+  RatingModel? _ratingStats;
+  NetworkResult<List<CommentModel>>? _commentsResult;
+  NetworkResult<RatingModel>? _ratingResult;
+  bool _isLoadingComments = false;
+  bool _isLoadingRating = false;
+  final TextEditingController _commentController = TextEditingController();
+  int? _selectedRating;
+
+  @override
+  void initState() {
+    super.initState();
+    _commentController.addListener(() {
+      setState(() {}); // Buton durumunu güncelle
+    });
+    _loadComments();
+    _loadRatingStats();
+  }
+
+  @override
+  void dispose() {
+    _commentController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadComments() async {
+    setState(() {
+      _isLoadingComments = true;
+    });
+
+    final result = await _commentRepository.getComments(
+      campaignId: widget.campaignId,
+      limit: 20,
+    );
+
+    setState(() {
+      _commentsResult = result;
+      _isLoadingComments = false;
+      if (result is NetworkSuccess) {
+        _comments = result.data;
+      }
+    });
+  }
+
+  Future<void> _loadRatingStats() async {
+    setState(() {
+      _isLoadingRating = true;
+    });
+
+    final result = await _ratingRepository.getRatingStats(widget.campaignId);
+
+    setState(() {
+      _ratingResult = result;
+      _isLoadingRating = false;
+      if (result is NetworkSuccess) {
+        _ratingStats = result.data;
+        _selectedRating = result.data.userRating;
+      }
+    });
+  }
+
+  Future<void> _submitComment() async {
+    if (_commentController.text.trim().isEmpty) return;
+
+    final commentText = _commentController.text.trim();
+    _commentController.clear();
+
+    final result = await _commentRepository.addComment(
+      campaignId: widget.campaignId,
+      commentText: commentText,
+    );
+
+    if (result is NetworkSuccess) {
+      _loadComments();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Yorumunuz eklendi'),
+            backgroundColor: AppColors.success,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } else if (result is NetworkError && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result.message),
+          backgroundColor: AppColors.error,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
+  Future<void> _submitRating(int rating) async {
+    setState(() {
+      _selectedRating = rating;
+    });
+
+    final result = await _ratingRepository.submitRating(
+      campaignId: widget.campaignId,
+      rating: rating,
+    );
+
+    if (result is NetworkSuccess) {
+      _loadRatingStats();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Puanınız kaydedildi'),
+            backgroundColor: AppColors.success,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } else if (result is NetworkError && mounted) {
+      setState(() {
+        _selectedRating = _ratingStats?.userRating;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result.message),
+          backgroundColor: AppColors.error,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -109,6 +248,16 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
                   ),
                 ),
               ),
+
+              const SizedBox(height: 20),
+
+              // Puanlama Bölümü
+              _buildRatingSection(),
+
+              const SizedBox(height: 20),
+
+              // Yorumlar Bölümü
+              _buildCommentsSection(),
             ],
           ),
         ),
@@ -504,6 +653,349 @@ ${shareUrl}
           ),
         );
       }
+    }
+  }
+
+  /// Puanlama bölümü
+  Widget _buildRatingSection() {
+    final isLoggedIn = _authService.getCurrentFirebaseUser() != null;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.textPrimaryLight.withOpacity(0.08),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+            spreadRadius: 0,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'PUANLAMA',
+            style: AppTextStyles.bodySecondary(isDark: false).copyWith(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5,
+              color: AppColors.textSecondaryLight,
+            ),
+          ),
+          const SizedBox(height: 16),
+          
+          if (_isLoadingRating)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(16.0),
+                child: CircularProgressIndicator(),
+              ),
+            )
+          else if (_ratingResult is NetworkError)
+            Text(
+              (_ratingResult as NetworkError).message,
+              style: AppTextStyles.bodySecondary(isDark: false),
+            )
+          else if (_ratingStats != null) ...[
+            // Ortalama puan
+            Row(
+              children: [
+                Text(
+                  _ratingStats!.averageRating.toStringAsFixed(1),
+                  style: AppTextStyles.headline(isDark: false).copyWith(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                _buildStarRating(_ratingStats!.averageRating, size: 24),
+                const SizedBox(width: 8),
+                Text(
+                  '(${_ratingStats!.totalRatings} değerlendirme)',
+                  style: AppTextStyles.bodySecondary(isDark: false),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            
+            // Kullanıcı puanı (eğer giriş yapmışsa)
+            if (isLoggedIn) ...[
+              const Divider(),
+              const SizedBox(height: 16),
+              Text(
+                'Puanınız',
+                style: AppTextStyles.body(isDark: false).copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 8),
+              _buildStarRatingInput(),
+            ],
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// Yıldız puanlama widget'ı (görüntüleme)
+  Widget _buildStarRating(double rating, {double size = 20}) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(5, (index) {
+        final starValue = index + 1;
+        if (rating >= starValue) {
+          return Icon(Icons.star, color: AppColors.warning, size: size);
+        } else if (rating > starValue - 1) {
+          return Icon(Icons.star_half, color: AppColors.warning, size: size);
+        } else {
+          return Icon(Icons.star_border, color: AppColors.textSecondaryLight, size: size);
+        }
+      }),
+    );
+  }
+
+  /// Yıldız puanlama widget'ı (input)
+  Widget _buildStarRatingInput() {
+    return Row(
+      children: List.generate(5, (index) {
+        final starValue = index + 1;
+        final isSelected = _selectedRating != null && starValue <= _selectedRating!;
+        
+        return GestureDetector(
+          onTap: () => _submitRating(starValue),
+          child: Icon(
+            isSelected ? Icons.star : Icons.star_border,
+            color: isSelected ? AppColors.warning : AppColors.textSecondaryLight,
+            size: 32,
+          ),
+        );
+      }),
+    );
+  }
+
+  /// Yorumlar bölümü
+  Widget _buildCommentsSection() {
+    final isLoggedIn = _authService.getCurrentFirebaseUser() != null;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.textPrimaryLight.withOpacity(0.08),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+            spreadRadius: 0,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'YORUMLAR',
+            style: AppTextStyles.bodySecondary(isDark: false).copyWith(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5,
+              color: AppColors.textSecondaryLight,
+            ),
+          ),
+          const SizedBox(height: 16),
+          
+          // Yorum ekleme alanı (giriş yapmışsa)
+          if (isLoggedIn) ...[
+            TextField(
+              controller: _commentController,
+              maxLines: 3,
+              decoration: InputDecoration(
+                hintText: 'Yorumunuzu yazın...',
+                hintStyle: AppTextStyles.bodySecondary(isDark: false),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: AppColors.textSecondaryLight.withOpacity(0.3),
+                  ),
+                ),
+                filled: true,
+                fillColor: AppColors.backgroundLight,
+              ),
+              style: AppTextStyles.body(isDark: false),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _commentController.text.trim().isEmpty ? null : _submitComment,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryLight,
+                  foregroundColor: AppColors.textPrimaryLight,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text('Yorum Ekle'),
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Divider(),
+            const SizedBox(height: 16),
+          ] else ...[
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.backgroundLight,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline, color: AppColors.textSecondaryLight, size: 20),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Yorum yapmak için giriş yapın',
+                      style: AppTextStyles.bodySecondary(isDark: false),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+          
+          // Yorumlar listesi
+          if (_isLoadingComments)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(16.0),
+                child: CircularProgressIndicator(),
+              ),
+            )
+          else if (_commentsResult is NetworkError)
+            Text(
+              (_commentsResult as NetworkError).message,
+              style: AppTextStyles.bodySecondary(isDark: false),
+            )
+          else if (_comments.isEmpty)
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(
+                'Henüz yorum yok. İlk yorumu siz yapın!',
+                style: AppTextStyles.bodySecondary(isDark: false),
+                textAlign: TextAlign.center,
+              ),
+            )
+          else
+            ..._comments.map((comment) => _buildCommentItem(comment)),
+        ],
+      ),
+    );
+  }
+
+  /// Yorum item widget'ı
+  Widget _buildCommentItem(CommentModel comment) {
+    final dateFormat = DateFormat('dd MMM yyyy, HH:mm', 'tr_TR');
+    
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 16,
+                backgroundColor: AppColors.primaryLight.withOpacity(0.2),
+                child: Text(
+                  comment.userId.substring(0, 1).toUpperCase(),
+                  style: AppTextStyles.body(isDark: false).copyWith(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Kullanıcı ${comment.userId.substring(0, 8)}',
+                      style: AppTextStyles.body(isDark: false).copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Text(
+                      dateFormat.format(comment.createdAt) + (comment.isEdited ? ' (düzenlendi)' : ''),
+                      style: AppTextStyles.caption(isDark: false).copyWith(
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (comment.isOwnComment)
+                PopupMenuButton(
+                  icon: const Icon(Icons.more_vert, size: 18),
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(
+                      value: 'edit',
+                      child: Text('Düzenle'),
+                    ),
+                    const PopupMenuItem(
+                      value: 'delete',
+                      child: Text('Sil'),
+                    ),
+                  ],
+                  onSelected: (value) {
+                    if (value == 'delete') {
+                      _deleteComment(comment.id);
+                    }
+                  },
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            comment.commentText,
+            style: AppTextStyles.body(isDark: false),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _deleteComment(String commentId) async {
+    final result = await _commentRepository.deleteComment(commentId);
+    
+    if (result is NetworkSuccess) {
+      _loadComments();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Yorum silindi'),
+            backgroundColor: AppColors.success,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } else if (result is NetworkError && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result.message),
+          backgroundColor: AppColors.error,
+          duration: const Duration(seconds: 3),
+        ),
+      );
     }
   }
 }
