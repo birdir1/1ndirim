@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_text_styles.dart';
+import '../../../core/services/notification_service.dart';
 import 'profile_section_title.dart';
 import 'notification_toggle_tile.dart';
 
 /// Notifications Section Widget
-class NotificationsSection extends StatelessWidget {
+class NotificationsSection extends StatefulWidget {
   final bool newOpportunitiesEnabled;
   final bool expiringOpportunitiesEnabled;
   final bool isLoading;
@@ -19,6 +21,26 @@ class NotificationsSection extends StatelessWidget {
     required this.onNewOpportunitiesChanged,
     required this.onExpiringChanged,
   });
+
+  @override
+  State<NotificationsSection> createState() => _NotificationsSectionState();
+}
+
+class _NotificationsSectionState extends State<NotificationsSection> {
+  String? _fcmTokenStatus;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkFcmToken();
+  }
+
+  void _checkFcmToken() {
+    final token = NotificationService().fcmToken;
+    setState(() {
+      _fcmTokenStatus = token != null ? 'Aktif' : 'Henüz kaydedilmedi';
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,9 +74,9 @@ class NotificationsSection extends StatelessWidget {
               children: [
                 NotificationToggleTile(
                   title: 'Yeni fırsatlar',
-                  value: newOpportunitiesEnabled,
-                  isLoading: isLoading,
-                  onChanged: onNewOpportunitiesChanged,
+                  value: widget.newOpportunitiesEnabled,
+                  isLoading: widget.isLoading,
+                  onChanged: widget.onNewOpportunitiesChanged,
                 ),
                 const SizedBox(height: 20),
                 Divider(
@@ -64,9 +86,48 @@ class NotificationsSection extends StatelessWidget {
                 const SizedBox(height: 20),
                 NotificationToggleTile(
                   title: 'Süresi dolmak üzere olanlar',
-                  value: expiringOpportunitiesEnabled,
-                  isLoading: isLoading,
-                  onChanged: onExpiringChanged,
+                  value: widget.expiringOpportunitiesEnabled,
+                  isLoading: widget.isLoading,
+                  onChanged: widget.onExpiringChanged,
+                ),
+                const SizedBox(height: 20),
+                Divider(
+                  color: AppColors.divider,
+                  height: 1,
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          _fcmTokenStatus == 'Aktif' 
+                            ? Icons.check_circle 
+                            : Icons.info_outline,
+                          size: 16,
+                          color: _fcmTokenStatus == 'Aktif'
+                            ? AppColors.success
+                            : AppColors.textSecondaryLight,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Bildirim durumu',
+                          style: AppTextStyles.caption(isDark: false).copyWith(
+                            color: AppColors.textSecondaryLight,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Text(
+                      _fcmTokenStatus ?? 'Kontrol ediliyor...',
+                      style: AppTextStyles.caption(isDark: false).copyWith(
+                        color: _fcmTokenStatus == 'Aktif'
+                          ? AppColors.success
+                          : AppColors.textSecondaryLight,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
