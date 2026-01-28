@@ -4,6 +4,7 @@ import '../../../core/utils/page_transitions.dart';
 import '../../../core/widgets/app_logo.dart';
 import '../../profile/profile_screen.dart';
 import '../calendar/calendar_screen.dart';
+import '../../map/map_screen.dart';
 import 'search_bar_widget.dart';
 
 /// Home Header Widget
@@ -89,6 +90,35 @@ class HomeHeader extends StatelessWidget {
                   ),
                   child: Icon(
                     Icons.calendar_today,
+                    size: 20,
+                    color: AppColors.primaryLight,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              InkWell(
+                onTap: () {
+                  Navigator.of(context).push(
+                    SlidePageRoute(
+                      child: const MapScreen(),
+                      direction: SlideDirection.up,
+                    ),
+                  );
+                },
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: AppColors.overlayWhiteLight,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppColors.textPrimaryLight.withOpacity(0.1),
+                      width: 1,
+                    ),
+                  ),
+                  child: Icon(
+                    Icons.map,
                     size: 20,
                     color: AppColors.primaryLight,
                   ),
