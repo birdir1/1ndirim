@@ -24,6 +24,10 @@ class _PremiumScreenState extends State<PremiumScreen> {
   List<PremiumPlanModel> _plans = [];
   List<PremiumFeatureModel> _features = [];
   bool _isLoading = false;
+  
+  NetworkResult<Map<String, dynamic>>? _statusResult;
+  NetworkResult<List<PremiumPlanModel>>? _plansResult;
+  NetworkResult<List<PremiumFeatureModel>>? _featuresResult;
 
   @override
   void initState() {

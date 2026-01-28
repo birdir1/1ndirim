@@ -29,6 +29,7 @@ class _SearchScreenState extends State<SearchScreen> {
   );
   List<OpportunityModel> _searchResults = [];
   String _lastSearchTerm = '';
+  bool _isSearching = false;
   Timer? _debounceTimer;
 
   @override
