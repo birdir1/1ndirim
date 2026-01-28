@@ -13,16 +13,27 @@ try {
   
   if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
     // Service account key file path
-    const serviceAccount = require(process.env.GOOGLE_APPLICATION_CREDENTIALS);
-    firebaseAdmin = admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
-    });
+    const fs = require('fs');
+    const path = require('path');
+    const serviceAccountPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+    
+    // Dosyanın var olup olmadığını kontrol et
+    if (fs.existsSync(serviceAccountPath)) {
+      const serviceAccount = require(path.resolve(serviceAccountPath));
+      firebaseAdmin = admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount),
+      });
+      console.log('✅ Firebase Admin SDK başlatıldı:', serviceAccountPath);
+    } else {
+      console.warn('⚠️ Firebase service account dosyası bulunamadı:', serviceAccountPath);
+    }
   } else if (process.env.FIREBASE_SERVICE_ACCOUNT) {
     // Service account JSON string
     const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
     firebaseAdmin = admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
     });
+    console.log('✅ Firebase Admin SDK başlatıldı (FIREBASE_SERVICE_ACCOUNT)');
   } else {
     console.warn('⚠️ Firebase Admin SDK yapılandırılmamış. Authentication middleware çalışmayacak.');
   }

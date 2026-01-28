@@ -91,8 +91,10 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
               ),
             );
           }
+        } else if (result is NetworkError) {
+          throw Exception(result.message);
         } else {
-          throw Exception(result.error ?? 'Favoriden çıkarılamadı');
+          throw Exception('Favoriden çıkarılamadı');
         }
       } else {
         // Favoriye ekle
@@ -111,8 +113,10 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
               ),
             );
           }
+        } else if (result is NetworkError) {
+          throw Exception(result.message);
         } else {
-          throw Exception(result.error ?? 'Favoriye eklenemedi');
+          throw Exception('Favoriye eklenemedi');
         }
       }
     } catch (e) {

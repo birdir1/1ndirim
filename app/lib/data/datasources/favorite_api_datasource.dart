@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import '../../core/config/api_config.dart';
 import '../../core/theme/app_colors.dart';
 import '../models/opportunity_model.dart';
