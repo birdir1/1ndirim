@@ -18,6 +18,7 @@ import '../how_it_works/how_it_works_screen.dart';
 import '../settings/kvkk_screen.dart';
 import '../settings/terms_of_use_screen.dart';
 import '../community/community_screen.dart';
+import '../price_tracking/price_tracking_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -212,6 +213,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             Navigator.of(context).push(
                               SlidePageRoute(
                                 child: const CommunityScreen(),
+                                direction: SlideDirection.right,
+                              ),
+                            );
+                          },
+                        ),
+                        ProfileMenuItem(
+                          icon: Icons.track_changes,
+                          title: 'Fiyat Takibi',
+                          onTap: () {
+                            Navigator.of(context).push(
+                              SlidePageRoute(
+                                child: const PriceTrackingScreen(),
                                 direction: SlideDirection.right,
                               ),
                             );

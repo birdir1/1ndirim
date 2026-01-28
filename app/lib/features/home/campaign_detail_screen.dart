@@ -10,9 +10,11 @@ import '../../core/config/api_config.dart';
 import '../../core/utils/network_result.dart';
 import '../../data/repositories/comment_repository.dart';
 import '../../data/repositories/rating_repository.dart';
+import '../../data/repositories/price_tracking_repository.dart';
 import '../../data/models/comment_model.dart';
 import '../../data/models/rating_model.dart';
 import '../../core/services/auth_service.dart';
+import '../../core/utils/network_result.dart';
 
 class CampaignDetailScreen extends StatefulWidget {
   final String title;
@@ -65,6 +67,7 @@ class CampaignDetailScreen extends StatefulWidget {
 class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
   final CommentRepository _commentRepository = CommentRepository.instance;
   final RatingRepository _ratingRepository = RatingRepository.instance;
+  final PriceTrackingRepository _priceTrackingRepository = PriceTrackingRepository.instance;
   final AuthService _authService = AuthService.instance;
   
   List<CommentModel> _comments = [];
@@ -80,6 +83,10 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
   VideoPlayerController? _videoController;
   bool _isVideoInitialized = false;
   bool _isVideoPlaying = false;
+  
+  // Price tracking
+  bool _isPriceTracking = false;
+  bool _isLoadingPriceTracking = false;
 
   @override
   void initState() {
@@ -90,6 +97,76 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
     _loadComments();
     _loadRatingStats();
     _initializeVideo();
+    _checkPriceTracking();
+  }
+
+  Future<void> _checkPriceTracking() async {
+    if (_authService.currentUser == null) return;
+
+    try {
+      final result = await _priceTrackingRepository.getPriceTracking();
+      if (result is NetworkSuccess) {
+        final tracking = result.data;
+        setState(() {
+          _isPriceTracking = tracking.any((t) => t.campaignId == widget.campaignId);
+        });
+      }
+    } catch (e) {
+      // Hata durumunda sessizce devam et
+    }
+  }
+
+  Future<void> _togglePriceTracking() async {
+    if (_authService.currentUser == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Fiyat takibi için giriş yapmanız gerekiyor'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoadingPriceTracking = true;
+    });
+
+    NetworkResult result;
+    if (_isPriceTracking) {
+      result = await _priceTrackingRepository.removePriceTracking(widget.campaignId);
+    } else {
+      result = await _priceTrackingRepository.addPriceTracking(
+        campaignId: widget.campaignId,
+        notifyOnDrop: true,
+        notifyOnIncrease: false,
+      );
+    }
+
+    if (mounted) {
+      setState(() {
+        _isLoadingPriceTracking = false;
+        if (result is NetworkSuccess) {
+          _isPriceTracking = !_isPriceTracking;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                _isPriceTracking
+                    ? 'Fiyat takibi başlatıldı'
+                    : 'Fiyat takibi durduruldu',
+              ),
+              backgroundColor: AppColors.success,
+            ),
+          );
+        } else if (result is NetworkError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result.message),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      });
+    }
   }
 
   @override
@@ -313,6 +390,11 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
                       
                       // CTA Butonu
                       _buildCTAButton(),
+                      
+                      const SizedBox(height: 12),
+                      
+                      // Fiyat Takibi Butonu
+                      _buildPriceTrackingButton(),
                     ],
                   ),
                 ),
@@ -714,6 +796,50 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
     final minutes = duration.inMinutes;
     final remainingSeconds = duration.inSeconds % 60;
     return '${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
+  }
+
+  Widget _buildPriceTrackingButton() {
+    if (_authService.currentUser == null) {
+      return const SizedBox.shrink();
+    }
+
+    return OutlinedButton.icon(
+      onPressed: _isLoadingPriceTracking ? null : _togglePriceTracking,
+      icon: _isLoadingPriceTracking
+          ? const SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: AppColors.primaryLight,
+              ),
+            )
+          : Icon(
+              _isPriceTracking ? Icons.track_changes : Icons.track_changes_outlined,
+              color: _isPriceTracking ? AppColors.primaryLight : AppColors.textSecondaryLight,
+            ),
+      label: Text(
+        _isPriceTracking ? 'Fiyat Takibi Aktif' : 'Fiyat Takibini Başlat',
+        style: AppTextStyles.body(isDark: false).copyWith(
+          color: _isPriceTracking ? AppColors.primaryLight : AppColors.textSecondaryLight,
+        ),
+      ),
+      style: OutlinedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        side: BorderSide(
+          color: _isPriceTracking
+              ? AppColors.primaryLight
+              : AppColors.textSecondaryLight.withOpacity(0.3),
+          width: 1.5,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        backgroundColor: _isPriceTracking
+            ? AppColors.primaryLight.withOpacity(0.1)
+            : Colors.transparent,
+      ),
+    );
   }
 
   Widget _buildCTAButton() {
