@@ -21,6 +21,7 @@ import '../settings/language_settings_screen.dart';
 import '../community/community_screen.dart';
 import '../price_tracking/price_tracking_screen.dart';
 import '../blog/blog_screen.dart';
+import '../referral/referral_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -239,6 +240,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             Navigator.of(context).push(
                               SlidePageRoute(
                                 child: const BlogScreen(),
+                                direction: SlideDirection.right,
+                              ),
+                            );
+                          },
+                        ),
+                        ProfileMenuItem(
+                          icon: Icons.card_giftcard,
+                          title: 'Referans Programı',
+                          onTap: () {
+                            Navigator.of(context).push(
+                              SlidePageRoute(
+                                child: const ReferralScreen(),
                                 direction: SlideDirection.right,
                               ),
                             );
