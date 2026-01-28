@@ -15,7 +15,7 @@ class SearchBarWidget extends StatelessWidget {
         Navigator.of(context).push(
           SlidePageRoute(
             child: const SearchScreen(),
-            direction: SlideDirection.bottom,
+            direction: SlideDirection.down,
           ),
         );
       },

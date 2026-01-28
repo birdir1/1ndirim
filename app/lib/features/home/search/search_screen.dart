@@ -21,6 +21,7 @@ class SearchScreen extends StatefulWidget {
 class _SearchScreenState extends State<SearchScreen> {
   final OpportunityRepository _opportunityRepository = OpportunityRepository.instance;
   final TextEditingController _searchController = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
   
   NetworkResult<List<OpportunityModel>> _searchResult = const NetworkSuccess([]);
   List<OpportunityModel> _searchResults = [];
@@ -34,7 +35,7 @@ class _SearchScreenState extends State<SearchScreen> {
     _searchController.addListener(_onSearchChanged);
     // Focus'u otomatik ver
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      FocusScope.of(context).requestFocus(FocusNode());
+      _focusNode.requestFocus();
     });
   }
 
@@ -42,6 +43,7 @@ class _SearchScreenState extends State<SearchScreen> {
   void dispose() {
     _debounceTimer?.cancel();
     _searchController.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
@@ -117,6 +119,7 @@ class _SearchScreenState extends State<SearchScreen> {
         ),
         title: TextField(
           controller: _searchController,
+          focusNode: _focusNode,
           autofocus: true,
           style: const TextStyle(
             color: AppColors.textPrimaryLight,
@@ -139,6 +142,9 @@ class _SearchScreenState extends State<SearchScreen> {
                   )
                 : null,
           ),
+          onChanged: (_) {
+            setState(() {}); // suffixIcon'u güncellemek için
+          },
         ),
       ),
       body: _buildBody(),
