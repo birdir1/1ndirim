@@ -1,16 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:provider/provider.dart';
 import 'core/theme/app_theme.dart';
 import 'core/services/preferences_service.dart';
 import 'core/services/auth_service.dart';
+import 'core/services/notification_service.dart';
 import 'core/providers/selected_sources_provider.dart';
 import 'core/utils/app_logger.dart';
 import 'features/splash/splash_screen.dart';
 import 'features/auth/login_screen.dart';
 import 'features/onboarding/onboarding_screen.dart';
 import 'features/main_shell/main_shell.dart';
+
+/// Background message handler (top-level function)
+@pragma('vm:entry-point')
+Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  AppLogger.info('📨 Background mesaj alındı: ${message.notification?.title}');
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,6 +27,12 @@ void main() async {
   try {
     await Firebase.initializeApp();
     AppLogger.firebaseInit(true);
+    
+    // Background message handler'ı ayarla
+    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+    
+    // Notification service'i başlat
+    await NotificationService().initialize();
   } catch (e) {
     AppLogger.firebaseInit(false, e);
   }

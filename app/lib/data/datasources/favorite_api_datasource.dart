@@ -262,4 +262,28 @@ class FavoriteApiDataSource {
       return AppColors.discountRed;
     }
   }
+
+  /// FCM token'ı backend'e gönderir
+  Future<void> updateFcmToken(String fcmToken) async {
+    try {
+      final options = await _getAuthOptions();
+      await _dio.post(
+        '/api/users/fcm-token',
+        data: {'fcmToken': fcmToken},
+        options: options,
+      );
+    } catch (e) {
+      if (e is DioException) {
+        if (e.type == DioExceptionType.connectionTimeout ||
+            e.type == DioExceptionType.receiveTimeout) {
+          throw Exception('Bağlantı zaman aşımı. Lütfen internet bağlantınızı kontrol edin.');
+        } else if (e.response?.statusCode == 401) {
+          throw Exception('Oturum süreniz dolmuş. Lütfen tekrar giriş yapın.');
+        } else if (e.response?.statusCode == 500) {
+          throw Exception('Sunucu hatası. Lütfen daha sonra tekrar deneyin.');
+        }
+      }
+      throw Exception('FCM token güncelleme hatası: ${e.toString()}');
+    }
+  }
 }
