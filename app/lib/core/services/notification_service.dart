@@ -66,14 +66,36 @@ class NotificationService {
         return;
       }
 
-      // FCM token al
+      // iOS için APNS token'ı bekle (opsiyonel, hata vermezse devam et)
+      try {
+        final apnsToken = await _messaging.getAPNSToken();
+        if (apnsToken != null) {
+          AppLogger.info('📱 APNS Token alındı');
+        }
+      } catch (e) {
+        // APNS token henüz hazır değilse devam et, kritik değil
+        AppLogger.warning('⚠️ APNS token henüz hazır değil, devam ediliyor...');
+      }
+
+      // FCM token al (biraz bekle ki APNS token hazır olsun)
+      await Future.delayed(const Duration(milliseconds: 500));
+      
       _fcmToken = await _messaging.getToken();
       if (_fcmToken != null) {
         AppLogger.info('📱 FCM Token alındı: ${_fcmToken!.substring(0, 20)}...');
         await _sendTokenToServer(_fcmToken!);
+      } else {
+        // Token alınamadıysa tekrar dene (iOS'ta bazen zaman alabilir)
+        await Future.delayed(const Duration(seconds: 1));
+        _fcmToken = await _messaging.getToken();
+        if (_fcmToken != null) {
+          AppLogger.info('📱 FCM Token alındı (2. deneme): ${_fcmToken!.substring(0, 20)}...');
+          await _sendTokenToServer(_fcmToken!);
+        }
       }
     } catch (e) {
       AppLogger.error('❌ İzin isteme ve token kaydetme hatası: $e');
+      // Hata olsa bile devam et, kritik değil
     }
   }
 
