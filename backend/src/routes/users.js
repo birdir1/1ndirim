@@ -96,4 +96,69 @@ router.delete('/fcm-token', firebaseAuth, async (req, res) => {
   }
 });
 
+/**
+ * GET /api/users/stats
+ * Kullanıcının istatistiklerini getirir
+ */
+router.get('/stats', firebaseAuth, async (req, res) => {
+  const client = await pool.connect();
+  
+  try {
+    const userId = req.user.uid;
+
+    // Favori sayısı
+    const favoritesResult = await client.query(
+      'SELECT COUNT(*) as count FROM user_favorites WHERE user_id = $1',
+      [userId]
+    );
+    const favoriteCount = parseInt(favoritesResult.rows[0].count) || 0;
+
+    // Yorum sayısı
+    const commentsResult = await client.query(
+      'SELECT COUNT(*) as count FROM campaign_comments WHERE user_id = $1 AND is_deleted = false',
+      [userId]
+    );
+    const commentCount = parseInt(commentsResult.rows[0].count) || 0;
+
+    // Puan sayısı
+    const ratingsResult = await client.query(
+      'SELECT COUNT(*) as count FROM campaign_ratings WHERE user_id = $1',
+      [userId]
+    );
+    const ratingCount = parseInt(ratingsResult.rows[0].count) || 0;
+
+    // Son aktivite tarihi (en son favori, yorum veya puan)
+    const lastActivityResult = await client.query(
+      `SELECT MAX(activity_date) as last_activity FROM (
+        SELECT created_at as activity_date FROM user_favorites WHERE user_id = $1
+        UNION ALL
+        SELECT created_at as activity_date FROM campaign_comments WHERE user_id = $1 AND is_deleted = false
+        UNION ALL
+        SELECT created_at as activity_date FROM campaign_ratings WHERE user_id = $1
+      ) activities`,
+      [userId]
+    );
+    const lastActivity = lastActivityResult.rows[0].last_activity || null;
+
+    res.json({
+      success: true,
+      data: {
+        favoriteCount,
+        commentCount,
+        ratingCount,
+        totalActivity: favoriteCount + commentCount + ratingCount,
+        lastActivity,
+      },
+    });
+  } catch (error) {
+    console.error('❌ Kullanıcı istatistikleri getirme hatası:', error);
+    res.status(500).json({
+      success: false,
+      error: 'İstatistikler getirilemedi',
+    });
+  } finally {
+    client.release();
+  }
+});
+
 module.exports = router;
