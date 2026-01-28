@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/page_transitions.dart';
 import '../../../core/utils/source_logo_helper.dart';
 import '../../../core/utils/network_result.dart';
+import '../../../core/providers/compare_provider.dart';
 import '../../../data/models/opportunity_model.dart';
 import '../../../data/repositories/favorite_repository.dart';
 import '../campaign_detail_screen.dart';
+import '../../compare/compare_screen.dart';
 
 /// Opportunity Card Widget V2
 /// Görsel olarak tamamen yeniden tasarlandı - Logo'lar büyük ve net
@@ -258,40 +261,124 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
                       ],
                     ),
                   ),
-                  // Favori Butonu
-                  if (_auth.currentUser != null)
-                    GestureDetector(
-                      onTap: _toggleFavorite,
-                      child: Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: _isFavorite 
-                              ? AppColors.discountRed.withOpacity(0.1)
-                              : Colors.white.withOpacity(0.8),
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: _isFavorite 
-                                ? AppColors.discountRed.withOpacity(0.3)
-                                : Colors.grey.withOpacity(0.3),
-                            width: 1.5,
+                  // Aksiyon Butonları
+                  Row(
+                    children: [
+                      // Karşılaştırma Butonu
+                      Consumer<CompareProvider>(
+                        builder: (context, compareProvider, child) {
+                          final isInCompare = compareProvider.contains(widget.opportunity.id);
+                          final isFull = compareProvider.isFull && !isInCompare;
+                          
+                          return GestureDetector(
+                            onTap: () {
+                              if (isInCompare) {
+                                compareProvider.removeCampaign(widget.opportunity.id);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Karşılaştırmadan kaldırıldı'),
+                                    duration: Duration(seconds: 1),
+                                  ),
+                                );
+                              } else if (isFull) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('En fazla ${CompareProvider.maxCompareCount} kampanya karşılaştırabilirsiniz'),
+                                    duration: const Duration(seconds: 2),
+                                    backgroundColor: AppColors.error,
+                                  ),
+                                );
+                              } else {
+                                final added = compareProvider.addCampaign(widget.opportunity);
+                                if (added) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('${compareProvider.count}/${CompareProvider.maxCompareCount} kampanya seçildi'),
+                                      duration: const Duration(seconds: 1),
+                                      action: compareProvider.count >= 2
+                                          ? SnackBarAction(
+                                              label: 'Karşılaştır',
+                                              textColor: Colors.white,
+                                              onPressed: () {
+                                                Navigator.of(context).push(
+                                                  SlidePageRoute(
+                                                    child: CompareScreen(
+                                                      campaigns: compareProvider.campaigns,
+                                                    ),
+                                                    direction: SlideDirection.up,
+                                                  ),
+                                                );
+                                              },
+                                            )
+                                          : null,
+                                    ),
+                                  );
+                                }
+                              }
+                            },
+                            child: Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: isInCompare
+                                    ? AppColors.primaryLight.withOpacity(0.1)
+                                    : Colors.white.withOpacity(0.8),
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: isInCompare
+                                      ? AppColors.primaryLight.withOpacity(0.3)
+                                      : Colors.grey.withOpacity(0.3),
+                                  width: 1.5,
+                                ),
+                              ),
+                              child: Icon(
+                                Icons.compare_arrows,
+                                color: isInCompare
+                                    ? AppColors.primaryLight
+                                    : (isFull ? Colors.grey.withOpacity(0.5) : Colors.grey),
+                                size: 20,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(width: 8),
+                      // Favori Butonu
+                      if (_auth.currentUser != null)
+                        GestureDetector(
+                          onTap: _toggleFavorite,
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: _isFavorite 
+                                  ? AppColors.discountRed.withOpacity(0.1)
+                                  : Colors.white.withOpacity(0.8),
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: _isFavorite 
+                                    ? AppColors.discountRed.withOpacity(0.3)
+                                    : Colors.grey.withOpacity(0.3),
+                                width: 1.5,
+                              ),
+                            ),
+                            child: _isLoading
+                                ? const Padding(
+                                    padding: EdgeInsets.all(10.0),
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.discountRed),
+                                    ),
+                                  )
+                                : Icon(
+                                    _isFavorite ? Icons.favorite : Icons.favorite_border,
+                                    color: _isFavorite ? AppColors.discountRed : Colors.grey,
+                                    size: 20,
+                                  ),
                           ),
                         ),
-                        child: _isLoading
-                            ? const Padding(
-                                padding: EdgeInsets.all(12.0),
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.discountRed),
-                                ),
-                              )
-                            : Icon(
-                                _isFavorite ? Icons.favorite : Icons.favorite_border,
-                                color: _isFavorite ? AppColors.discountRed : Colors.grey,
-                                size: 22,
-                              ),
-                      ),
-                    ),
+                    ],
+                  ),
                 ],
               ),
             ),

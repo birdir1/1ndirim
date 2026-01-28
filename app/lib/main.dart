@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:provider/provider.dart';
+import 'core/providers/compare_provider.dart';
 import 'core/theme/app_theme.dart';
 import 'core/services/preferences_service.dart';
 import 'core/services/auth_service.dart';
@@ -62,6 +63,9 @@ class IndirimApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(
           create: (_) => SelectedSourcesProvider()..loadSelectedSources(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => CompareProvider(),
         ),
       ],
       child: MaterialApp(
