@@ -270,6 +270,91 @@ class Campaign {
   }
 
   /**
+   * Kampanyaları arama terimine göre arar
+   * @param {string} searchTerm - Arama terimi (title, description, source_name'de arar)
+   * @param {Array<string>} sourceIds - Filtreleme için source ID'leri (opsiyonel)
+   * @param {Object} filters - Ek filtreler (category, dateRange, vb.)
+   * @returns {Promise<Array>}
+   */
+  static async search(searchTerm, sourceIds = null, filters = {}) {
+    let query = `
+      SELECT 
+        c.*,
+        s.name as source_name,
+        s.type as source_type,
+        s.logo_url as source_logo_url
+      FROM campaigns c
+      INNER JOIN sources s ON c.source_id = s.id
+      WHERE c.is_active = true
+        AND c.expires_at > NOW()
+        AND (c.is_hidden = false OR c.is_hidden IS NULL)
+    `;
+
+    const params = [];
+    let paramIndex = 1;
+    let searchPattern = null;
+
+    // Arama terimi ekle (title, description, source_name'de ara)
+    if (searchTerm && searchTerm.trim().length > 0) {
+      searchPattern = `%${searchTerm.trim().toLowerCase()}%`;
+      query += ` AND (
+        LOWER(c.title) LIKE $${paramIndex}
+        OR LOWER(c.description) LIKE $${paramIndex}
+        OR LOWER(c.detail_text) LIKE $${paramIndex}
+        OR LOWER(s.name) LIKE $${paramIndex}
+      )`;
+      params.push(searchPattern);
+      paramIndex++;
+    }
+
+    // Source filtreleme
+    if (sourceIds && sourceIds.length > 0) {
+      query += ` AND c.source_id = ANY($${paramIndex}::uuid[])`;
+      params.push(sourceIds);
+      paramIndex++;
+    }
+
+    // Kategori filtreleme (eğer varsa)
+    if (filters.category) {
+      query += ` AND c.campaign_type = $${paramIndex}`;
+      params.push(filters.category);
+      paramIndex++;
+    }
+
+    // Tarih aralığı filtreleme (eğer varsa)
+    if (filters.startDate) {
+      query += ` AND c.expires_at >= $${paramIndex}`;
+      params.push(filters.startDate);
+      paramIndex++;
+    }
+    if (filters.endDate) {
+      query += ` AND c.expires_at <= $${paramIndex}`;
+      params.push(filters.endDate);
+      paramIndex++;
+    }
+
+    // Sıralama: önce pinned, sonra relevance (title match > description match), sonra tarih
+    if (searchPattern) {
+      // Arama terimi varsa relevance'e göre sırala
+      query += ` ORDER BY 
+        c.is_pinned DESC,
+        CASE 
+          WHEN LOWER(c.title) LIKE $1 THEN 1
+          WHEN LOWER(c.description) LIKE $1 THEN 2
+          WHEN LOWER(c.detail_text) LIKE $1 THEN 3
+          ELSE 4
+        END,
+        c.created_at DESC`;
+    } else {
+      // Arama terimi yoksa normal sıralama
+      query += ` ORDER BY c.is_pinned DESC, c.pinned_at DESC NULLS LAST, c.created_at DESC`;
+    }
+
+    const result = await pool.query(query, params);
+    return result.rows;
+  }
+
+  /**
    * ID'ye göre kampanya getirir
    * @param {string} id - Campaign UUID
    * @returns {Promise<Object|null>}

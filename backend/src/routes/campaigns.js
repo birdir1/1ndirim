@@ -82,6 +82,108 @@ router.get('/', async (req, res) => {
 });
 
 /**
+ * GET /campaigns/search
+ * Kampanyaları arama terimine göre arar
+ * Query params:
+ *   - ?q=arama terimi (zorunlu)
+ *   - ?sourceNames=Akbank,Yapı Kredi (opsiyonel)
+ *   - ?category=main|light|category (opsiyonel)
+ *   - ?startDate=2026-01-01 (opsiyonel)
+ *   - ?endDate=2026-12-31 (opsiyonel)
+ */
+router.get('/search', async (req, res) => {
+  try {
+    const searchTerm = req.query.q;
+    
+    if (!searchTerm || searchTerm.trim().length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Arama terimi gerekli',
+        message: 'q parametresi boş olamaz',
+      });
+    }
+
+    let sourceIds = null;
+
+    // sourceNames parametresi varsa (Flutter'dan geliyor)
+    if (req.query.sourceNames) {
+      try {
+        const sourceNames = req.query.sourceNames
+          .split(',')
+          .map((name) => name.trim().toLowerCase())
+          .filter((name) => name.length > 0);
+        
+        if (sourceNames.length > 0) {
+          const Source = require('../models/Source');
+          const allSources = await Source.findAll();
+          sourceIds = allSources
+            .filter((source) => {
+              const normalizedSourceName = (source.name || '').trim().toLowerCase();
+              return sourceNames.includes(normalizedSourceName);
+            })
+            .map((source) => source.id);
+        }
+      } catch (sourceErr) {
+        console.warn('Campaigns/search: sourceNames filter failed, falling back to all', sourceErr.message);
+        sourceIds = null;
+      }
+    } else if (req.query.sourceIds) {
+      sourceIds = req.query.sourceIds.split(',').filter((id) => id.trim());
+    }
+
+    // Filtreler
+    const filters = {};
+    if (req.query.category) {
+      filters.category = req.query.category;
+    }
+    if (req.query.startDate) {
+      filters.startDate = req.query.startDate;
+    }
+    if (req.query.endDate) {
+      filters.endDate = req.query.endDate;
+    }
+
+    const campaigns = await Campaign.search(searchTerm, sourceIds, filters);
+
+    // Flutter uygulaması için format
+    const formattedCampaigns = campaigns.map((campaign) => ({
+      id: campaign.id,
+      title: campaign.title,
+      subtitle: campaign.description || `${campaign.source_name}`,
+      sourceName: campaign.source_name,
+      sourceId: campaign.source_id,
+      icon: campaign.icon_name || 'local_offer',
+      iconColor: campaign.icon_color || '#DC2626',
+      iconBgColor: campaign.icon_bg_color || '#FEE2E2',
+      tags: campaign.tags || [],
+      description: campaign.description,
+      detailText: campaign.detail_text,
+      originalUrl: campaign.original_url,
+      affiliateUrl: campaign.affiliate_url || null,
+      expiresAt: campaign.expires_at,
+      howToUse: campaign.how_to_use || [],
+      validityChannels: campaign.validity_channels || [],
+      status: campaign.status,
+    }));
+
+    res.json({
+      success: true,
+      data: formattedCampaigns,
+      count: formattedCampaigns.length,
+      searchTerm: searchTerm,
+    });
+  } catch (error) {
+    console.error('Campaigns/search error:', error.message);
+    console.error('Campaigns/search stack:', error.stack);
+    res.status(500).json({
+      success: false,
+      error: 'Arama yapılırken bir hata oluştu',
+      message: error.message,
+    });
+  }
+});
+
+/**
  * GET /campaigns/all
  * TÜM aktif kampanyaları getirir (feed type'a bakmaz)
  * Main feed guard'ı bypass eder

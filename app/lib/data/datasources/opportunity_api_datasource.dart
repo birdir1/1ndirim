@@ -283,6 +283,122 @@ class OpportunityApiDataSource {
     }
   }
 
+  /// Kampanyaları arama terimine göre arar
+  /// [searchTerm] - Arama terimi (zorunlu)
+  /// [sourceNames] - Kaynak isimleri ile filtreleme (opsiyonel)
+  /// [category] - Kategori filtresi: 'main', 'light', 'category' (opsiyonel)
+  /// [startDate] - Başlangıç tarihi (opsiyonel, format: YYYY-MM-DD)
+  /// [endDate] - Bitiş tarihi (opsiyonel, format: YYYY-MM-DD)
+  Future<List<OpportunityModel>> searchCampaigns({
+    required String searchTerm,
+    List<String>? sourceNames,
+    String? category,
+    String? startDate,
+    String? endDate,
+  }) async {
+    try {
+      if (searchTerm.trim().isEmpty) {
+        throw Exception('Arama terimi boş olamaz');
+      }
+
+      final queryParams = <String, dynamic>{
+        'q': searchTerm.trim(),
+      };
+
+      if (sourceNames != null && sourceNames.isNotEmpty) {
+        queryParams['sourceNames'] = sourceNames.join(',');
+      }
+
+      if (category != null && category.isNotEmpty) {
+        queryParams['category'] = category;
+      }
+
+      if (startDate != null && startDate.isNotEmpty) {
+        queryParams['startDate'] = startDate;
+      }
+
+      if (endDate != null && endDate.isNotEmpty) {
+        queryParams['endDate'] = endDate;
+      }
+
+      final response = await _dio.get(
+        '${ApiConfig.campaigns}/search',
+        queryParameters: queryParams,
+      );
+
+      // Response validation
+      if (response.statusCode != 200) {
+        throw Exception('Sunucu hatası (${response.statusCode}). Lütfen daha sonra tekrar deneyin.');
+      }
+
+      // Response format validation
+      if (response.data == null) {
+        throw Exception('Sunucudan geçersiz yanıt alındı.');
+      }
+
+      // Success flag kontrolü
+      if (response.data['success'] != true) {
+        final errorMessage = response.data['error'] as String? ?? 
+                            response.data['message'] as String? ?? 
+                            'Arama yapılırken bir hata oluştu';
+        throw Exception(errorMessage);
+      }
+
+      // Data validation
+      final campaignsData = response.data['data'];
+      if (campaignsData == null) {
+        return [];
+      }
+
+      if (campaignsData is! List) {
+        throw Exception('Sunucudan beklenmeyen veri formatı alındı.');
+      }
+
+      // Parse campaigns
+      try {
+        return campaignsData
+            .map((json) => _mapApiResponseToModel(json as Map<String, dynamic>))
+            .toList();
+      } catch (parseError) {
+        throw Exception('Arama sonuçları işlenirken bir hata oluştu.');
+      }
+    } on DioException catch (e) {
+      // Connection timeout
+      if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.receiveTimeout) {
+        throw Exception('Bağlantı zaman aşımı. Lütfen tekrar deneyin.');
+      }
+      
+      // Connection error (no internet, server down)
+      if (e.type == DioExceptionType.connectionError) {
+        throw Exception('Sunucuya bağlanılamadı. Lütfen internet bağlantınızı kontrol edin.');
+      }
+      
+      // HTTP error (400, 500, 503, etc.)
+      if (e.response != null) {
+        final statusCode = e.response!.statusCode;
+        if (statusCode == 400) {
+          final errorMessage = e.response?.data['message'] as String? ?? 
+                              e.response?.data['error'] as String? ?? 
+                              'Geçersiz arama terimi';
+          throw Exception(errorMessage);
+        } else if (statusCode == 500) {
+          throw Exception('Sunucu hatası. Lütfen daha sonra tekrar deneyin.');
+        } else if (statusCode == 503) {
+          throw Exception('Servis şu anda kullanılamıyor. Lütfen daha sonra tekrar deneyin.');
+        }
+      }
+      
+      // Generic DioException
+      throw Exception('Arama yapılırken bir hata oluştu: ${e.message ?? "Bilinmeyen hata"}');
+    } catch (e) {
+      if (e is Exception) {
+        rethrow;
+      }
+      throw Exception('Beklenmeyen hata: ${e.toString()}');
+    }
+  }
+
   /// API response'unu OpportunityModel'e çevirir
   OpportunityModel _mapApiResponseToModel(Map<String, dynamic> json) {
     // Icon name'den IconData'ya mapping

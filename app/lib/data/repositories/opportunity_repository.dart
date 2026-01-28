@@ -71,4 +71,39 @@ class OpportunityRepository {
       );
     }
   }
+
+  /// Kampanyaları arama terimine göre arar
+  Future<NetworkResult<List<OpportunityModel>>> searchCampaigns({
+    required String searchTerm,
+    List<String>? sourceNames,
+    String? category,
+    String? startDate,
+    String? endDate,
+  }) async {
+    try {
+      if (searchTerm.trim().isEmpty) {
+        return NetworkError.general('Arama terimi boş olamaz');
+      }
+
+      final opportunities = await _apiDataSource.searchCampaigns(
+        searchTerm: searchTerm,
+        sourceNames: sourceNames,
+        category: category,
+        startDate: startDate,
+        endDate: endDate,
+      );
+      return NetworkSuccess(opportunities);
+    } catch (e) {
+      // Exception mesajını extract et
+      final errorMessage = e is Exception 
+          ? e.toString().replaceFirst('Exception: ', '')
+          : 'Arama yapılırken bir hata oluştu';
+      
+      // Hata durumunda NetworkError döndür (app crash etmeyecek)
+      return NetworkError.general(
+        errorMessage,
+        error: e,
+      );
+    }
+  }
 }

@@ -3,6 +3,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/page_transitions.dart';
 import '../../../core/widgets/app_logo.dart';
 import '../../profile/profile_screen.dart';
+import 'search_bar_widget.dart';
 
 /// Home Header Widget
 class HomeHeader extends StatelessWidget {
@@ -12,51 +13,53 @@ class HomeHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                AppLogo(
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: AppLogo(
                   fontSize: 26,
                   textColor: AppColors.textPrimaryLight,
                 ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 12),
-          InkWell(
-            onTap: () {
-              // Profil ekranına yönlendir
-              Navigator.of(context).push(
-                SlidePageRoute(
-                  child: const ProfileScreen(),
-                  direction: SlideDirection.right,
-                ),
-              );
-            },
-            borderRadius: BorderRadius.circular(20),
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: AppColors.overlayWhiteLight,
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: AppColors.textPrimaryLight.withOpacity(0.1),
-                  width: 1,
+              ),
+              const SizedBox(width: 12),
+              InkWell(
+                onTap: () {
+                  // Profil ekranına yönlendir
+                  Navigator.of(context).push(
+                    SlidePageRoute(
+                      child: const ProfileScreen(),
+                      direction: SlideDirection.right,
+                    ),
+                  );
+                },
+                borderRadius: BorderRadius.circular(20),
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.overlayWhiteLight,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: AppColors.textPrimaryLight.withOpacity(0.1),
+                      width: 1,
+                    ),
+                  ),
+                  child: Icon(
+                    Icons.account_circle,
+                    size: 24,
+                    color: AppColors.primaryLight,
+                  ),
                 ),
               ),
-              child: Icon(
-                Icons.account_circle,
-                size: 24,
-                color: AppColors.primaryLight,
-              ),
-            ),
+            ],
           ),
+          const SizedBox(height: 12),
+          const SearchBarWidget(),
         ],
       ),
     );
