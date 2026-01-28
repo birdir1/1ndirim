@@ -12,6 +12,7 @@ class OpportunityModel {
   final List<String> tags;
   final String? affiliateUrl; // YENİ
   final String? originalUrl; // YENİ
+  final String? expiresAt; // Kampanya bitiş tarihi (ISO 8601 formatında)
 
   const OpportunityModel({
     required this.id,
@@ -24,6 +25,7 @@ class OpportunityModel {
     required this.tags,
     this.affiliateUrl, // YENİ
     this.originalUrl, // YENİ
+    this.expiresAt,
   });
 
   /// Map'ten model oluşturur
@@ -39,6 +41,7 @@ class OpportunityModel {
       tags: (map['tags'] as List).map((e) => e.toString()).toList(),
       affiliateUrl: map['affiliateUrl'] as String?, // YENİ
       originalUrl: map['originalUrl'] as String?, // YENİ
+      expiresAt: map['expiresAt'] as String?,
     );
   }
 

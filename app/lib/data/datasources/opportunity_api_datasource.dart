@@ -423,6 +423,7 @@ class OpportunityApiDataSource {
           [],
       affiliateUrl: json['affiliateUrl'] as String?, // YENİ
       originalUrl: json['originalUrl'] as String?, // YENİ
+      expiresAt: json['expiresAt'] as String?,
     );
   }
 

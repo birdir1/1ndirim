@@ -1,0 +1,346 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:table_calendar/table_calendar.dart';
+import 'package:intl/intl.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_text_styles.dart';
+import '../../../core/utils/page_transitions.dart';
+import '../../../core/utils/network_result.dart';
+import '../../../core/providers/selected_sources_provider.dart';
+import '../../../data/models/opportunity_model.dart';
+import '../../../data/repositories/opportunity_repository.dart';
+import '../widgets/opportunity_card_v2.dart';
+import '../campaign_detail_screen.dart';
+
+/// Kampanya Takvimi Ekranı
+/// Tarih seçildiğinde o tarihte bitecek kampanyaları gösterir
+class CalendarScreen extends StatefulWidget {
+  const CalendarScreen({super.key});
+
+  @override
+  State<CalendarScreen> createState() => _CalendarScreenState();
+}
+
+class _CalendarScreenState extends State<CalendarScreen> {
+  DateTime _focusedDay = DateTime.now();
+  DateTime _selectedDay = DateTime.now();
+  CalendarFormat _calendarFormat = CalendarFormat.month;
+  
+  NetworkResult<List<OpportunityModel>> _campaignsResult = const NetworkLoading();
+  List<OpportunityModel> _campaigns = [];
+  bool _isLoading = false;
+
+  final OpportunityRepository _opportunityRepository = OpportunityRepository.instance;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadCampaignsForDate(_selectedDay);
+    });
+  }
+
+  /// Seçili tarihte bitecek kampanyaları yükler
+  Future<void> _loadCampaignsForDate(DateTime date) async {
+    if (!mounted || _isLoading) return;
+
+    setState(() {
+      _isLoading = true;
+      _campaignsResult = const NetworkLoading();
+    });
+
+    final sourcesProvider = Provider.of<SelectedSourcesProvider>(context, listen: false);
+    final selectedSourceNames = sourcesProvider.getSelectedSourceNames();
+
+    try {
+      // Tarih aralığı: seçili günün başından sonuna kadar
+      final startDate = DateTime(date.year, date.month, date.day);
+      final endDate = DateTime(date.year, date.month, date.day, 23, 59, 59);
+
+      // Backend'de findByDateRange kullanmak yerine, tüm aktif kampanyaları alıp
+      // expiresAt'e göre filtreleyelim (daha basit)
+      final result = await _opportunityRepository.getOpportunitiesBySources(
+        selectedSourceNames.isNotEmpty ? selectedSourceNames : null,
+      );
+
+      if (mounted) {
+        if (result is NetworkSuccess<List<OpportunityModel>>) {
+          // Seçili tarihte bitecek kampanyaları filtrele
+          final filteredCampaigns = result.data.where((campaign) {
+            if (campaign.expiresAt == null) return false;
+            try {
+              final expiresAt = DateTime.parse(campaign.expiresAt!);
+              // Seçili günün başı ve sonu arasında bitecek kampanyalar
+              return expiresAt.year == date.year &&
+                     expiresAt.month == date.month &&
+                     expiresAt.day == date.day;
+            } catch (e) {
+              return false;
+            }
+          }).toList();
+
+          setState(() {
+            _campaigns = filteredCampaigns;
+            _campaignsResult = NetworkSuccess(filteredCampaigns);
+            _isLoading = false;
+          });
+        } else {
+          setState(() {
+            _campaignsResult = result;
+            _isLoading = false;
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _campaignsResult = NetworkError.general('Kampanyalar yüklenirken bir hata oluştu');
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  /// Tarih seçildiğinde çağrılır
+  void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
+    if (!isSameDay(_selectedDay, selectedDay)) {
+      setState(() {
+        _selectedDay = selectedDay;
+        _focusedDay = focusedDay;
+      });
+      _loadCampaignsForDate(selectedDay);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.backgroundLight,
+      appBar: AppBar(
+        backgroundColor: AppColors.backgroundLight,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimaryLight),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: Text(
+          'Kampanya Takvimi',
+          style: AppTextStyles.heading(isDark: false),
+        ),
+        centerTitle: false,
+      ),
+      body: Column(
+        children: [
+          // Takvim Widget
+          Container(
+            margin: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.shadowDark.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: TableCalendar<dynamic>(
+              firstDay: DateTime.now().subtract(const Duration(days: 365)),
+              lastDay: DateTime.now().add(const Duration(days: 365)),
+              focusedDay: _focusedDay,
+              selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+              calendarFormat: _calendarFormat,
+              onFormatChanged: (format) {
+                if (_calendarFormat != format) {
+                  setState(() {
+                    _calendarFormat = format;
+                  });
+                }
+              },
+              onDaySelected: _onDaySelected,
+              onPageChanged: (focusedDay) {
+                _focusedDay = focusedDay;
+              },
+              calendarStyle: CalendarStyle(
+                outsideDaysVisible: false,
+                weekendTextStyle: AppTextStyles.body(isDark: false).copyWith(
+                  color: AppColors.textSecondaryLight,
+                ),
+                defaultTextStyle: AppTextStyles.body(isDark: false),
+                selectedDecoration: BoxDecoration(
+                  color: AppColors.primaryLight,
+                  shape: BoxShape.circle,
+                ),
+                todayDecoration: BoxDecoration(
+                  color: AppColors.primaryLight.withOpacity(0.3),
+                  shape: BoxShape.circle,
+                ),
+                selectedTextStyle: AppTextStyles.body(isDark: false).copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+                todayTextStyle: AppTextStyles.body(isDark: false).copyWith(
+                  color: AppColors.primaryLight,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              headerStyle: HeaderStyle(
+                formatButtonVisible: true,
+                titleCentered: false,
+                formatButtonShowsNext: false,
+                formatButtonDecoration: BoxDecoration(
+                  color: AppColors.primaryLight,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                formatButtonTextStyle: AppTextStyles.caption(isDark: false).copyWith(
+                  color: Colors.white,
+                ),
+                leftChevronIcon: Icon(
+                  Icons.chevron_left,
+                  color: AppColors.textPrimaryLight,
+                ),
+                rightChevronIcon: Icon(
+                  Icons.chevron_right,
+                  color: AppColors.textPrimaryLight,
+                ),
+              ),
+            ),
+          ),
+
+          // Seçili Tarih Bilgisi
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.calendar_today,
+                  size: 16,
+                  color: AppColors.textSecondaryLight,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  DateFormat('d MMMM yyyy', 'tr_TR').format(_selectedDay),
+                  style: AppTextStyles.body(isDark: false).copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimaryLight,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  '${_campaigns.length} kampanya',
+                  style: AppTextStyles.caption(isDark: false).copyWith(
+                    color: AppColors.textSecondaryLight,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          // Kampanya Listesi
+          Expanded(
+            child: _buildCampaignsList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCampaignsList() {
+    if (_campaignsResult is NetworkLoading) {
+      return const Center(
+        child: CircularProgressIndicator(
+          color: AppColors.primaryLight,
+        ),
+      );
+    }
+
+    if (_campaignsResult is NetworkError) {
+      final error = _campaignsResult as NetworkError;
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 48,
+              color: AppColors.error,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              error.message,
+              style: AppTextStyles.body(isDark: false).copyWith(
+                color: AppColors.textSecondaryLight,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () => _loadCampaignsForDate(_selectedDay),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryLight,
+              ),
+              child: const Text('Tekrar Dene'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_campaigns.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.event_busy,
+              size: 48,
+              color: AppColors.textSecondaryLight,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Bu tarihte bitecek kampanya yok',
+              style: AppTextStyles.body(isDark: false).copyWith(
+                color: AppColors.textSecondaryLight,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Başka bir tarih seçmeyi deneyin',
+              style: AppTextStyles.caption(isDark: false).copyWith(
+                color: AppColors.textSecondaryLight,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+      itemCount: _campaigns.length,
+      itemBuilder: (context, index) {
+        final campaign = _campaigns[index];
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: InkWell(
+            onTap: () {
+              Navigator.of(context).push(
+                SlidePageRoute(
+                  child: CampaignDetailScreen(campaign: campaign),
+                  direction: SlideDirection.left,
+                ),
+              );
+            },
+            borderRadius: BorderRadius.circular(20),
+            child: OpportunityCardV2(
+              opportunity: campaign,
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
