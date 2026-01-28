@@ -22,6 +22,7 @@ import '../community/community_screen.dart';
 import '../price_tracking/price_tracking_screen.dart';
 import '../blog/blog_screen.dart';
 import '../referral/referral_screen.dart';
+import '../premium/premium_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -252,6 +253,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             Navigator.of(context).push(
                               SlidePageRoute(
                                 child: const ReferralScreen(),
+                                direction: SlideDirection.right,
+                              ),
+                            );
+                          },
+                        ),
+                        ProfileMenuItem(
+                          icon: Icons.star,
+                          title: 'Premium Üyelik',
+                          onTap: () {
+                            Navigator.of(context).push(
+                              SlidePageRoute(
+                                child: const PremiumScreen(),
                                 direction: SlideDirection.right,
                               ),
                             );
