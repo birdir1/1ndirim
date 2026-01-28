@@ -143,14 +143,8 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
       onTap: () {
         Navigator.of(context).push(
           SlidePageRoute(
-            child: CampaignDetailScreen(
-              title: widget.opportunity.title,
-              description: widget.opportunity.subtitle,
-              detailText: 'Bu kampanyayı kullanmak için ilgili kartınızla alışveriş yapmanız yeterli.',
-              logoColor: widget.opportunity.iconColor,
-              affiliateUrl: widget.opportunity.affiliateUrl,
-              campaignId: widget.opportunity.id,
-              originalUrl: widget.opportunity.originalUrl ?? '',
+            child: CampaignDetailScreen.fromOpportunity(
+              opportunity: widget.opportunity,
             ),
             direction: SlideDirection.right,
           ),

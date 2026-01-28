@@ -329,7 +329,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
             onTap: () {
               Navigator.of(context).push(
                 SlidePageRoute(
-                  child: CampaignDetailScreen(campaign: campaign),
+                  child: CampaignDetailScreen.fromOpportunity(
+                    opportunity: campaign,
+                  ),
                   direction: SlideDirection.left,
                 ),
               );

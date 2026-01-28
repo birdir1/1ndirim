@@ -3,6 +3,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:dio/dio.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:intl/intl.dart';
+import 'package:video_player/video_player.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/config/api_config.dart';
@@ -21,6 +22,9 @@ class CampaignDetailScreen extends StatefulWidget {
   final String? affiliateUrl;
   final String campaignId;
   final String originalUrl;
+  final String? videoUrl;
+  final String? videoThumbnailUrl;
+  final int? videoDuration;
 
   const CampaignDetailScreen({
     super.key,
@@ -31,7 +35,28 @@ class CampaignDetailScreen extends StatefulWidget {
     this.affiliateUrl,
     required this.campaignId,
     required this.originalUrl,
+    this.videoUrl,
+    this.videoThumbnailUrl,
+    this.videoDuration,
   });
+
+  /// OpportunityModel'den CampaignDetailScreen oluşturur
+  factory CampaignDetailScreen.fromOpportunity({
+    required opportunity,
+  }) {
+    return CampaignDetailScreen(
+      title: opportunity.title,
+      description: opportunity.subtitle,
+      detailText: 'Bu kampanyayı kullanmak için ilgili kartınızla alışveriş yapmanız yeterli.',
+      logoColor: opportunity.iconColor,
+      affiliateUrl: opportunity.affiliateUrl,
+      campaignId: opportunity.id,
+      originalUrl: opportunity.originalUrl ?? '',
+      videoUrl: opportunity.videoUrl,
+      videoThumbnailUrl: opportunity.videoThumbnailUrl,
+      videoDuration: opportunity.videoDuration,
+    );
+  }
 
   @override
   State<CampaignDetailScreen> createState() => _CampaignDetailScreenState();
@@ -50,6 +75,11 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
   bool _isLoadingRating = false;
   final TextEditingController _commentController = TextEditingController();
   int? _selectedRating;
+  
+  // Video player
+  VideoPlayerController? _videoController;
+  bool _isVideoInitialized = false;
+  bool _isVideoPlaying = false;
 
   @override
   void initState() {
@@ -59,12 +89,44 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
     });
     _loadComments();
     _loadRatingStats();
+    _initializeVideo();
   }
 
   @override
   void dispose() {
     _commentController.dispose();
+    _videoController?.dispose();
     super.dispose();
+  }
+
+  /// Video player'ı başlat
+  Future<void> _initializeVideo() async {
+    if (widget.videoUrl == null || widget.videoUrl!.isEmpty) {
+      return;
+    }
+
+    try {
+      _videoController = VideoPlayerController.networkUrl(
+        Uri.parse(widget.videoUrl!),
+      );
+      
+      await _videoController!.initialize();
+      
+      if (mounted) {
+        setState(() {
+          _isVideoInitialized = true;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Video yüklenemedi: ${e.toString()}'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _loadComments() async {
@@ -226,6 +288,13 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
                       _buildCampaignSummary(),
                       
                       const SizedBox(height: 32),
+                      
+                      // Video Bölümü (varsa)
+                      if (widget.videoUrl != null && widget.videoUrl!.isNotEmpty)
+                        _buildVideoSection(),
+                      
+                      if (widget.videoUrl != null && widget.videoUrl!.isNotEmpty)
+                        const SizedBox(height: 32),
                       
                       // Kampanya Detayları Bölümü
                       _buildCampaignDetails(),
@@ -514,6 +583,137 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
         ),
       ],
     );
+  }
+
+  Widget _buildVideoSection() {
+    if (!_isVideoInitialized || _videoController == null) {
+      // Video yükleniyor veya thumbnail göster
+      return Container(
+        width: double.infinity,
+        height: 200,
+        decoration: BoxDecoration(
+          color: AppColors.surfaceLight,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: widget.videoThumbnailUrl != null && widget.videoThumbnailUrl!.isNotEmpty
+            ? ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Image.network(
+                  widget.videoThumbnailUrl!,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.play_circle_outline,
+                            size: 48,
+                            color: AppColors.textSecondaryLight,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Video yükleniyor...',
+                            style: AppTextStyles.caption(isDark: false).copyWith(
+                              color: AppColors.textSecondaryLight,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              )
+            : Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.play_circle_outline,
+                      size: 48,
+                      color: AppColors.textSecondaryLight,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Video yükleniyor...',
+                      style: AppTextStyles.caption(isDark: false).copyWith(
+                        color: AppColors.textSecondaryLight,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Kampanya Videosu',
+          style: AppTextStyles.body(isDark: false).copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          width: double.infinity,
+          height: 200,
+          decoration: BoxDecoration(
+            color: Colors.black,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: AspectRatio(
+                  aspectRatio: _videoController!.value.aspectRatio,
+                  child: VideoPlayer(_videoController!),
+                ),
+              ),
+              // Play/Pause butonu
+              IconButton(
+                icon: Icon(
+                  _isVideoPlaying ? Icons.pause_circle : Icons.play_circle,
+                  size: 64,
+                  color: Colors.white.withOpacity(0.9),
+                ),
+                onPressed: () {
+                  setState(() {
+                    if (_videoController!.value.isPlaying) {
+                      _videoController!.pause();
+                      _isVideoPlaying = false;
+                    } else {
+                      _videoController!.play();
+                      _isVideoPlaying = true;
+                    }
+                  });
+                },
+              ),
+            ],
+          ),
+        ),
+        if (widget.videoDuration != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              'Süre: ${_formatDuration(widget.videoDuration!)}',
+              style: AppTextStyles.caption(isDark: false).copyWith(
+                color: AppColors.textSecondaryLight,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  String _formatDuration(int seconds) {
+    final duration = Duration(seconds: seconds);
+    final minutes = duration.inMinutes;
+    final remainingSeconds = duration.inSeconds % 60;
+    return '${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
   }
 
   Widget _buildCTAButton() {
