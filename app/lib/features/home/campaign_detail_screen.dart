@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:dio/dio.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/config/api_config.dart';
@@ -53,9 +54,7 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
               color: AppColors.textPrimaryLight,
               size: 24,
             ),
-            onPressed: () {
-              // TODO: Implement share functionality
-            },
+            onPressed: _shareCampaign,
           ),
         ],
       ),
@@ -472,6 +471,39 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
     final url = widget.affiliateUrl ?? widget.originalUrl;
     if (url.isNotEmpty) {
       _openUrl(url);
+    }
+  }
+
+  /// Kampanyayı paylaşır
+  Future<void> _shareCampaign() async {
+    try {
+      // Paylaşılacak URL (affiliate varsa onu kullan, yoksa original)
+      final shareUrl = widget.affiliateUrl ?? widget.originalUrl;
+      
+      // Paylaşım metni oluştur
+      final shareText = '''${widget.title}
+
+${widget.description}
+
+${shareUrl}
+
+1ndirim ile keşfet''';
+
+      // Native share sheet'i aç
+      await Share.share(
+        shareText,
+        subject: widget.title,
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Paylaşım sırasında bir hata oluştu'),
+            backgroundColor: AppColors.error,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
     }
   }
 }
