@@ -144,6 +144,9 @@ class _LoginScreenState extends State<LoginScreen> {
         await prefsService.setUserName(result.name!);
       }
 
+      // Referans kodunu işle (varsa)
+      await _processReferralCode();
+
       if (!mounted) return;
 
       setState(() {
