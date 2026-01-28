@@ -12,6 +12,8 @@ const adminRouter = require('./routes/admin'); // FAZ 10: Admin & Control Layer
 const legalRouter = require('./routes/legal'); // Privacy Policy & Terms of Use
 const favoritesRouter = require('./routes/favorites'); // User Favorites
 const usersRouter = require('./routes/users'); // User Management (FCM tokens, etc.)
+const commentsRouter = require('./routes/comments'); // Campaign Comments
+const ratingsRouter = require('./routes/ratings'); // Campaign Ratings
 const { deactivateExpiredCampaigns } = require('./jobs/deactivateExpiredCampaigns');
 
 const app = express();
@@ -37,6 +39,8 @@ app.get('/', (req, res) => {
         admin: '/api/admin', // FAZ 10: Admin & Control Layer
         favorites: '/api/favorites', // User Favorites
         users: '/api/users', // User Management
+        comments: '/api/comments', // Campaign Comments
+        ratings: '/api/ratings', // Campaign Ratings
       },
   });
 });
@@ -48,6 +52,8 @@ app.use('/api/health', healthRouter);
 app.use('/api/admin', adminRouter); // FAZ 10: Admin & Control Layer
 app.use('/api/favorites', favoritesRouter); // User Favorites
 app.use('/api/users', usersRouter); // User Management
+app.use('/api/comments', commentsRouter); // Campaign Comments
+app.use('/api/ratings', ratingsRouter); // Campaign Ratings
 app.use('/', legalRouter); // Privacy Policy & Terms of Use (root level)
 
 // 404 handler
@@ -76,6 +82,8 @@ app.listen(PORT, () => {
   console.log(`🏦 Sources: http://localhost:${PORT}/api/sources`);
   console.log(`⭐ Favorites: http://localhost:${PORT}/api/favorites`);
   console.log(`👤 Users: http://localhost:${PORT}/api/users`);
+  console.log(`💬 Comments: http://localhost:${PORT}/api/comments`);
+  console.log(`⭐ Ratings: http://localhost:${PORT}/api/ratings`);
 
   // Cron job: Sadece CRON_ONLY env yoksa çalıştır (production'da ayrı worker)
   if (!process.env.CRON_ONLY) {
