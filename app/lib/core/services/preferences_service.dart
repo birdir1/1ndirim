@@ -9,6 +9,7 @@ class PreferencesService {
   static const String _keyNotificationNewOpportunities = 'notification_new_opportunities';
   static const String _keyNotificationExpiring = 'notification_expiring';
   static const String _keyUserName = 'user_name';
+  static const String _keyLocale = 'app_locale';
 
   // Singleton instance
   static PreferencesService? _instance;

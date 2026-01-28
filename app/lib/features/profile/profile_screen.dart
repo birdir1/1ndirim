@@ -17,6 +17,7 @@ import '../../core/utils/network_result.dart';
 import '../how_it_works/how_it_works_screen.dart';
 import '../settings/kvkk_screen.dart';
 import '../settings/terms_of_use_screen.dart';
+import '../settings/language_settings_screen.dart';
 import '../community/community_screen.dart';
 import '../price_tracking/price_tracking_screen.dart';
 import '../blog/blog_screen.dart';
@@ -250,6 +251,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             Navigator.of(context).push(
                               SlidePageRoute(
                                 child: const HowItWorksScreen(),
+                                direction: SlideDirection.right,
+                              ),
+                            );
+                          },
+                        ),
+                        ProfileMenuItem(
+                          icon: Icons.language,
+                          title: 'Dil',
+                          onTap: () {
+                            Navigator.of(context).push(
+                              SlidePageRoute(
+                                child: const LanguageSettingsScreen(),
                                 direction: SlideDirection.right,
                               ),
                             );

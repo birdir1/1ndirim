@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:provider/provider.dart';
 import 'core/providers/compare_provider.dart';
+import 'core/providers/locale_provider.dart';
 import 'core/theme/app_theme.dart';
+import 'core/l10n/app_localizations.dart';
 import 'core/services/preferences_service.dart';
 import 'core/services/auth_service.dart';
 import 'core/services/notification_service.dart';
@@ -62,19 +65,34 @@ class IndirimApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
+          create: (_) => LocaleProvider(),
+        ),
+        ChangeNotifierProvider(
           create: (_) => SelectedSourcesProvider()..loadSelectedSources(),
         ),
         ChangeNotifierProvider(
           create: (_) => CompareProvider(),
         ),
       ],
-      child: MaterialApp(
-        title: '1ndirim',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.light(),
-        darkTheme: AppTheme.dark(),
-        themeMode: ThemeMode.light, // Default light
-        home: const AppNavigator(),
+      child: Consumer<LocaleProvider>(
+        builder: (context, localeProvider, child) {
+          return MaterialApp(
+            title: '1ndirim',
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.light(),
+            darkTheme: AppTheme.dark(),
+            themeMode: ThemeMode.light, // Default light
+            locale: localeProvider.locale,
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: LocaleProvider.supportedLocales,
+            home: const AppNavigator(),
+          );
+        },
       ),
     );
   }
