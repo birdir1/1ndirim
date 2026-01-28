@@ -129,6 +129,19 @@ router.post('/:campaignId', firebaseAuth, async (req, res) => {
 
     const ratingData = result.rows[0];
 
+    // İlk puanlamada puan ekle (created_at ve updated_at aynıysa yeni kayıt)
+    const isNewRating = ratingData.created_at.getTime() === ratingData.updated_at.getTime();
+    if (isNewRating) {
+      // Puan ekle (async, hata olsa bile devam et)
+      GamificationService.addPoints(
+        userId,
+        GamificationService.POINTS.RATING,
+        'rating',
+        ratingData.id,
+        'Kampanyaya puan verildi'
+      ).catch(err => console.error('Puan ekleme hatası (puanlama):', err));
+    }
+
     res.status(201).json({
       success: true,
       message: 'Puan kaydedildi',
