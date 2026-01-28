@@ -19,6 +19,7 @@ import '../settings/kvkk_screen.dart';
 import '../settings/terms_of_use_screen.dart';
 import '../community/community_screen.dart';
 import '../price_tracking/price_tracking_screen.dart';
+import '../blog/blog_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -225,6 +226,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             Navigator.of(context).push(
                               SlidePageRoute(
                                 child: const PriceTrackingScreen(),
+                                direction: SlideDirection.right,
+                              ),
+                            );
+                          },
+                        ),
+                        ProfileMenuItem(
+                          icon: Icons.article,
+                          title: 'Blog & Rehberler',
+                          onTap: () {
+                            Navigator.of(context).push(
+                              SlidePageRoute(
+                                child: const BlogScreen(),
                                 direction: SlideDirection.right,
                               ),
                             );
