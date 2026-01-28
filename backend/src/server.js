@@ -18,6 +18,7 @@ const communityRouter = require('./routes/community'); // Community Features
 const priceTrackingRouter = require('./routes/price_tracking'); // Price Tracking
 const blogRouter = require('./routes/blog'); // Blog & Content
 const referralsRouter = require('./routes/referrals'); // Referral System
+const premiumRouter = require('./routes/premium'); // Premium Subscriptions
 const { deactivateExpiredCampaigns } = require('./jobs/deactivateExpiredCampaigns');
 
 const app = express();
@@ -49,6 +50,7 @@ app.get('/', (req, res) => {
         priceTracking: '/api/price-tracking', // Price Tracking
         blog: '/api/blog', // Blog & Content
         referrals: '/api/referrals', // Referral System
+        premium: '/api/premium', // Premium Subscriptions
       },
   });
 });
@@ -66,6 +68,7 @@ app.use('/api/community', communityRouter); // Community Features
 app.use('/api/price-tracking', priceTrackingRouter); // Price Tracking
 app.use('/api/blog', blogRouter); // Blog & Content
 app.use('/api/referrals', referralsRouter); // Referral System
+app.use('/api/premium', premiumRouter); // Premium Subscriptions
 app.use('/', legalRouter); // Privacy Policy & Terms of Use (root level)
 
 // 404 handler
@@ -100,6 +103,7 @@ app.listen(PORT, () => {
   console.log(`💰 Price Tracking: http://localhost:${PORT}/api/price-tracking`);
   console.log(`📝 Blog: http://localhost:${PORT}/api/blog`);
   console.log(`🎁 Referrals: http://localhost:${PORT}/api/referrals`);
+  console.log(`⭐ Premium: http://localhost:${PORT}/api/premium`);
 
   // Cron job: Sadece CRON_ONLY env yoksa çalıştır (production'da ayrı worker)
   if (!process.env.CRON_ONLY) {
