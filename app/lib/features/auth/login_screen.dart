@@ -4,6 +4,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/services/preferences_service.dart';
 import '../../core/services/auth_service.dart';
+import '../../data/repositories/referral_repository.dart';
 import '../../features/main_shell/main_shell.dart';
 import '../../features/onboarding/onboarding_screen.dart';
 
@@ -18,6 +19,8 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
+  final TextEditingController _referralCodeController = TextEditingController();
+  final ReferralRepository _referralRepository = ReferralRepository();
 
   /// Apple Sign-In handler
   Future<void> _handleAppleSignIn() async {
@@ -205,6 +208,34 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  /// Referans kodunu işler
+  Future<void> _processReferralCode() async {
+    final referralCode = _referralCodeController.text.trim().toUpperCase();
+    if (referralCode.isEmpty) return;
+
+    try {
+      final result = await _referralRepository.processReferral(referralCode);
+      if (result is NetworkSuccess && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Referans kodu başarıyla uygulandı! +${result.data['rewardPoints'] ?? 0} puan kazandınız.'),
+            backgroundColor: AppColors.success,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      // Referans kodu hatası sessizce göz ardı edilir (kullanıcı deneyimini bozmamak için)
+      // İsteğe bağlı olarak loglanabilir
+    }
+  }
+
+  @override
+  void dispose() {
+    _referralCodeController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -256,7 +287,92 @@ class _LoginScreenState extends State<LoginScreen> {
                     textAlign: TextAlign.center,
                   ),
                 ),
-                const SizedBox(height: 48),
+                const SizedBox(height: 32),
+
+                // Referans Kodu (Opsiyonel)
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.cardBackground,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: AppColors.textSecondaryLight.withOpacity(0.2),
+                      width: 1,
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.card_giftcard,
+                            size: 18,
+                            color: AppColors.primaryLight,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Referans Kodunuz Var mı?',
+                            style: AppTextStyles.body(isDark: false).copyWith(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: _referralCodeController,
+                        decoration: InputDecoration(
+                          hintText: 'Referans kodunu girin (opsiyonel)',
+                          hintStyle: AppTextStyles.bodySecondary(isDark: false).copyWith(
+                            fontSize: 14,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color: AppColors.textSecondaryLight.withOpacity(0.2),
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color: AppColors.textSecondaryLight.withOpacity(0.2),
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color: AppColors.primaryLight,
+                              width: 2,
+                            ),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                        ),
+                        style: AppTextStyles.body(isDark: false).copyWith(
+                          fontSize: 14,
+                          letterSpacing: 1.5,
+                        ),
+                        textAlign: TextAlign.center,
+                        textCapitalization: TextCapitalization.characters,
+                        maxLength: 8,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Referans kodu ile kayıt olarak bonus puan kazanabilirsiniz',
+                        style: AppTextStyles.caption(isDark: false).copyWith(
+                          fontSize: 11,
+                          color: AppColors.textSecondaryLight,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
 
                 // Apple Login Button
                 // NOT: Apple Sign-In için ücretli Apple Developer Program gerekiyor ($99/yıl)
