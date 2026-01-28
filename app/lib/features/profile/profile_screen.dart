@@ -17,6 +17,7 @@ import '../../core/utils/network_result.dart';
 import '../how_it_works/how_it_works_screen.dart';
 import '../settings/kvkk_screen.dart';
 import '../settings/terms_of_use_screen.dart';
+import '../community/community_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -204,6 +205,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     const SizedBox(height: 12),
                     Column(
                       children: [
+                        ProfileMenuItem(
+                          icon: Icons.people,
+                          title: 'Topluluk',
+                          onTap: () {
+                            Navigator.of(context).push(
+                              SlidePageRoute(
+                                child: const CommunityScreen(),
+                                direction: SlideDirection.right,
+                              ),
+                            );
+                          },
+                        ),
                         ProfileMenuItem(
                           icon: Icons.help_outline,
                           title: 'Nasıl çalışır?',
