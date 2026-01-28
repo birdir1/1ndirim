@@ -13,6 +13,9 @@ class OpportunityModel {
   final String? affiliateUrl; // YENİ
   final String? originalUrl; // YENİ
   final String? expiresAt; // Kampanya bitiş tarihi (ISO 8601 formatında)
+  final double? sourceLatitude; // Kaynak konumu - enlem
+  final double? sourceLongitude; // Kaynak konumu - boylam
+  final String? sourceCity; // Kaynak şehri
 
   const OpportunityModel({
     required this.id,
@@ -26,6 +29,9 @@ class OpportunityModel {
     this.affiliateUrl, // YENİ
     this.originalUrl, // YENİ
     this.expiresAt,
+    this.sourceLatitude,
+    this.sourceLongitude,
+    this.sourceCity,
   });
 
   /// Map'ten model oluşturur
@@ -42,6 +48,13 @@ class OpportunityModel {
       affiliateUrl: map['affiliateUrl'] as String?, // YENİ
       originalUrl: map['originalUrl'] as String?, // YENİ
       expiresAt: map['expiresAt'] as String?,
+      sourceLatitude: map['sourceLatitude'] != null
+          ? (map['sourceLatitude'] as num).toDouble()
+          : null,
+      sourceLongitude: map['sourceLongitude'] != null
+          ? (map['sourceLongitude'] as num).toDouble()
+          : null,
+      sourceCity: map['sourceCity'] as String?,
     );
   }
 

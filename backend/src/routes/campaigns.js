@@ -64,6 +64,9 @@ router.get('/', async (req, res) => {
       howToUse: campaign.how_to_use || [],
       validityChannels: campaign.validity_channels || [],
       status: campaign.status,
+      sourceLatitude: campaign.source_latitude,
+      sourceLongitude: campaign.source_longitude,
+      sourceCity: campaign.source_city,
     }));
 
     res.json({
@@ -164,6 +167,9 @@ router.get('/search', async (req, res) => {
       howToUse: campaign.how_to_use || [],
       validityChannels: campaign.validity_channels || [],
       status: campaign.status,
+      sourceLatitude: campaign.source_latitude,
+      sourceLongitude: campaign.source_longitude,
+      sourceCity: campaign.source_city,
     }));
 
     res.json({
@@ -519,6 +525,9 @@ router.get('/expiring-soon', async (req, res) => {
       howToUse: campaign.how_to_use || [],
       validityChannels: campaign.validity_channels || [],
       status: campaign.status,
+      sourceLatitude: campaign.source_latitude,
+      sourceLongitude: campaign.source_longitude,
+      sourceCity: campaign.source_city,
     }));
 
     res.json({

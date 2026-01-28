@@ -424,6 +424,13 @@ class OpportunityApiDataSource {
       affiliateUrl: json['affiliateUrl'] as String?, // YENİ
       originalUrl: json['originalUrl'] as String?, // YENİ
       expiresAt: json['expiresAt'] as String?,
+      sourceLatitude: json['sourceLatitude'] != null
+          ? (json['sourceLatitude'] as num).toDouble()
+          : null,
+      sourceLongitude: json['sourceLongitude'] != null
+          ? (json['sourceLongitude'] as num).toDouble()
+          : null,
+      sourceCity: json['sourceCity'] as String?,
     );
   }
 
