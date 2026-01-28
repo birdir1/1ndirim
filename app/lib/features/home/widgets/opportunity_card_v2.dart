@@ -160,17 +160,17 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
           color: Colors.white,
           borderRadius: BorderRadius.circular(28),
           border: Border.all(
-            color: sourceColor.withOpacity(0.25),
+            color: sourceColor.withValues(alpha: 0.25),
             width: 2,
           ),
           boxShadow: [
             BoxShadow(
-              color: sourceColor.withOpacity(0.15),
+              color: sourceColor.withValues(alpha: 0.15),
               blurRadius: 24,
               offset: const Offset(0, 8),
             ),
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -183,11 +183,11 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: sourceColor.withOpacity(0.05),
+                color: sourceColor.withValues(alpha: 0.05),
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
                 border: Border(
                   bottom: BorderSide(
-                    color: sourceColor.withOpacity(0.1),
+                    color: sourceColor.withValues(alpha: 0.1),
                     width: 1,
                   ),
                 ),
@@ -202,12 +202,12 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: sourceColor.withOpacity(0.3),
+                        color: sourceColor.withValues(alpha: 0.3),
                         width: 2.5,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: sourceColor.withOpacity(0.2),
+                          color: sourceColor.withValues(alpha: 0.2),
                           blurRadius: 12,
                           offset: const Offset(0, 4),
                         ),
@@ -244,7 +244,7 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
-                              color: sourceColor.withOpacity(0.15),
+                              color: sourceColor.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
@@ -321,13 +321,13 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
                               height: 40,
                               decoration: BoxDecoration(
                                 color: isInCompare
-                                    ? AppColors.primaryLight.withOpacity(0.1)
-                                    : Colors.white.withOpacity(0.8),
+                                    ? AppColors.primaryLight.withValues(alpha: 0.1)
+                                    : Colors.white.withValues(alpha: 0.8),
                                 shape: BoxShape.circle,
                                 border: Border.all(
                                   color: isInCompare
-                                      ? AppColors.primaryLight.withOpacity(0.3)
-                                      : Colors.grey.withOpacity(0.3),
+                                      ? AppColors.primaryLight.withValues(alpha: 0.3)
+                                      : Colors.grey.withValues(alpha: 0.3),
                                   width: 1.5,
                                 ),
                               ),
@@ -335,7 +335,7 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
                                 Icons.compare_arrows,
                                 color: isInCompare
                                     ? AppColors.primaryLight
-                                    : (isFull ? Colors.grey.withOpacity(0.5) : Colors.grey),
+                                    : (isFull ? Colors.grey.withValues(alpha: 0.5) : Colors.grey),
                                 size: 20,
                               ),
                             ),
@@ -352,13 +352,13 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
                             height: 40,
                             decoration: BoxDecoration(
                               color: _isFavorite 
-                                  ? AppColors.discountRed.withOpacity(0.1)
-                                  : Colors.white.withOpacity(0.8),
+                                  ? AppColors.discountRed.withValues(alpha: 0.1)
+                                  : Colors.white.withValues(alpha: 0.8),
                               shape: BoxShape.circle,
                               border: Border.all(
                                 color: _isFavorite 
-                                    ? AppColors.discountRed.withOpacity(0.3)
-                                    : Colors.grey.withOpacity(0.3),
+                                    ? AppColors.discountRed.withValues(alpha: 0.3)
+                                    : Colors.grey.withValues(alpha: 0.3),
                                 width: 1.5,
                               ),
                             ),
@@ -443,8 +443,8 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
                             borderRadius: BorderRadius.circular(22),
                             border: Border.all(
                               color: isDiscount 
-                                  ? AppColors.badgeDiscountText.withOpacity(0.3)
-                                  : AppColors.badgeText.withOpacity(0.3),
+                                  ? AppColors.badgeDiscountText.withValues(alpha: 0.3)
+                                  : AppColors.badgeText.withValues(alpha: 0.3),
                               width: 1.5,
                             ),
                           ),

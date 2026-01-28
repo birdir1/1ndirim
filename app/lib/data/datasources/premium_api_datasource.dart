@@ -1,22 +1,24 @@
 import 'package:dio/dio.dart';
 import '../../core/config/api_config.dart';
 import '../../core/services/auth_service.dart';
-import '../models/premium_subscription_model.dart';
 import '../models/premium_plan_model.dart';
 import '../models/premium_feature_model.dart';
 
 /// Premium API Data Source
 class PremiumApiDataSource {
   final Dio _dio;
-  final AuthService _authService = AuthService();
+  final AuthService _authService = AuthService.instance;
 
   PremiumApiDataSource({Dio? dio})
-      : _dio = dio ??
-            Dio(BaseOptions(
+    : _dio =
+          dio ??
+          Dio(
+            BaseOptions(
               baseUrl: ApiConfig.baseUrl,
               connectTimeout: ApiConfig.connectTimeout,
               receiveTimeout: ApiConfig.receiveTimeout,
-            ));
+            ),
+          );
 
   /// Auth header'ları alır
   Future<Map<String, String>> _getAuthHeaders() async {
@@ -24,9 +26,7 @@ class PremiumApiDataSource {
     if (token == null) {
       throw Exception('Giriş yapmanız gerekiyor');
     }
-    return {
-      'Authorization': 'Bearer $token',
-    };
+    return {'Authorization': 'Bearer $token'};
   }
 
   /// Kullanıcının premium durumunu kontrol eder
@@ -48,9 +48,13 @@ class PremiumApiDataSource {
 
       return response.data['data'];
     } on DioException catch (e) {
-      throw Exception('Premium durum kontrol edilirken bir hata oluştu: ${e.message}');
+      throw Exception(
+        'Premium durum kontrol edilirken bir hata oluştu: ${e.message}',
+      );
     } catch (e) {
-      throw Exception('Premium durum kontrol edilirken bir hata oluştu: ${e.toString()}');
+      throw Exception(
+        'Premium durum kontrol edilirken bir hata oluştu: ${e.toString()}',
+      );
     }
   }
 
@@ -80,9 +84,13 @@ class PremiumApiDataSource {
           .map((item) => PremiumPlanModel.fromMap(item as Map<String, dynamic>))
           .toList();
     } on DioException catch (e) {
-      throw Exception('Premium planlar alınırken bir hata oluştu: ${e.message}');
+      throw Exception(
+        'Premium planlar alınırken bir hata oluştu: ${e.message}',
+      );
     } catch (e) {
-      throw Exception('Premium planlar alınırken bir hata oluştu: ${e.toString()}');
+      throw Exception(
+        'Premium planlar alınırken bir hata oluştu: ${e.toString()}',
+      );
     }
   }
 
@@ -109,17 +117,26 @@ class PremiumApiDataSource {
       }
 
       return data
-          .map((item) => PremiumFeatureModel.fromMap(item as Map<String, dynamic>))
+          .map(
+            (item) => PremiumFeatureModel.fromMap(item as Map<String, dynamic>),
+          )
           .toList();
     } on DioException catch (e) {
-      throw Exception('Premium özellikler alınırken bir hata oluştu: ${e.message}');
+      throw Exception(
+        'Premium özellikler alınırken bir hata oluştu: ${e.message}',
+      );
     } catch (e) {
-      throw Exception('Premium özellikler alınırken bir hata oluştu: ${e.toString()}');
+      throw Exception(
+        'Premium özellikler alınırken bir hata oluştu: ${e.toString()}',
+      );
     }
   }
 
   /// Premium abonelik oluşturur (test için)
-  Future<Map<String, dynamic>> subscribe(String planType, {int? durationDays}) async {
+  Future<Map<String, dynamic>> subscribe(
+    String planType, {
+    int? durationDays,
+  }) async {
     try {
       final headers = await _getAuthHeaders();
       final response = await _dio.post(
@@ -147,7 +164,9 @@ class PremiumApiDataSource {
       }
       throw Exception('Abonelik oluşturulurken bir hata oluştu: ${e.message}');
     } catch (e) {
-      throw Exception('Abonelik oluşturulurken bir hata oluştu: ${e.toString()}');
+      throw Exception(
+        'Abonelik oluşturulurken bir hata oluştu: ${e.toString()}',
+      );
     }
   }
 
@@ -173,7 +192,9 @@ class PremiumApiDataSource {
       }
       throw Exception('Abonelik iptal edilirken bir hata oluştu: ${e.message}');
     } catch (e) {
-      throw Exception('Abonelik iptal edilirken bir hata oluştu: ${e.toString()}');
+      throw Exception(
+        'Abonelik iptal edilirken bir hata oluştu: ${e.toString()}',
+      );
     }
   }
 }

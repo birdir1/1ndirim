@@ -50,7 +50,7 @@ class HomeHeader extends StatelessWidget {
                     color: AppColors.overlayWhiteLight,
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: AppColors.textPrimaryLight.withOpacity(0.1),
+                      color: AppColors.textPrimaryLight.withValues(alpha: 0.1),
                       width: 1,
                     ),
                   ),
@@ -78,12 +78,15 @@ class HomeHeader extends StatelessWidget {
                       InkWell(
                         onTap: () {
                           if (compareProvider.isEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(l10n.selectCampaigns),
-                                duration: const Duration(seconds: 2),
-                              ),
-                            );
+                            final l10n = AppLocalizations.of(context);
+                            if (l10n != null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(l10n.selectCampaigns),
+                                  duration: const Duration(seconds: 2),
+                                ),
+                              );
+                            }
                           } else {
                             Navigator.of(context).push(
                               SlidePageRoute(
@@ -103,7 +106,7 @@ class HomeHeader extends StatelessWidget {
                             color: AppColors.overlayWhiteLight,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: AppColors.textPrimaryLight.withOpacity(0.1),
+                              color: AppColors.textPrimaryLight.withValues(alpha: 0.1),
                               width: 1,
                             ),
                           ),
@@ -162,7 +165,7 @@ class HomeHeader extends StatelessWidget {
                     color: AppColors.overlayWhiteLight,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: AppColors.textPrimaryLight.withOpacity(0.1),
+                      color: AppColors.textPrimaryLight.withValues(alpha: 0.1),
                       width: 1,
                     ),
                   ),

@@ -33,7 +33,7 @@ class AppEmptyState extends StatelessWidget {
               width: 96,
               height: 96,
               decoration: BoxDecoration(
-                color: AppColors.secondaryLight.withOpacity(0.1),
+                color: AppColors.secondaryLight.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -73,7 +73,7 @@ class AppEmptyState extends StatelessWidget {
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.secondaryLight.withOpacity(0.3),
+                      color: AppColors.secondaryLight.withValues(alpha: 0.3),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                       spreadRadius: 0,

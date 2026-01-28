@@ -449,6 +449,41 @@ class OpportunityApiDataSource {
     );
   }
 
+  /// Yakında bitecek kampanyaları getirir
+  /// Backend'de özel bir endpoint yok, bu yüzden tüm kampanyaları alıp
+  /// expiresAt'e göre filtreleriz
+  Future<List<OpportunityModel>> getExpiringSoon({
+    int days = 7,
+    List<String>? sourceNames,
+  }) async {
+    try {
+      // Tüm kampanyaları al
+      final allOpportunities = await getOpportunitiesBySources(
+        sourceNames ?? [],
+      );
+
+      // Şu anki tarih
+      final now = DateTime.now();
+      final expiryDate = now.add(Duration(days: days));
+
+      // expiresAt'e göre filtrele
+      return allOpportunities.where((opportunity) {
+        if (opportunity.expiresAt == null) return false;
+        
+        try {
+          final expiresAt = DateTime.parse(opportunity.expiresAt!);
+          // Şu andan sonra ve belirtilen gün sayısı içinde bitecek kampanyalar
+          return expiresAt.isAfter(now) && expiresAt.isBefore(expiryDate);
+        } catch (e) {
+          return false;
+        }
+      }).toList();
+    } catch (e) {
+      // Hata durumunda boş liste döndür
+      return [];
+    }
+  }
+
   /// Icon name'den IconData'ya mapping
   IconData _mapIconNameToIconData(String iconName) {
     switch (iconName) {

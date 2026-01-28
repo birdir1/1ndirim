@@ -7,7 +7,7 @@ import '../models/price_history_model.dart';
 /// Price Tracking API Data Source
 class PriceTrackingApiDataSource {
   final Dio _dio;
-  final AuthService _authService = AuthService();
+  final AuthService _authService = AuthService.instance;
 
   PriceTrackingApiDataSource({Dio? dio})
       : _dio = dio ??

@@ -6,10 +6,10 @@ class PreferencesService {
   // Key'ler - Hardcoded string'ler burada tanımlı
   // Not: _keyIsLoggedIn kaldırıldı (Firebase Auth kullanılıyor)
   static const String _keyOnboardingComplete = 'onboarding_complete';
-  static const String _keyNotificationNewOpportunities = 'notification_new_opportunities';
+  static const String _keyNotificationNewOpportunities =
+      'notification_new_opportunities';
   static const String _keyNotificationExpiring = 'notification_expiring';
   static const String _keyUserName = 'user_name';
-  static const String _keyLocale = 'app_locale';
 
   // Singleton instance
   static PreferencesService? _instance;
@@ -83,7 +83,8 @@ class PreferencesService {
   Future<bool> isNotificationNewOpportunitiesEnabled() async {
     try {
       await _init();
-      return _prefs!.getBool(_keyNotificationNewOpportunities) ?? true; // Default: true
+      return _prefs!.getBool(_keyNotificationNewOpportunities) ??
+          true; // Default: true
     } catch (e) {
       return true;
     }
@@ -103,7 +104,8 @@ class PreferencesService {
   Future<bool> isNotificationExpiringEnabled() async {
     try {
       await _init();
-      return _prefs!.getBool(_keyNotificationExpiring) ?? false; // Default: false
+      return _prefs!.getBool(_keyNotificationExpiring) ??
+          false; // Default: false
     } catch (e) {
       return false;
     }
@@ -144,5 +146,4 @@ class PreferencesService {
       return false;
     }
   }
-
 }

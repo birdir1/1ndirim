@@ -144,7 +144,7 @@ class _ProfileHeaderState extends State<ProfileHeader> {
                   gradient: LinearGradient(
                     colors: [
                       AppColors.warning,
-                      AppColors.warning.withOpacity(0.8),
+                      AppColors.warning.withValues(alpha: 0.8),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(12),

@@ -313,6 +313,21 @@ class AuthService {
     }
   }
 
+  /// Mevcut kullanıcı için ID token alır
+  Future<String?> getIdToken() async {
+    try {
+      final user = getCurrentFirebaseUser();
+      if (user == null) return null;
+      return await user.getIdToken();
+    } catch (e) {
+      AppLogger.warning('getIdToken error: $e');
+      return null;
+    }
+  }
+
+  /// Mevcut kullanıcıyı getirir (currentUser için alias)
+  User? get currentUser => getCurrentFirebaseUser();
+
   /// Firebase auth state değişikliklerini dinler
   Stream<User?> get authStateChanges {
     try {

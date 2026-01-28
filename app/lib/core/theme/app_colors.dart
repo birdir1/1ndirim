@@ -58,9 +58,9 @@ class AppColors {
   static const iconSecondaryLight = Color(0xFFD1D5DB); // Açık Gri
   
   // Shadow Colors
-  static const shadowLight = Color(0x1A000000); // black.withOpacity(0.1)
-  static const shadowMedium = Color(0x0D000000); // black.withOpacity(0.05)
-  static const shadowDark = Color(0x0A000000); // black.withOpacity(0.04)
+  static const shadowLight = Color(0x1A000000); // black.withValues(alpha: 0.1)
+  static const shadowMedium = Color(0x0D000000); // black.withValues(alpha: 0.05)
+  static const shadowDark = Color(0x0A000000); // black.withValues(alpha: 0.04)
   
   // Badge & Tag Colors - Mavi tonları + indirim kırmızısı
   static const badgeBackground = Color(0xFFEBF4FF); // Açık Mavi - Vurgu alanları
@@ -72,10 +72,10 @@ class AppColors {
   static const badgeDiscountText = Color(0xFFDC2626); // Kan Kırmızısı
   
   // Overlay Colors
-  static const overlayWhite = Color(0xE6FFFFFF); // white.withOpacity(0.9)
-  static const overlayWhiteLight = Color(0x80FFFFFF); // white.withOpacity(0.5)
-  static const overlayWhiteVeryLight = Color(0x66FFFFFF); // white.withOpacity(0.4)
-  static const overlayBlack = Color(0x0D000000); // black.withOpacity(0.05)
+  static const overlayWhite = Color(0xE6FFFFFF); // white.withValues(alpha: 0.9)
+  static const overlayWhiteLight = Color(0x80FFFFFF); // white.withValues(alpha: 0.5)
+  static const overlayWhiteVeryLight = Color(0x66FFFFFF); // white.withValues(alpha: 0.4)
+  static const overlayBlack = Color(0x0D000000); // black.withValues(alpha: 0.05)
   
   // Text Colors (Additional) - Ahenkli tonlar
   static const textTertiary = Color(0xFF6B7280); // Orta Gri

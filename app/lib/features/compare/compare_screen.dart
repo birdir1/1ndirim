@@ -10,10 +10,7 @@ import '../home/campaign_detail_screen.dart';
 class CompareScreen extends StatefulWidget {
   final List<OpportunityModel> campaigns;
 
-  const CompareScreen({
-    super.key,
-    required this.campaigns,
-  });
+  const CompareScreen({super.key, required this.campaigns});
 
   @override
   State<CompareScreen> createState() => _CompareScreenState();
@@ -54,13 +51,16 @@ class _CompareScreenState extends State<CompareScreen> {
         ),
         title: Text(
           'Kampanya Karşılaştırma',
-          style: AppTextStyles.heading(isDark: false),
+          style: AppTextStyles.headline(isDark: false),
         ),
         centerTitle: false,
         actions: [
           if (_selectedCampaigns.isNotEmpty)
             IconButton(
-              icon: const Icon(Icons.clear_all, color: AppColors.textPrimaryLight),
+              icon: const Icon(
+                Icons.clear_all,
+                color: AppColors.textPrimaryLight,
+              ),
               onPressed: _clearAll,
               tooltip: 'Tümünü temizle',
             ),
@@ -97,16 +97,16 @@ class _CompareScreenState extends State<CompareScreen> {
           const SizedBox(height: 16),
           Text(
             'Karşılaştırılacak kampanya yok',
-            style: AppTextStyles.heading(isDark: false).copyWith(
-              color: AppColors.textPrimaryLight,
-            ),
+            style: AppTextStyles.headline(
+              isDark: false,
+            ).copyWith(color: AppColors.textPrimaryLight),
           ),
           const SizedBox(height: 8),
           Text(
             'En fazla $maxCompareCount kampanyayı karşılaştırabilirsiniz',
-            style: AppTextStyles.body(isDark: false).copyWith(
-              color: AppColors.textSecondaryLight,
-            ),
+            style: AppTextStyles.body(
+              isDark: false,
+            ).copyWith(color: AppColors.textSecondaryLight),
             textAlign: TextAlign.center,
           ),
         ],
@@ -118,27 +118,23 @@ class _CompareScreenState extends State<CompareScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.primaryLight.withOpacity(0.1),
+        color: AppColors.primaryLight.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: AppColors.primaryLight.withOpacity(0.3),
+          color: AppColors.primaryLight.withValues(alpha: 0.3),
           width: 1,
         ),
       ),
       child: Row(
         children: [
-          Icon(
-            Icons.info_outline,
-            color: AppColors.primaryLight,
-            size: 20,
-          ),
+          Icon(Icons.info_outline, color: AppColors.primaryLight, size: 20),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               '${_selectedCampaigns.length} kampanya karşılaştırılıyor (Maksimum: $maxCompareCount)',
-              style: AppTextStyles.body(isDark: false).copyWith(
-                color: AppColors.textPrimaryLight,
-              ),
+              style: AppTextStyles.body(
+                isDark: false,
+              ).copyWith(color: AppColors.textPrimaryLight),
             ),
           ),
         ],
@@ -153,7 +149,7 @@ class _CompareScreenState extends State<CompareScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppColors.shadowDark.withOpacity(0.1),
+            color: AppColors.shadowDark.withValues(alpha: 0.1),
             blurRadius: 12,
             offset: const Offset(0, 2),
           ),
@@ -178,7 +174,7 @@ class _CompareScreenState extends State<CompareScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.primaryLight.withOpacity(0.1),
+        color: AppColors.primaryLight.withValues(alpha: 0.1),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Row(
@@ -239,14 +235,14 @@ class _CompareScreenState extends State<CompareScreen> {
 
   Widget _buildCampaignRow(OpportunityModel campaign, int index) {
     final isLast = index == _selectedCampaigns.length - 1;
-    
+
     return Container(
       decoration: BoxDecoration(
         border: Border(
           bottom: isLast
               ? BorderSide.none
               : BorderSide(
-                  color: AppColors.textSecondaryLight.withOpacity(0.1),
+                  color: AppColors.textSecondaryLight.withValues(alpha: 0.1),
                   width: 1,
                 ),
         ),
@@ -315,9 +311,10 @@ class _CompareScreenState extends State<CompareScreen> {
                                 onPressed: () {
                                   Navigator.of(context).push(
                                     SlidePageRoute(
-                                      child: CampaignDetailScreen.fromOpportunity(
-                                        opportunity: c,
-                                      ),
+                                      child:
+                                          CampaignDetailScreen.fromOpportunity(
+                                            opportunity: c,
+                                          ),
                                       direction: SlideDirection.left,
                                     ),
                                   );
@@ -358,13 +355,15 @@ class _CompareScreenState extends State<CompareScreen> {
       decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(
-            color: AppColors.textSecondaryLight.withOpacity(0.1),
+            color: AppColors.textSecondaryLight.withValues(alpha: 0.1),
             width: 1,
           ),
         ),
       ),
       child: Row(
-        crossAxisAlignment: isMultiline ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+        crossAxisAlignment: isMultiline
+            ? CrossAxisAlignment.start
+            : CrossAxisAlignment.center,
         children: [
           SizedBox(
             width: 120,
@@ -378,12 +377,13 @@ class _CompareScreenState extends State<CompareScreen> {
           ),
           Expanded(
             child: Row(
-              crossAxisAlignment: isMultiline ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+              crossAxisAlignment: isMultiline
+                  ? CrossAxisAlignment.start
+                  : CrossAxisAlignment.center,
               children: values.asMap().entries.map((entry) {
-                final valueIndex = entry.key;
                 final value = entry.value;
                 final isEmpty = value.isEmpty || value == 'null';
-                
+
                 return Expanded(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 8),

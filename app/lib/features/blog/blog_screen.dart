@@ -7,7 +7,7 @@ import '../../core/utils/page_transitions.dart';
 import '../../data/models/blog_category_model.dart';
 import '../../data/models/blog_post_model.dart';
 import '../../data/repositories/blog_repository.dart';
-import '../../core/widgets/empty_state.dart';
+
 import 'blog_detail_screen.dart';
 
 /// Blog Ekranı
@@ -21,8 +21,6 @@ class BlogScreen extends StatefulWidget {
 
 class _BlogScreenState extends State<BlogScreen> {
   final BlogRepository _repository = BlogRepository();
-  NetworkResult<List<BlogCategoryModel>>? _categoriesResult;
-  NetworkResult<List<BlogPostModel>>? _postsResult;
   List<BlogCategoryModel> _categories = [];
   List<BlogPostModel> _posts = [];
   String? _selectedCategorySlug;
@@ -46,15 +44,13 @@ class _BlogScreenState extends State<BlogScreen> {
 
     if (mounted) {
       setState(() {
-        _categoriesResult = categoriesResult;
-        _postsResult = postsResult;
         _isLoading = false;
 
-        if (categoriesResult is NetworkSuccess) {
+        if (categoriesResult is NetworkSuccess<List<BlogCategoryModel>>) {
           _categories = categoriesResult.data;
         }
 
-        if (postsResult is NetworkSuccess) {
+        if (postsResult is NetworkSuccess<List<BlogPostModel>>) {
           _posts = postsResult.data;
         }
       });
@@ -74,10 +70,9 @@ class _BlogScreenState extends State<BlogScreen> {
 
     if (mounted) {
       setState(() {
-        _postsResult = result;
         _isLoading = false;
 
-        if (result is NetworkSuccess) {
+        if (result is NetworkSuccess<List<BlogPostModel>>) {
           _posts = result.data;
         }
       });
@@ -97,7 +92,7 @@ class _BlogScreenState extends State<BlogScreen> {
         ),
         title: Text(
           'Blog & Rehberler',
-          style: AppTextStyles.heading(isDark: false),
+          style: AppTextStyles.headline(isDark: false),
         ),
         centerTitle: false,
         actions: [
@@ -208,13 +203,13 @@ class _BlogScreenState extends State<BlogScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         decoration: BoxDecoration(
           color: isSelected
-              ? chipColor.withOpacity(0.2)
+              ? chipColor.withValues(alpha: 0.2)
               : AppColors.surfaceLight,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isSelected
                 ? chipColor
-                : AppColors.textSecondaryLight.withOpacity(0.2),
+                : AppColors.textSecondaryLight.withValues(alpha: 0.2),
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -279,7 +274,7 @@ class _BlogScreenState extends State<BlogScreen> {
               const SizedBox(width: 8),
               Text(
                 'Öne Çıkanlar',
-                style: AppTextStyles.heading(isDark: false).copyWith(
+                style: AppTextStyles.headline(isDark: false).copyWith(
                   fontSize: 18,
                 ),
               ),
@@ -315,7 +310,7 @@ class _BlogScreenState extends State<BlogScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppColors.shadowDark.withOpacity(0.1),
+            color: AppColors.shadowDark.withValues(alpha: 0.1),
             blurRadius: 12,
             offset: const Offset(0, 2),
           ),
@@ -374,7 +369,7 @@ class _BlogScreenState extends State<BlogScreen> {
                             color: post.category!.color != null
                                 ? Color(int.parse(
                                     post.category!.color!.replaceFirst('#', '0xFF')))
-                                : AppColors.primaryLight.withOpacity(0.1),
+                                : AppColors.primaryLight.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(

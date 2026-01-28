@@ -7,7 +7,6 @@ import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/network_result.dart';
 import '../../data/repositories/referral_repository.dart';
 import '../../data/models/referral_stats_model.dart';
-import '../../core/widgets/empty_state.dart';
 
 /// Referans Programı Ekranı
 class ReferralScreen extends StatefulWidget {
@@ -45,12 +44,12 @@ class _ReferralScreenState extends State<ReferralScreen> {
         _isLoading = false;
         _statsResult = statsResult;
 
-        if (codeResult is NetworkSuccess) {
-          _referralCode = codeResult.data;
+        if (codeResult is NetworkSuccess<String>) {
+          _referralCode = (codeResult as NetworkSuccess<String>).data;
         }
 
-        if (statsResult is NetworkSuccess) {
-          _stats = statsResult.data;
+        if (statsResult is NetworkSuccess<ReferralStatsModel>) {
+          _stats = (statsResult as NetworkSuccess<ReferralStatsModel>).data;
           _referralCode ??= _stats?.referralCode;
         }
       });
@@ -104,7 +103,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
         ),
         title: Text(
           'Referans Programı',
-          style: AppTextStyles.heading(isDark: false),
+          style: AppTextStyles.headline(isDark: false),
         ),
         centerTitle: false,
         actions: [
@@ -117,9 +116,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
       ),
       body: _isLoading && _stats == null
           ? const Center(
-              child: CircularProgressIndicator(
-                color: AppColors.primaryLight,
-              ),
+              child: CircularProgressIndicator(color: AppColors.primaryLight),
             )
           : RefreshIndicator(
               onRefresh: _loadData,
@@ -177,18 +174,13 @@ class _ReferralScreenState extends State<ReferralScreen> {
       ),
       child: Column(
         children: [
-          const Icon(
-            Icons.card_giftcard,
-            size: 48,
-            color: Colors.white,
-          ),
+          const Icon(Icons.card_giftcard, size: 48, color: Colors.white),
           const SizedBox(height: 16),
           Text(
             'Referans Kodunuz',
-            style: AppTextStyles.body(isDark: false).copyWith(
-              color: Colors.white.withOpacity(0.9),
-              fontSize: 16,
-            ),
+            style: AppTextStyles.body(
+              isDark: false,
+            ).copyWith(color: Colors.white.withOpacity(0.9), fontSize: 16),
           ),
           const SizedBox(height: 12),
           if (_referralCode != null) ...[
@@ -200,7 +192,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
               ),
               child: Text(
                 _referralCode!,
-                style: AppTextStyles.heading(isDark: false).copyWith(
+                style: AppTextStyles.headline(isDark: false).copyWith(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 2,
@@ -246,9 +238,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
               ],
             ),
           ] else ...[
-            const CircularProgressIndicator(
-              color: Colors.white,
-            ),
+            const CircularProgressIndicator(color: Colors.white),
           ],
         ],
       ),
@@ -263,9 +253,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
       children: [
         Text(
           'İstatistikler',
-          style: AppTextStyles.heading(isDark: false).copyWith(
-            fontSize: 20,
-          ),
+          style: AppTextStyles.headline(isDark: false).copyWith(fontSize: 20),
         ),
         const SizedBox(height: 16),
         Row(
@@ -293,7 +281,12 @@ class _ReferralScreenState extends State<ReferralScreen> {
     );
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
+  Widget _buildStatCard(
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -321,18 +314,16 @@ class _ReferralScreenState extends State<ReferralScreen> {
           const SizedBox(height: 12),
           Text(
             value,
-            style: AppTextStyles.heading(isDark: false).copyWith(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
+            style: AppTextStyles.headline(
+              isDark: false,
+            ).copyWith(fontSize: 24, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 4),
           Text(
             title,
-            style: AppTextStyles.body(isDark: false).copyWith(
-              color: AppColors.textSecondaryLight,
-              fontSize: 12,
-            ),
+            style: AppTextStyles.body(
+              isDark: false,
+            ).copyWith(color: AppColors.textSecondaryLight, fontSize: 12),
           ),
         ],
       ),
@@ -349,9 +340,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
       children: [
         Text(
           'Son Referanslar',
-          style: AppTextStyles.heading(isDark: false).copyWith(
-            fontSize: 20,
-          ),
+          style: AppTextStyles.headline(isDark: false).copyWith(fontSize: 20),
         ),
         const SizedBox(height: 16),
         ..._stats!.recentReferrals.map((referral) {
@@ -390,23 +379,28 @@ class _ReferralScreenState extends State<ReferralScreen> {
                     children: [
                       Text(
                         'Davet edilen kullanıcı',
-                        style: AppTextStyles.body(isDark: false).copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: AppTextStyles.body(
+                          isDark: false,
+                        ).copyWith(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        DateFormat('dd MMM yyyy, HH:mm', 'tr_TR')
-                            .format(referral.createdAt),
-                        style: AppTextStyles.caption(isDark: false).copyWith(
-                          color: AppColors.textSecondaryLight,
-                        ),
+                        DateFormat(
+                          'dd MMM yyyy, HH:mm',
+                          'tr_TR',
+                        ).format(referral.createdAt),
+                        style: AppTextStyles.caption(
+                          isDark: false,
+                        ).copyWith(color: AppColors.textSecondaryLight),
                       ),
                     ],
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.success.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
@@ -422,7 +416,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
               ],
             ),
           );
-        }).toList(),
+        }),
       ],
     );
   }
@@ -439,17 +433,13 @@ class _ReferralScreenState extends State<ReferralScreen> {
         children: [
           Row(
             children: [
-              Icon(
-                Icons.info_outline,
-                color: AppColors.primaryLight,
-                size: 24,
-              ),
+              Icon(Icons.info_outline, color: AppColors.primaryLight, size: 24),
               const SizedBox(width: 8),
               Text(
                 'Nasıl Çalışır?',
-                style: AppTextStyles.heading(isDark: false).copyWith(
-                  fontSize: 18,
-                ),
+                style: AppTextStyles.headline(
+                  isDark: false,
+                ).copyWith(fontSize: 18),
               ),
             ],
           ),
@@ -490,10 +480,9 @@ class _ReferralScreenState extends State<ReferralScreen> {
           child: Center(
             child: Text(
               number,
-              style: AppTextStyles.body(isDark: false).copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
+              style: AppTextStyles.body(
+                isDark: false,
+              ).copyWith(color: Colors.white, fontWeight: FontWeight.bold),
             ),
           ),
         ),
@@ -504,16 +493,16 @@ class _ReferralScreenState extends State<ReferralScreen> {
             children: [
               Text(
                 title,
-                style: AppTextStyles.body(isDark: false).copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                style: AppTextStyles.body(
+                  isDark: false,
+                ).copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 4),
               Text(
                 description,
-                style: AppTextStyles.caption(isDark: false).copyWith(
-                  color: AppColors.textSecondaryLight,
-                ),
+                style: AppTextStyles.caption(
+                  isDark: false,
+                ).copyWith(color: AppColors.textSecondaryLight),
               ),
             ],
           ),

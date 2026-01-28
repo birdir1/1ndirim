@@ -23,7 +23,6 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   String _selectedFilter = 'Tümü';
   NetworkResult<List<OpportunityModel>> _opportunitiesResult = const NetworkLoading();
-  NetworkResult<List<OpportunityModel>> _expiringSoonResult = const NetworkLoading();
   List<OpportunityModel> _allOpportunities = [];
   List<OpportunityModel> _expiringSoonOpportunities = [];
   List<Map<String, dynamic>> _filters = [];
@@ -378,10 +377,10 @@ class _HomeScreenState extends State<HomeScreen> {
       margin: const EdgeInsets.fromLTRB(24, 0, 24, 16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.warning.withOpacity(0.1),
+        color: AppColors.warning.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: AppColors.warning.withOpacity(0.3),
+          color: AppColors.warning.withValues(alpha: 0.3),
           width: 1,
         ),
       ),

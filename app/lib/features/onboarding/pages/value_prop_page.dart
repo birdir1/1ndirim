@@ -102,12 +102,12 @@ class ValuePropPage extends StatelessWidget {
         color: AppColors.surfaceLight, // #FFF8DE
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: AppColors.primaryLight.withOpacity(0.2),
+          color: AppColors.primaryLight.withValues(alpha: 0.2),
           width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primaryLight.withOpacity(0.15),
+            color: AppColors.primaryLight.withValues(alpha: 0.15),
             blurRadius: 8,
             offset: const Offset(0, 4),
             spreadRadius: 0,

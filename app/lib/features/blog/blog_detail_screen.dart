@@ -85,7 +85,7 @@ class BlogDetailScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.shadowDark.withOpacity(0.1),
+                    color: AppColors.shadowDark.withValues(alpha: 0.1),
                     blurRadius: 12,
                     offset: const Offset(0, 2),
                   ),
@@ -107,7 +107,7 @@ class BlogDetailScreen extends StatelessWidget {
                             color: post.category!.color != null
                                 ? Color(int.parse(
                                     post.category!.color!.replaceFirst('#', '0xFF')))
-                                : AppColors.primaryLight.withOpacity(0.1),
+                                : AppColors.primaryLight.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
@@ -168,7 +168,7 @@ class BlogDetailScreen extends StatelessWidget {
 
                   // Footer
                   Divider(
-                    color: AppColors.textSecondaryLight.withOpacity(0.2),
+                    color: AppColors.textSecondaryLight.withValues(alpha: 0.2),
                   ),
                   const SizedBox(height: 12),
                   Row(
@@ -226,7 +226,7 @@ class BlogDetailScreen extends StatelessWidget {
         widgets.add(
           Text(
             trimmed.substring(2),
-            style: AppTextStyles.heading(isDark: false).copyWith(
+            style: AppTextStyles.headline(isDark: false).copyWith(
               fontSize: 22,
             ),
           ),
@@ -237,7 +237,7 @@ class BlogDetailScreen extends StatelessWidget {
         widgets.add(
           Text(
             trimmed.substring(3),
-            style: AppTextStyles.heading(isDark: false).copyWith(
+            style: AppTextStyles.headline(isDark: false).copyWith(
               fontSize: 20,
             ),
           ),

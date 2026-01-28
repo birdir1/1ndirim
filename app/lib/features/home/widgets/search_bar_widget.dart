@@ -27,12 +27,12 @@ class SearchBarWidget extends StatelessWidget {
           color: AppColors.cardBackground,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: AppColors.textPrimaryLight.withOpacity(0.1),
+            color: AppColors.textPrimaryLight.withValues(alpha: 0.1),
             width: 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: AppColors.shadowDark.withOpacity(0.05),
+              color: AppColors.shadowDark.withValues(alpha: 0.05),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),

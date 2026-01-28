@@ -28,7 +28,7 @@ class PageIndicator extends StatelessWidget {
           decoration: BoxDecoration(
             color: isActive
                 ? AppColors.primary(isDark)
-                : AppColors.primary(isDark).withOpacity(0.3),
+                : AppColors.primary(isDark).withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(3),
           ),
         );

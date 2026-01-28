@@ -142,8 +142,8 @@ class _SourceCard extends StatelessWidget {
       height: 55,
       decoration: BoxDecoration(
         color: isSelected
-            ? Colors.white.withOpacity(0.2)
-            : source.color.withOpacity(0.1),
+            ? Colors.white.withValues(alpha: 0.2)
+            : source.color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Icon(
@@ -169,7 +169,7 @@ class _SourceCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),

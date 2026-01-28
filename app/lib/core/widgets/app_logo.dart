@@ -29,7 +29,7 @@ class AppLogo extends StatelessWidget {
         // Logo gibi görünmesi için ekstra özellikler
         shadows: [
           Shadow(
-            color: AppColors.textPrimaryLight.withOpacity(0.1),
+            color: AppColors.textPrimaryLight.withValues(alpha: 0.1),
             offset: const Offset(0, 1),
             blurRadius: 2,
           ),

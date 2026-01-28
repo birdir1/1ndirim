@@ -36,10 +36,10 @@ class _EditSourcesScreenState extends State<EditSourcesScreen> {
   Future<void> _initializeSources() async {
     // Tüm kaynakları repository'den al
     _sources = SourceRepository.getAllSourcesWithSegments();
-    
+
     // Tüm seçenekleri kapalı başlat (kullanıcı isterse açabilir)
     _expandedIds.clear();
-    
+
     // Repository'den seçili kaynakları yükle
     await _loadSelectedSources();
   }
@@ -50,11 +50,11 @@ class _EditSourcesScreenState extends State<EditSourcesScreen> {
       // Repository'den seçili kaynak ve segment ID'lerini al
       final selectedSourceIds = await SourceRepository.getSelectedSources();
       final selectedSegmentIds = await SourceRepository.getSelectedSegments();
-      
+
       // İlk durumu kaydet (değişiklik kontrolü için)
       _initialSelectedSources = List.from(selectedSourceIds);
       _initialSelectedSegments = List.from(selectedSegmentIds);
-      
+
       if (mounted) {
         setState(() {
           for (var source in _sources) {
@@ -62,12 +62,13 @@ class _EditSourcesScreenState extends State<EditSourcesScreen> {
             for (var segment in source.segments) {
               segment.isSelected = selectedSegmentIds.contains(segment.id);
             }
-            
+
             // Eğer kaynak ID'si seçili listede varsa veya en az bir segment seçiliyse, kaynağı seç
             final hasSelectedSegment = source.segments.any((s) => s.isSelected);
-            source.isSelected = selectedSourceIds.contains(source.id) || hasSelectedSegment;
+            source.isSelected =
+                selectedSourceIds.contains(source.id) || hasSelectedSegment;
           }
-          
+
           _hasUnsavedChanges = false;
           _isLoading = false;
         });
@@ -86,12 +87,9 @@ class _EditSourcesScreenState extends State<EditSourcesScreen> {
   /// Mevcut seçimlerin başlangıç durumundan farklı olup olmadığını kontrol eder
   bool _hasUnsavedChangesCheck() {
     // Seçili kaynakları topla
-    final currentSelectedSources = _sources
-        .where((s) => s.isSelected)
-        .map((s) => s.id)
-        .toList()
-      ..sort();
-    
+    final currentSelectedSources =
+        _sources.where((s) => s.isSelected).map((s) => s.id).toList()..sort();
+
     // Seçili segmentleri topla
     final currentSelectedSegments = <String>[];
     for (var source in _sources) {
@@ -102,29 +100,29 @@ class _EditSourcesScreenState extends State<EditSourcesScreen> {
       }
     }
     currentSelectedSegments.sort();
-    
+
     // İlk durumu sırala
     final initialSources = List.from(_initialSelectedSources)..sort();
     final initialSegments = List.from(_initialSelectedSegments)..sort();
-    
+
     // Listeleri karşılaştır
     if (currentSelectedSources.length != initialSources.length ||
         currentSelectedSegments.length != initialSegments.length) {
       return true;
     }
-    
+
     for (int i = 0; i < currentSelectedSources.length; i++) {
       if (currentSelectedSources[i] != initialSources[i]) {
         return true;
       }
     }
-    
+
     for (int i = 0; i < currentSelectedSegments.length; i++) {
       if (currentSelectedSegments[i] != initialSegments[i]) {
         return true;
       }
     }
-    
+
     return false;
   }
 
@@ -162,11 +160,11 @@ class _EditSourcesScreenState extends State<EditSourcesScreen> {
       final source = _sources.firstWhere((s) => s.id == sourceId);
       final segment = source.segments.firstWhere((s) => s.id == segmentId);
       segment.isSelected = !segment.isSelected;
-      
+
       // Eğer en az bir segment seçiliyse, kaynağı da otomatik seç
       final anySelected = source.segments.any((s) => s.isSelected);
       source.isSelected = anySelected;
-      
+
       _hasUnsavedChanges = _hasUnsavedChangesCheck();
     });
   }
@@ -174,18 +172,18 @@ class _EditSourcesScreenState extends State<EditSourcesScreen> {
   /// Değişiklikleri kaydeder - Repository üzerinden kalıcı hale getirir
   Future<void> _saveChanges() async {
     if (_isLoading || _isSaving) return;
-    
+
     setState(() {
       _isSaving = true;
     });
-    
+
     try {
       // Seçili ana kaynakların id'lerini topla
       final selectedSources = _sources
           .where((s) => s.isSelected)
           .map((s) => s.id)
           .toList();
-      
+
       // Seçili alt segmentlerin id'lerini topla
       final selectedSegments = <String>[];
       for (var source in _sources) {
@@ -195,11 +193,15 @@ class _EditSourcesScreenState extends State<EditSourcesScreen> {
           }
         }
       }
-      
+
       // Repository üzerinden kaydet
-      final sourcesSuccess = await SourceRepository.saveSelectedSources(selectedSources);
-      final segmentsSuccess = await SourceRepository.saveSelectedSegments(selectedSegments);
-      
+      final sourcesSuccess = await SourceRepository.saveSelectedSources(
+        selectedSources,
+      );
+      final segmentsSuccess = await SourceRepository.saveSelectedSegments(
+        selectedSegments,
+      );
+
       if (sourcesSuccess && segmentsSuccess) {
         // Başlangıç durumunu güncelle (değişiklik kontrolü için)
         if (mounted) {
@@ -211,11 +213,18 @@ class _EditSourcesScreenState extends State<EditSourcesScreen> {
             // Kaydetme sonrası tüm açık seçenekleri kapat
             _expandedIds.clear();
           });
-          
+
+          if (!mounted) return;
+
           // Provider'ı refresh et (global state güncelle)
-          final sourcesProvider = Provider.of<SelectedSourcesProvider>(context, listen: false);
+          final sourcesProvider = Provider.of<SelectedSourcesProvider>(
+            context,
+            listen: false,
+          );
           await sourcesProvider.loadSelectedSources();
-          
+
+          if (!mounted) return;
+
           // Onay ekranına git
           Navigator.of(context).pushReplacement(
             SlidePageRoute(
@@ -263,9 +272,7 @@ class _EditSourcesScreenState extends State<EditSourcesScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.cardBackground,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
           'Değişiklikler kaydedilmedi',
           style: AppTextStyles.sectionTitle(isDark: false),
@@ -279,19 +286,18 @@ class _EditSourcesScreenState extends State<EditSourcesScreen> {
             onPressed: () => Navigator.of(context).pop(false),
             child: Text(
               'İptal',
-              style: AppTextStyles.caption(isDark: false).copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+              style: AppTextStyles.caption(
+                isDark: false,
+              ).copyWith(fontWeight: FontWeight.w600),
             ),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
             child: Text(
               'Çık',
-              style: AppTextStyles.caption(isDark: false).copyWith(
-                fontWeight: FontWeight.w600,
-                color: AppColors.error,
-              ),
+              style: AppTextStyles.caption(
+                isDark: false,
+              ).copyWith(fontWeight: FontWeight.w600, color: AppColors.error),
             ),
           ),
         ],
@@ -332,9 +338,7 @@ class _EditSourcesScreenState extends State<EditSourcesScreen> {
           ),
         ),
         body: const Center(
-          child: CircularProgressIndicator(
-            color: AppColors.primaryLight,
-          ),
+          child: CircularProgressIndicator(color: AppColors.primaryLight),
         ),
       );
     }
@@ -367,88 +371,89 @@ class _EditSourcesScreenState extends State<EditSourcesScreen> {
               }
             },
           ),
-        centerTitle: true,
-        title: Text(
-          'Kaynaklarımı Düzenle',
-          style: AppTextStyles.pageTitle(isDark: false),
-        ),
-        actions: [
-          if (_isSaving)
-            const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: AppColors.primaryLight,
+          centerTitle: true,
+          title: Text(
+            'Kaynaklarımı Düzenle',
+            style: AppTextStyles.pageTitle(isDark: false),
+          ),
+          actions: [
+            if (_isSaving)
+              const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.primaryLight,
+                  ),
+                ),
+              )
+            else
+              TextButton(
+                onPressed: _hasUnsavedChanges ? _saveChanges : null,
+                child: Text(
+                  'Kaydet',
+                  style: AppTextStyles.button(
+                    color: _hasUnsavedChanges
+                        ? AppColors.primaryLight
+                        : AppColors.textSecondaryLight,
+                  ),
                 ),
               ),
-            )
-          else
-            TextButton(
-              onPressed: _hasUnsavedChanges ? _saveChanges : null,
-              child: Text(
-                'Kaydet',
-                style: AppTextStyles.button(
-                  color: _hasUnsavedChanges
-                      ? AppColors.primaryLight
-                      : AppColors.textSecondaryLight,
-                ),
-              ),
-            ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // BANKALAR Section
-            Padding(
-              padding: const EdgeInsets.only(left: 4, top: 8, bottom: 8),
-              child: Text(
-                'Bankalar',
-                style: AppTextStyles.sectionTitle(isDark: false),
-              ),
-            ),
-            ..._banks.map((source) => RepaintBoundary(
-                  child: _buildSourceAccordion(source),
-                )),
-            
-            const SizedBox(height: 24),
-            
-            // OPERATÖRLER Section
-            Padding(
-              padding: const EdgeInsets.only(left: 4, top: 8, bottom: 8),
-              child: Text(
-                'Operatörler',
-                style: AppTextStyles.sectionTitle(isDark: false),
-              ),
-            ),
-            ..._operators.map((source) => RepaintBoundary(
-                  child: _buildSourceAccordion(source),
-                )),
-            
-            const SizedBox(height: 16),
-            
-            // Info Text
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: Text(
-                'Alt seçimler, sana uygun kampanyaları daha doğru göstermemizi sağlar.',
-                style: AppTextStyles.caption(isDark: false).copyWith(
-                  fontSize: 12,
-                  color: AppColors.textSecondaryLight,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-            
-            const SizedBox(height: 24),
           ],
         ),
-      ),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // BANKALAR Section
+              Padding(
+                padding: const EdgeInsets.only(left: 4, top: 8, bottom: 8),
+                child: Text(
+                  'Bankalar',
+                  style: AppTextStyles.sectionTitle(isDark: false),
+                ),
+              ),
+              ..._banks.map(
+                (source) =>
+                    RepaintBoundary(child: _buildSourceAccordion(source)),
+              ),
+
+              const SizedBox(height: 24),
+
+              // OPERATÖRLER Section
+              Padding(
+                padding: const EdgeInsets.only(left: 4, top: 8, bottom: 8),
+                child: Text(
+                  'Operatörler',
+                  style: AppTextStyles.sectionTitle(isDark: false),
+                ),
+              ),
+              ..._operators.map(
+                (source) =>
+                    RepaintBoundary(child: _buildSourceAccordion(source)),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Info Text
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Text(
+                  'Alt seçimler, sana uygun kampanyaları daha doğru göstermemizi sağlar.',
+                  style: AppTextStyles.caption(
+                    isDark: false,
+                  ).copyWith(fontSize: 12, color: AppColors.textSecondaryLight),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+
+              const SizedBox(height: 24),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -456,14 +461,14 @@ class _EditSourcesScreenState extends State<EditSourcesScreen> {
   Widget _buildSourceAccordion(SourceModel source) {
     final isExpanded = _expandedIds.contains(source.id);
     final hasSegments = source.segments.isNotEmpty;
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 6),
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: AppColors.divider.withOpacity(0.2),
+          color: AppColors.divider.withValues(alpha: 0.2),
           width: 1,
         ),
       ),
@@ -480,7 +485,9 @@ class _EditSourcesScreenState extends State<EditSourcesScreen> {
         child: ExpansionTile(
           key: ValueKey('${source.id}_$isExpanded'),
           initiallyExpanded: isExpanded,
-          onExpansionChanged: hasSegments ? (expanded) => _toggleExpand(source.id) : null,
+          onExpansionChanged: hasSegments
+              ? (expanded) => _toggleExpand(source.id)
+              : null,
           tilePadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           childrenPadding: EdgeInsets.zero,
           leading: Checkbox(
@@ -500,10 +507,9 @@ class _EditSourcesScreenState extends State<EditSourcesScreen> {
               Expanded(
                 child: Text(
                   source.name,
-                  style: AppTextStyles.body(isDark: false).copyWith(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
-                  ),
+                  style: AppTextStyles.body(
+                    isDark: false,
+                  ).copyWith(fontSize: 15, fontWeight: FontWeight.w500),
                 ),
               ),
             ],
@@ -520,12 +526,17 @@ class _EditSourcesScreenState extends State<EditSourcesScreen> {
                   Divider(
                     height: 1,
                     thickness: 1,
-                    color: AppColors.divider.withOpacity(0.2),
+                    color: AppColors.divider.withValues(alpha: 0.2),
                     indent: 12,
                     endIndent: 12,
                   ),
                   Padding(
-                    padding: const EdgeInsets.only(left: 12, right: 12, top: 4, bottom: 8),
+                    padding: const EdgeInsets.only(
+                      left: 12,
+                      right: 12,
+                      top: 4,
+                      bottom: 8,
+                    ),
                     child: Column(
                       children: source.segments.map((segment) {
                         return RepaintBoundary(
@@ -536,21 +547,26 @@ class _EditSourcesScreenState extends State<EditSourcesScreen> {
                                 const SizedBox(width: 40),
                                 Checkbox(
                                   value: segment.isSelected,
-                                  onChanged: (value) => _toggleSegmentSelection(source.id, segment.id),
+                                  onChanged: (value) => _toggleSegmentSelection(
+                                    source.id,
+                                    segment.id,
+                                  ),
                                   activeColor: AppColors.secondaryLight,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(4),
                                   ),
-                                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  materialTapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
                                   visualDensity: VisualDensity.compact,
                                 ),
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
                                     segment.name,
-                                    style: AppTextStyles.caption(isDark: false).copyWith(
-                                      color: AppColors.textPrimaryLight,
-                                    ),
+                                    style: AppTextStyles.caption(isDark: false)
+                                        .copyWith(
+                                          color: AppColors.textPrimaryLight,
+                                        ),
                                   ),
                                 ),
                               ],
@@ -571,7 +587,7 @@ class _EditSourcesScreenState extends State<EditSourcesScreen> {
   Widget _buildLogo(SourceModel source) {
     final logoSvgPath = 'assets/images/logos/${source.id}.svg';
     final logoPngPath = 'assets/images/logos/${source.id}.png';
-    
+
     return Container(
       width: 50,
       height: 50,
@@ -582,13 +598,23 @@ class _EditSourcesScreenState extends State<EditSourcesScreen> {
         borderRadius: BorderRadius.circular(8),
       ),
       child: Center(
-        child: _buildLogoImage(logoSvgPath, logoPngPath, source, isExpanded: false),
+        child: _buildLogoImage(
+          logoSvgPath,
+          logoPngPath,
+          source,
+          isExpanded: false,
+        ),
       ),
     );
   }
 
   /// Logo görselini yükler (SVG öncelikli, PNG fallback)
-  Widget _buildLogoImage(String svgPath, String pngPath, SourceModel source, {bool isExpanded = false}) {
+  Widget _buildLogoImage(
+    String svgPath,
+    String pngPath,
+    SourceModel source, {
+    bool isExpanded = false,
+  }) {
     // Önce SVG dosyasının var olup olmadığını kontrol et
     // SVG yoksa direkt PNG'ye geç
     return FutureBuilder<String?>(
@@ -601,7 +627,11 @@ class _EditSourcesScreenState extends State<EditSourcesScreen> {
               child: SvgPicture.asset(
                 svgPath,
                 fit: BoxFit.contain,
-                placeholderBuilder: (context) => _buildPngOrFallback(pngPath, source, isExpanded: isExpanded),
+                placeholderBuilder: (context) => _buildPngOrFallback(
+                  pngPath,
+                  source,
+                  isExpanded: isExpanded,
+                ),
                 // allowDrawingOutsideViewBox: true, // SVG uyarılarını azaltır
               ),
             );
@@ -628,7 +658,11 @@ class _EditSourcesScreenState extends State<EditSourcesScreen> {
   }
 
   /// PNG'yi dene, yoksa fallback icon göster
-  Widget _buildPngOrFallback(String pngPath, SourceModel source, {bool isExpanded = false}) {
+  Widget _buildPngOrFallback(
+    String pngPath,
+    SourceModel source, {
+    bool isExpanded = false,
+  }) {
     return Center(
       child: Image.asset(
         pngPath,
@@ -640,14 +674,10 @@ class _EditSourcesScreenState extends State<EditSourcesScreen> {
             width: 50,
             height: 50,
             decoration: BoxDecoration(
-              color: source.color.withOpacity(0.1),
+              color: source.color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(
-              source.icon,
-              color: source.color,
-              size: 28,
-            ),
+            child: Icon(source.icon, color: source.color, size: 28),
           );
         },
       ),

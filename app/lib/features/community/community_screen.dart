@@ -59,7 +59,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
         ),
         title: Text(
           'Topluluk',
-          style: AppTextStyles.heading(isDark: false),
+          style: AppTextStyles.headline(isDark: false),
         ),
         centerTitle: false,
         actions: [
@@ -101,7 +101,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.error.withOpacity(0.1),
+          color: AppColors.error.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Row(
@@ -133,7 +133,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
         gradient: LinearGradient(
           colors: [
             AppColors.primaryLight,
-            AppColors.primaryLight.withOpacity(0.8),
+            AppColors.primaryLight.withValues(alpha: 0.8),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -141,7 +141,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primaryLight.withOpacity(0.3),
+            color: AppColors.primaryLight.withValues(alpha: 0.3),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -155,7 +155,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(
@@ -171,7 +171,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                   children: [
                     Text(
                       'Topluluk İstatistikleri',
-                      style: AppTextStyles.heading(isDark: false).copyWith(
+                      style: AppTextStyles.headline(isDark: false).copyWith(
                         color: Colors.white,
                         fontSize: 20,
                       ),
@@ -180,7 +180,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                     Text(
                       '${stats.totalUsers} aktif kullanıcı',
                       style: AppTextStyles.body(isDark: false).copyWith(
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                     ),
                   ],
@@ -242,7 +242,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
+        color: Colors.white.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -261,7 +261,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
           Text(
             label,
             style: AppTextStyles.caption(isDark: false).copyWith(
-              color: Colors.white.withOpacity(0.9),
+              color: Colors.white.withValues(alpha: 0.9),
             ),
             textAlign: TextAlign.center,
           ),
@@ -275,7 +275,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.error.withOpacity(0.1),
+          color: AppColors.error.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Row(
@@ -314,7 +314,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
       children: [
         Text(
           'Liderlik Tablosu',
-          style: AppTextStyles.heading(isDark: false).copyWith(
+          style: AppTextStyles.headline(isDark: false).copyWith(
             fontSize: 20,
           ),
         ),
@@ -351,7 +351,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: user.isCurrentUser
-            ? AppColors.primaryLight.withOpacity(0.1)
+            ? AppColors.primaryLight.withValues(alpha: 0.1)
             : AppColors.surfaceLight,
         borderRadius: BorderRadius.circular(16),
         border: user.isCurrentUser
@@ -368,7 +368,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: rankColor.withOpacity(0.2),
+              color: rankColor.withValues(alpha: 0.2),
               shape: BoxShape.circle,
             ),
             child: Center(
@@ -459,7 +459,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppColors.primaryLight.withOpacity(0.1),
+              color: AppColors.primaryLight.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(

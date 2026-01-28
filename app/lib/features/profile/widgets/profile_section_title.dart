@@ -25,7 +25,7 @@ class ProfileSectionTitle extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppColors.secondaryLight.withOpacity(0.1),
+                color: AppColors.secondaryLight.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(

@@ -81,7 +81,7 @@ class _GamificationSectionState extends State<GamificationSection> {
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.error.withOpacity(0.1),
+          color: AppColors.error.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Row(
@@ -113,7 +113,7 @@ class _GamificationSectionState extends State<GamificationSection> {
         gradient: LinearGradient(
           colors: [
             AppColors.primaryLight,
-            AppColors.primaryLight.withOpacity(0.8),
+            AppColors.primaryLight.withValues(alpha: 0.8),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -121,7 +121,7 @@ class _GamificationSectionState extends State<GamificationSection> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primaryLight.withOpacity(0.3),
+            color: AppColors.primaryLight.withValues(alpha: 0.3),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -135,7 +135,7 @@ class _GamificationSectionState extends State<GamificationSection> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(
@@ -151,7 +151,7 @@ class _GamificationSectionState extends State<GamificationSection> {
                   children: [
                     Text(
                       'Seviye ${points.level}',
-                      style: AppTextStyles.heading(isDark: false).copyWith(
+                      style: AppTextStyles.headline(isDark: false).copyWith(
                         color: Colors.white,
                         fontSize: 24,
                       ),
@@ -160,7 +160,7 @@ class _GamificationSectionState extends State<GamificationSection> {
                     Text(
                       '${points.totalPointsEarned} toplam puan',
                       style: AppTextStyles.body(isDark: false).copyWith(
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                     ),
                   ],
@@ -179,7 +179,7 @@ class _GamificationSectionState extends State<GamificationSection> {
                   Text(
                     'Bir sonraki seviyeye',
                     style: AppTextStyles.caption(isDark: false).copyWith(
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withValues(alpha: 0.9),
                     ),
                   ),
                   Text(
@@ -197,7 +197,7 @@ class _GamificationSectionState extends State<GamificationSection> {
                 child: LinearProgressIndicator(
                   value: points.levelProgress,
                   minHeight: 8,
-                  backgroundColor: Colors.white.withOpacity(0.3),
+                  backgroundColor: Colors.white.withValues(alpha: 0.3),
                   valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
                 ),
               ),
@@ -213,7 +213,7 @@ class _GamificationSectionState extends State<GamificationSection> {
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.error.withOpacity(0.1),
+          color: AppColors.error.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Row(
@@ -312,7 +312,7 @@ class _GamificationSectionState extends State<GamificationSection> {
         color: AppColors.surfaceLight,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: rarityColor.withOpacity(0.3),
+          color: rarityColor.withValues(alpha: 0.3),
           width: 2,
         ),
       ),
@@ -322,7 +322,7 @@ class _GamificationSectionState extends State<GamificationSection> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: rarityColor.withOpacity(0.1),
+              color: rarityColor.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(

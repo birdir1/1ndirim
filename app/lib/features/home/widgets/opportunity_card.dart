@@ -41,17 +41,17 @@ class OpportunityCard extends StatelessWidget {
           color: AppColors.cardBackground,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: SourceLogoHelper.getLogoBackgroundColor(opportunity.sourceName).withOpacity(0.2),
+            color: SourceLogoHelper.getLogoBackgroundColor(opportunity.sourceName).withValues(alpha: 0.2),
             width: 1.5,
           ),
           boxShadow: [
             BoxShadow(
-              color: SourceLogoHelper.getLogoBackgroundColor(opportunity.sourceName).withOpacity(0.08),
+              color: SourceLogoHelper.getLogoBackgroundColor(opportunity.sourceName).withValues(alpha: 0.08),
               blurRadius: 20,
               offset: const Offset(0, 6),
             ),
             BoxShadow(
-              color: AppColors.shadowDark.withOpacity(0.05),
+              color: AppColors.shadowDark.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: const Offset(0, 2),
             ),
@@ -68,12 +68,12 @@ class OpportunityCard extends StatelessWidget {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: SourceLogoHelper.getLogoBackgroundColor(opportunity.sourceName).withOpacity(0.3),
+                  color: SourceLogoHelper.getLogoBackgroundColor(opportunity.sourceName).withValues(alpha: 0.3),
                   width: 2,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: SourceLogoHelper.getLogoBackgroundColor(opportunity.sourceName).withOpacity(0.1),
+                    color: SourceLogoHelper.getLogoBackgroundColor(opportunity.sourceName).withValues(alpha: 0.1),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -130,10 +130,10 @@ class OpportunityCard extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                         decoration: BoxDecoration(
-                          color: SourceLogoHelper.getLogoBackgroundColor(opportunity.sourceName).withOpacity(0.15),
+                          color: SourceLogoHelper.getLogoBackgroundColor(opportunity.sourceName).withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
-                            color: SourceLogoHelper.getLogoBackgroundColor(opportunity.sourceName).withOpacity(0.3),
+                            color: SourceLogoHelper.getLogoBackgroundColor(opportunity.sourceName).withValues(alpha: 0.3),
                             width: 1,
                           ),
                         ),

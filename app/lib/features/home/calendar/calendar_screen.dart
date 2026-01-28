@@ -25,12 +25,14 @@ class _CalendarScreenState extends State<CalendarScreen> {
   DateTime _focusedDay = DateTime.now();
   DateTime _selectedDay = DateTime.now();
   CalendarFormat _calendarFormat = CalendarFormat.month;
-  
-  NetworkResult<List<OpportunityModel>> _campaignsResult = const NetworkLoading();
+
+  NetworkResult<List<OpportunityModel>> _campaignsResult =
+      const NetworkLoading();
   List<OpportunityModel> _campaigns = [];
   bool _isLoading = false;
 
-  final OpportunityRepository _opportunityRepository = OpportunityRepository.instance;
+  final OpportunityRepository _opportunityRepository =
+      OpportunityRepository.instance;
 
   @override
   void initState() {
@@ -49,18 +51,20 @@ class _CalendarScreenState extends State<CalendarScreen> {
       _campaignsResult = const NetworkLoading();
     });
 
-    final sourcesProvider = Provider.of<SelectedSourcesProvider>(context, listen: false);
+    final sourcesProvider = Provider.of<SelectedSourcesProvider>(
+      context,
+      listen: false,
+    );
     final selectedSourceNames = sourcesProvider.getSelectedSourceNames();
 
     try {
       // Tarih aralığı: seçili günün başından sonuna kadar
-      final startDate = DateTime(date.year, date.month, date.day);
-      final endDate = DateTime(date.year, date.month, date.day, 23, 59, 59);
+      final selectedDate = DateTime(date.year, date.month, date.day);
 
       // Backend'de findByDateRange kullanmak yerine, tüm aktif kampanyaları alıp
       // expiresAt'e göre filtreleyelim (daha basit)
       final result = await _opportunityRepository.getOpportunitiesBySources(
-        selectedSourceNames.isNotEmpty ? selectedSourceNames : null,
+        selectedSourceNames.isNotEmpty ? selectedSourceNames : [],
       );
 
       if (mounted) {
@@ -71,9 +75,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
             try {
               final expiresAt = DateTime.parse(campaign.expiresAt!);
               // Seçili günün başı ve sonu arasında bitecek kampanyalar
-              return expiresAt.year == date.year &&
-                     expiresAt.month == date.month &&
-                     expiresAt.day == date.day;
+              return expiresAt.year == selectedDate.year &&
+                  expiresAt.month == selectedDate.month &&
+                  expiresAt.day == selectedDate.day;
             } catch (e) {
               return false;
             }
@@ -94,7 +98,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _campaignsResult = NetworkError.general('Kampanyalar yüklenirken bir hata oluştu');
+          _campaignsResult = NetworkError.general(
+            'Kampanyalar yüklenirken bir hata oluştu',
+          );
           _isLoading = false;
         });
       }
@@ -125,7 +131,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         ),
         title: Text(
           'Kampanya Takvimi',
-          style: AppTextStyles.heading(isDark: false),
+          style: AppTextStyles.headline(isDark: false),
         ),
         centerTitle: false,
       ),
@@ -139,7 +145,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.shadowDark.withOpacity(0.1),
+                  color: AppColors.shadowDark.withValues(alpha: 0.1),
                   blurRadius: 10,
                   offset: const Offset(0, 2),
                 ),
@@ -164,22 +170,21 @@ class _CalendarScreenState extends State<CalendarScreen> {
               },
               calendarStyle: CalendarStyle(
                 outsideDaysVisible: false,
-                weekendTextStyle: AppTextStyles.body(isDark: false).copyWith(
-                  color: AppColors.textSecondaryLight,
-                ),
+                weekendTextStyle: AppTextStyles.body(
+                  isDark: false,
+                ).copyWith(color: AppColors.textSecondaryLight),
                 defaultTextStyle: AppTextStyles.body(isDark: false),
                 selectedDecoration: BoxDecoration(
                   color: AppColors.primaryLight,
                   shape: BoxShape.circle,
                 ),
                 todayDecoration: BoxDecoration(
-                  color: AppColors.primaryLight.withOpacity(0.3),
+                  color: AppColors.primaryLight.withValues(alpha: 0.3),
                   shape: BoxShape.circle,
                 ),
-                selectedTextStyle: AppTextStyles.body(isDark: false).copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
+                selectedTextStyle: AppTextStyles.body(
+                  isDark: false,
+                ).copyWith(color: Colors.white, fontWeight: FontWeight.bold),
                 todayTextStyle: AppTextStyles.body(isDark: false).copyWith(
                   color: AppColors.primaryLight,
                   fontWeight: FontWeight.bold,
@@ -193,9 +198,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   color: AppColors.primaryLight,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                formatButtonTextStyle: AppTextStyles.caption(isDark: false).copyWith(
-                  color: Colors.white,
-                ),
+                formatButtonTextStyle: AppTextStyles.caption(
+                  isDark: false,
+                ).copyWith(color: Colors.white),
                 leftChevronIcon: Icon(
                   Icons.chevron_left,
                   color: AppColors.textPrimaryLight,
@@ -229,9 +234,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 const Spacer(),
                 Text(
                   '${_campaigns.length} kampanya',
-                  style: AppTextStyles.caption(isDark: false).copyWith(
-                    color: AppColors.textSecondaryLight,
-                  ),
+                  style: AppTextStyles.caption(
+                    isDark: false,
+                  ).copyWith(color: AppColors.textSecondaryLight),
                 ),
               ],
             ),
@@ -240,9 +245,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
           const SizedBox(height: 16),
 
           // Kampanya Listesi
-          Expanded(
-            child: _buildCampaignsList(),
-          ),
+          Expanded(child: _buildCampaignsList()),
         ],
       ),
     );
@@ -251,9 +254,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
   Widget _buildCampaignsList() {
     if (_campaignsResult is NetworkLoading) {
       return const Center(
-        child: CircularProgressIndicator(
-          color: AppColors.primaryLight,
-        ),
+        child: CircularProgressIndicator(color: AppColors.primaryLight),
       );
     }
 
@@ -263,17 +264,13 @@ class _CalendarScreenState extends State<CalendarScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.error_outline,
-              size: 48,
-              color: AppColors.error,
-            ),
+            Icon(Icons.error_outline, size: 48, color: AppColors.error),
             const SizedBox(height: 16),
             Text(
               error.message,
-              style: AppTextStyles.body(isDark: false).copyWith(
-                color: AppColors.textSecondaryLight,
-              ),
+              style: AppTextStyles.body(
+                isDark: false,
+              ).copyWith(color: AppColors.textSecondaryLight),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
@@ -302,16 +299,16 @@ class _CalendarScreenState extends State<CalendarScreen> {
             const SizedBox(height: 16),
             Text(
               'Bu tarihte bitecek kampanya yok',
-              style: AppTextStyles.body(isDark: false).copyWith(
-                color: AppColors.textSecondaryLight,
-              ),
+              style: AppTextStyles.body(
+                isDark: false,
+              ).copyWith(color: AppColors.textSecondaryLight),
             ),
             const SizedBox(height: 8),
             Text(
               'Başka bir tarih seçmeyi deneyin',
-              style: AppTextStyles.caption(isDark: false).copyWith(
-                color: AppColors.textSecondaryLight,
-              ),
+              style: AppTextStyles.caption(
+                isDark: false,
+              ).copyWith(color: AppColors.textSecondaryLight),
             ),
           ],
         ),
@@ -337,9 +334,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
               );
             },
             borderRadius: BorderRadius.circular(20),
-            child: OpportunityCardV2(
-              opportunity: campaign,
-            ),
+            child: OpportunityCardV2(opportunity: campaign),
           ),
         );
       },

@@ -1,5 +1,4 @@
 import '../../core/utils/network_result.dart';
-import '../models/premium_subscription_model.dart';
 import '../models/premium_plan_model.dart';
 import '../models/premium_feature_model.dart';
 import '../datasources/premium_api_datasource.dart';
@@ -22,10 +21,7 @@ class PremiumRepository {
           ? e.toString().replaceFirst('Exception: ', '')
           : 'Premium durum kontrol edilirken bir hata oluştu';
 
-      return NetworkError.general(
-        errorMessage,
-        error: e,
-      );
+      return NetworkError.general(errorMessage, error: e);
     }
   }
 
@@ -39,10 +35,7 @@ class PremiumRepository {
           ? e.toString().replaceFirst('Exception: ', '')
           : 'Premium planlar alınırken bir hata oluştu';
 
-      return NetworkError.general(
-        errorMessage,
-        error: e,
-      );
+      return NetworkError.general(errorMessage, error: e);
     }
   }
 
@@ -56,27 +49,27 @@ class PremiumRepository {
           ? e.toString().replaceFirst('Exception: ', '')
           : 'Premium özellikler alınırken bir hata oluştu';
 
-      return NetworkError.general(
-        errorMessage,
-        error: e,
-      );
+      return NetworkError.general(errorMessage, error: e);
     }
   }
 
   /// Premium abonelik oluşturur
-  Future<NetworkResult<Map<String, dynamic>>> subscribe(String planType, {int? durationDays}) async {
+  Future<NetworkResult<Map<String, dynamic>>> subscribe(
+    String planType, {
+    int? durationDays,
+  }) async {
     try {
-      final result = await _apiDataSource.subscribe(planType, durationDays: durationDays);
+      final result = await _apiDataSource.subscribe(
+        planType,
+        durationDays: durationDays,
+      );
       return NetworkSuccess(result);
     } catch (e) {
       final errorMessage = e is Exception
           ? e.toString().replaceFirst('Exception: ', '')
           : 'Abonelik oluşturulurken bir hata oluştu';
 
-      return NetworkError.general(
-        errorMessage,
-        error: e,
-      );
+      return NetworkError.general(errorMessage, error: e);
     }
   }
 
@@ -90,10 +83,7 @@ class PremiumRepository {
           ? e.toString().replaceFirst('Exception: ', '')
           : 'Abonelik iptal edilirken bir hata oluştu';
 
-      return NetworkError.general(
-        errorMessage,
-        error: e,
-      );
+      return NetworkError.general(errorMessage, error: e);
     }
   }
 }

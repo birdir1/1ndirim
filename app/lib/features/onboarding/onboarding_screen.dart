@@ -69,15 +69,24 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       await prefsService.setOnboardingComplete(true);
       // Save selected sources via SourceRepository
       await SourceRepository.saveSelectedSources(_selectedSources);
-      
+
+      if (!mounted) return;
+
       // Provider'ı refresh et (global state güncelle)
-      final sourcesProvider = Provider.of<SelectedSourcesProvider>(context, listen: false);
+      final sourcesProvider = Provider.of<SelectedSourcesProvider>(
+        context,
+        listen: false,
+      );
       await sourcesProvider.loadSelectedSources();
-      
-      widget.onComplete();
+
+      if (mounted) {
+        widget.onComplete();
+      }
     } catch (e) {
       // Hata durumunda da devam et, kullanıcı deneyimini bozma
-      widget.onComplete();
+      if (mounted) {
+        widget.onComplete();
+      }
     }
   }
 
@@ -95,10 +104,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         },
         children: [
           // Page 1: Value Proposition
-          ValuePropPage(
-            onNext: _nextPage,
-            isDark: widget.isDark,
-          ),
+          ValuePropPage(onNext: _nextPage, isDark: widget.isDark),
 
           // Page 2: Selection
           SelectionPage(

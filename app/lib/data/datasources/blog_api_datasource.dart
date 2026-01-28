@@ -7,7 +7,7 @@ import '../models/blog_post_model.dart';
 /// Blog API Data Source
 class BlogApiDataSource {
   final Dio _dio;
-  final AuthService _authService = AuthService();
+  final AuthService _authService = AuthService.instance;
 
   BlogApiDataSource({Dio? dio})
       : _dio = dio ??

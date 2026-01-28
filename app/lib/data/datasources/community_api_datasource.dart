@@ -7,7 +7,7 @@ import '../models/community_stats_model.dart';
 /// Community API Data Source
 class CommunityApiDataSource {
   final Dio _dio;
-  final AuthService _authService = AuthService();
+  final AuthService _authService = AuthService.instance;
 
   CommunityApiDataSource({Dio? dio})
       : _dio = dio ??

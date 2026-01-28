@@ -3,14 +3,14 @@ import 'package:intl/intl.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/network_result.dart';
-import '../../core/utils/page_transitions.dart';
+
 import '../../data/models/price_tracking_model.dart';
 import '../../data/models/price_history_model.dart';
 import '../../data/repositories/price_tracking_repository.dart';
 import '../../core/widgets/empty_state.dart';
-import '../home/campaign_detail_screen.dart';
-import '../home/widgets/opportunity_card_v2.dart';
-import '../../data/models/opportunity_model.dart';
+
+
+
 
 /// Fiyat Takibi Ekranı
 /// Kullanıcının takip ettiği kampanyaları ve fiyat geçmişlerini gösterir
@@ -113,7 +113,7 @@ class _PriceTrackingScreenState extends State<PriceTrackingScreen> {
         ),
         title: Text(
           'Fiyat Takibi',
-          style: AppTextStyles.heading(isDark: false),
+          style: AppTextStyles.sectionTitle(isDark: false),
         ),
         centerTitle: false,
         actions: [
@@ -227,7 +227,7 @@ class _PriceTrackingScreenState extends State<PriceTrackingScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppColors.shadowDark.withOpacity(0.1),
+            color: AppColors.shadowDark.withValues(alpha: 0.1),
             blurRadius: 12,
             offset: const Offset(0, 2),
           ),
@@ -314,7 +314,7 @@ class _PriceTrackingScreenState extends State<PriceTrackingScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: priceChangeColor!.withOpacity(0.1),
+                  color: priceChangeColor!.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(

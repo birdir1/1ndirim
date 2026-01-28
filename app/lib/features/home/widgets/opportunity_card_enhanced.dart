@@ -45,12 +45,12 @@ class OpportunityCardEnhanced extends StatelessWidget {
           color: AppColors.cardBackground,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: SourceLogoHelper.getLogoBackgroundColor(opportunity.sourceName).withOpacity(0.15),
+            color: SourceLogoHelper.getLogoBackgroundColor(opportunity.sourceName).withValues(alpha: 0.15),
             width: 1.5,
           ),
           boxShadow: [
             BoxShadow(
-              color: AppColors.shadowDark.withOpacity(0.1),
+              color: AppColors.shadowDark.withValues(alpha: 0.1),
               blurRadius: 20,
               offset: const Offset(0, 6),
             ),
@@ -69,10 +69,10 @@ class OpportunityCardEnhanced extends StatelessWidget {
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: SourceLogoHelper.getLogoBackgroundColor(opportunity.sourceName).withOpacity(0.1),
+                      color: SourceLogoHelper.getLogoBackgroundColor(opportunity.sourceName).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: SourceLogoHelper.getLogoBackgroundColor(opportunity.sourceName).withOpacity(0.2),
+                        color: SourceLogoHelper.getLogoBackgroundColor(opportunity.sourceName).withValues(alpha: 0.2),
                         width: 1,
                       ),
                     ),
@@ -206,8 +206,8 @@ class OpportunityCardEnhanced extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(20),
                                 border: Border.all(
                                   color: isDiscount 
-                                      ? AppColors.badgeDiscountText.withOpacity(0.2)
-                                      : AppColors.badgeText.withOpacity(0.2),
+                                      ? AppColors.badgeDiscountText.withValues(alpha: 0.2)
+                                      : AppColors.badgeText.withValues(alpha: 0.2),
                                   width: 1,
                                 ),
                               ),

@@ -18,9 +18,6 @@ class PremiumScreen extends StatefulWidget {
 
 class _PremiumScreenState extends State<PremiumScreen> {
   final PremiumRepository _repository = PremiumRepository();
-  NetworkResult<Map<String, dynamic>>? _statusResult;
-  NetworkResult<List<PremiumPlanModel>>? _plansResult;
-  NetworkResult<List<PremiumFeatureModel>>? _featuresResult;
   
   bool? _isPremium;
   PremiumSubscriptionModel? _subscription;
@@ -52,7 +49,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
         _plansResult = plansResult;
         _featuresResult = featuresResult;
 
-        if (statusResult is NetworkSuccess) {
+        if (statusResult is NetworkSuccess<Map<String, dynamic>>) {
           _isPremium = statusResult.data['isPremium'] as bool? ?? false;
           if (statusResult.data['subscription'] != null) {
             _subscription = PremiumSubscriptionModel.fromMap(
@@ -61,11 +58,11 @@ class _PremiumScreenState extends State<PremiumScreen> {
           }
         }
 
-        if (plansResult is NetworkSuccess) {
+        if (plansResult is NetworkSuccess<List<PremiumPlanModel>>) {
           _plans = plansResult.data;
         }
 
-        if (featuresResult is NetworkSuccess) {
+        if (featuresResult is NetworkSuccess<List<PremiumFeatureModel>>) {
           _features = featuresResult.data;
         }
       });
@@ -97,7 +94,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(result is NetworkError ? result.message : 'Bir hata oluştu'),
+            content: Text(result is NetworkError<Map<String, dynamic>> ? result.message : 'Bir hata oluştu'),
             backgroundColor: AppColors.error,
           ),
         );
@@ -148,7 +145,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(result is NetworkError ? result.message : 'Bir hata oluştu'),
+            content: Text(result is NetworkError<Map<String, dynamic>> ? result.message : 'Bir hata oluştu'),
             backgroundColor: AppColors.error,
           ),
         );
@@ -177,7 +174,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
             const SizedBox(width: 8),
             Text(
               'Premium Üyelik',
-              style: AppTextStyles.heading(isDark: false),
+              style: AppTextStyles.headline(isDark: false),
             ),
           ],
         ),
@@ -237,7 +234,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
         gradient: LinearGradient(
           colors: [
             AppColors.warning,
-            AppColors.warning.withOpacity(0.8),
+            AppColors.warning.withValues(alpha: 0.8),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -245,7 +242,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppColors.warning.withOpacity(0.3),
+            color: AppColors.warning.withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -264,7 +261,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
                   children: [
                     Text(
                       'Premium Üyesiniz',
-                      style: AppTextStyles.heading(isDark: false).copyWith(
+                      style: AppTextStyles.headline(isDark: false).copyWith(
                         color: Colors.white,
                         fontSize: 20,
                       ),
@@ -273,7 +270,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
                       Text(
                         'Bitiş: ${DateFormat('dd MMM yyyy', 'tr_TR').format(_subscription!.expiresAt!)}',
                         style: AppTextStyles.body(isDark: false).copyWith(
-                          color: Colors.white.withOpacity(0.9),
+                          color: Colors.white.withValues(alpha: 0.9),
                           fontSize: 14,
                         ),
                       ),
@@ -306,7 +303,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
       children: [
         Text(
           'Premium Özellikler',
-          style: AppTextStyles.heading(isDark: false).copyWith(
+          style: AppTextStyles.headline(isDark: false).copyWith(
             fontSize: 20,
           ),
         ),
@@ -320,7 +317,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.shadowDark.withOpacity(0.05),
+                  color: AppColors.shadowDark.withValues(alpha: 0.05),
                   blurRadius: 4,
                   offset: const Offset(0, 2),
                 ),
@@ -331,7 +328,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: AppColors.primaryLight.withOpacity(0.1),
+                    color: AppColors.primaryLight.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
@@ -377,7 +374,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
       children: [
         Text(
           'Premium Planlar',
-          style: AppTextStyles.heading(isDark: false).copyWith(
+          style: AppTextStyles.headline(isDark: false).copyWith(
             fontSize: 20,
           ),
         ),
@@ -394,12 +391,12 @@ class _PremiumScreenState extends State<PremiumScreen> {
               color: AppColors.cardBackground,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: AppColors.primaryLight.withOpacity(0.3),
+                color: AppColors.primaryLight.withValues(alpha: 0.3),
                 width: 2,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.shadowDark.withOpacity(0.1),
+                  color: AppColors.shadowDark.withValues(alpha: 0.1),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
@@ -416,7 +413,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
                         children: [
                           Text(
                             plan.planName,
-                            style: AppTextStyles.heading(isDark: false).copyWith(
+                            style: AppTextStyles.headline(isDark: false).copyWith(
                               fontSize: 22,
                             ),
                           ),
@@ -436,7 +433,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: AppColors.success.withOpacity(0.1),
+                          color: AppColors.success.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
@@ -455,7 +452,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
                   children: [
                     Text(
                       '₺${price!.toStringAsFixed(2)}',
-                      style: AppTextStyles.heading(isDark: false).copyWith(
+                      style: AppTextStyles.headline(isDark: false).copyWith(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
                       ),
@@ -530,16 +527,16 @@ class _PremiumScreenState extends State<PremiumScreen> {
           const SizedBox(height: 16),
           Text(
             'Premium\'a Geçin',
-            style: AppTextStyles.heading(isDark: false).copyWith(
+            style: AppTextStyles.headline(isDark: false).copyWith(
               fontSize: 20,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             'Tüm premium özelliklere erişin ve kampanyalardan daha fazla yararlanın',
+            textAlign: TextAlign.center,
             style: AppTextStyles.body(isDark: false).copyWith(
               color: AppColors.textSecondaryLight,
-              textAlign: TextAlign.center,
             ),
           ),
         ],

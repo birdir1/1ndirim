@@ -19,13 +19,15 @@ class SearchScreen extends StatefulWidget {
 }
 
 class _SearchScreenState extends State<SearchScreen> {
-  final OpportunityRepository _opportunityRepository = OpportunityRepository.instance;
+  final OpportunityRepository _opportunityRepository =
+      OpportunityRepository.instance;
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _focusNode = FocusNode();
-  
-  NetworkResult<List<OpportunityModel>> _searchResult = const NetworkSuccess([]);
+
+  NetworkResult<List<OpportunityModel>> _searchResult = const NetworkSuccess(
+    [],
+  );
   List<OpportunityModel> _searchResults = [];
-  bool _isSearching = false;
   String _lastSearchTerm = '';
   Timer? _debounceTimer;
 
@@ -50,7 +52,7 @@ class _SearchScreenState extends State<SearchScreen> {
   /// Arama terimi değiştiğinde debounce ile arama yap
   void _onSearchChanged() {
     final searchTerm = _searchController.text.trim();
-    
+
     // Debounce: 500ms bekle
     _debounceTimer?.cancel();
     _debounceTimer = Timer(const Duration(milliseconds: 500), () {
@@ -72,25 +74,28 @@ class _SearchScreenState extends State<SearchScreen> {
     if (!mounted || searchTerm.trim().isEmpty) return;
 
     setState(() {
-      _isSearching = true;
       _searchResult = const NetworkLoading();
       _lastSearchTerm = searchTerm;
     });
 
     try {
       // Seçili kaynakları al
-      final sourcesProvider = Provider.of<SelectedSourcesProvider>(context, listen: false);
+      final sourcesProvider = Provider.of<SelectedSourcesProvider>(
+        context,
+        listen: false,
+      );
       final selectedSourceNames = sourcesProvider.getSelectedSourceNames();
 
       final result = await _opportunityRepository.searchCampaigns(
         searchTerm: searchTerm,
-        sourceNames: selectedSourceNames.isNotEmpty ? selectedSourceNames : null,
+        sourceNames: selectedSourceNames.isNotEmpty
+            ? selectedSourceNames
+            : null,
       );
 
       if (mounted && _lastSearchTerm == searchTerm) {
         setState(() {
           _searchResult = result;
-          _isSearching = false;
           if (result is NetworkSuccess<List<OpportunityModel>>) {
             _searchResults = result.data;
           }
@@ -99,8 +104,9 @@ class _SearchScreenState extends State<SearchScreen> {
     } catch (e) {
       if (mounted && _lastSearchTerm == searchTerm) {
         setState(() {
-          _searchResult = NetworkError.general('Arama yapılırken bir hata oluştu');
-          _isSearching = false;
+          _searchResult = NetworkError.general(
+            'Arama yapılırken bir hata oluştu',
+          );
         });
       }
     }
@@ -135,7 +141,10 @@ class _SearchScreenState extends State<SearchScreen> {
             border: InputBorder.none,
             suffixIcon: _searchController.text.isNotEmpty
                 ? IconButton(
-                    icon: const Icon(Icons.clear, color: AppColors.textSecondaryLight),
+                    icon: const Icon(
+                      Icons.clear,
+                      color: AppColors.textSecondaryLight,
+                    ),
                     onPressed: () {
                       _searchController.clear();
                     },
@@ -157,16 +166,15 @@ class _SearchScreenState extends State<SearchScreen> {
       return AppEmptyState(
         icon: Icons.search,
         title: 'Kampanya ara',
-        description: 'Aramak istediğin kampanyanın adını, açıklamasını veya kaynak adını yaz.',
+        description:
+            'Aramak istediğin kampanyanın adını, açıklamasını veya kaynak adını yaz.',
       );
     }
 
     // Arama yapılıyor
     if (_searchResult is NetworkLoading) {
       return const Center(
-        child: CircularProgressIndicator(
-          color: AppColors.primaryLight,
-        ),
+        child: CircularProgressIndicator(color: AppColors.primaryLight),
       );
     }
 
@@ -187,7 +195,8 @@ class _SearchScreenState extends State<SearchScreen> {
         return AppEmptyState(
           icon: Icons.search_off,
           title: 'Sonuç bulunamadı',
-          description: '"$_lastSearchTerm" için kampanya bulunamadı. Farklı bir terim deneyebilirsin.',
+          description:
+              '"$_lastSearchTerm" için kampanya bulunamadı. Farklı bir terim deneyebilirsin.',
         );
       }
 
@@ -211,9 +220,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
           final opportunity = _searchResults[index - 1];
           return RepaintBoundary(
-            child: OpportunityCardV2(
-              opportunity: opportunity,
-            ),
+            child: OpportunityCardV2(opportunity: opportunity),
           );
         },
       );

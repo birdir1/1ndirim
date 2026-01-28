@@ -48,7 +48,7 @@ class SaveConfirmationScreen extends StatelessWidget {
               height: 120,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.primaryLight.withOpacity(0.15),
+                color: AppColors.primaryLight.withValues(alpha: 0.15),
               ),
               child: Center(
                 child: Container(

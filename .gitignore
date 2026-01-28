@@ -22,3 +22,7 @@ app/.dart_tool/
 app/.packages
 app/build/
 app/*.iml
+SUNUCU-*.md
+FIREBASE-*.md
+*RAPOR*.md
+*RAPOR*.txt

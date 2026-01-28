@@ -25,7 +25,7 @@ class LanguageSettingsScreen extends StatelessWidget {
         ),
         title: Text(
           l10n.languageSettings,
-          style: AppTextStyles.heading(isDark: false),
+          style: AppTextStyles.headline(isDark: false),
         ),
         centerTitle: false,
       ),
@@ -51,12 +51,12 @@ class LanguageSettingsScreen extends StatelessWidget {
                 border: Border.all(
                   color: isSelected
                       ? AppColors.primaryLight
-                      : AppColors.textSecondaryLight.withOpacity(0.1),
+                      : AppColors.textSecondaryLight.withValues(alpha: 0.1),
                   width: isSelected ? 2 : 1,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.shadowDark.withOpacity(0.05),
+                    color: AppColors.shadowDark.withValues(alpha: 0.05),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -72,7 +72,7 @@ class LanguageSettingsScreen extends StatelessWidget {
                   height: 40,
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? AppColors.primaryLight.withOpacity(0.1)
+                        ? AppColors.primaryLight.withValues(alpha: 0.1)
                         : AppColors.surfaceLight,
                     borderRadius: BorderRadius.circular(12),
                   ),

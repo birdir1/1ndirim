@@ -7,7 +7,7 @@ import '../models/user_badge_model.dart';
 /// Gamification API Data Source
 class GamificationApiDataSource {
   final Dio _dio;
-  final AuthService _authService = AuthService();
+  final AuthService _authService = AuthService.instance;
 
   GamificationApiDataSource({Dio? dio})
       : _dio = dio ??

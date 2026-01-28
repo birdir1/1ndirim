@@ -6,7 +6,7 @@ import '../models/referral_stats_model.dart';
 /// Referans API Data Source
 class ReferralApiDataSource {
   final Dio _dio;
-  final AuthService _authService = AuthService();
+  final AuthService _authService = AuthService.instance;
 
   ReferralApiDataSource({Dio? dio})
       : _dio = dio ??
