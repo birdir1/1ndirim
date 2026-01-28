@@ -5,6 +5,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../widgets/app_bottom_navigation_bar.dart';
 import '../home/home_screen.dart';
+import '../favorites/favorites_screen.dart';
 // V2 için: Discover ve Notifications geri eklenebilir
 // import '../discover/discover_screen.dart';
 // import '../notifications/notifications_screen.dart';
@@ -22,6 +23,7 @@ class _MainShellState extends State<MainShell> {
 
   final List<Widget> _screens = const [
     HomeScreen(),
+    FavoritesScreen(),
     // V2 için: Discover ve Notifications geri eklenebilir
     // DiscoverScreen(),
     // NotificationsScreen(),

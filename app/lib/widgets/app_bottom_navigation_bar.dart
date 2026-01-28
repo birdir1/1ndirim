@@ -48,6 +48,12 @@ class AppBottomNavigationBar extends StatelessWidget {
                 label: 'Ana Sayfa',
                 index: 0,
               ),
+              _buildNavItem(
+                icon: Icons.favorite_border,
+                activeIcon: Icons.favorite,
+                label: 'Favoriler',
+                index: 1,
+              ),
               // V2 için: Discover ve Notifications geri eklenebilir
               // _buildNavItem(
               //   icon: Icons.explore_outlined,

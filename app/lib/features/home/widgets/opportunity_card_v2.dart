@@ -1,37 +1,152 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/page_transitions.dart';
 import '../../../core/utils/source_logo_helper.dart';
+import '../../../core/utils/network_result.dart';
 import '../../../data/models/opportunity_model.dart';
+import '../../../data/repositories/favorite_repository.dart';
 import '../campaign_detail_screen.dart';
 
 /// Opportunity Card Widget V2
 /// Görsel olarak tamamen yeniden tasarlandı - Logo'lar büyük ve net
-class OpportunityCardV2 extends StatelessWidget {
+/// Favori butonu eklendi
+class OpportunityCardV2 extends StatefulWidget {
   final OpportunityModel opportunity;
+  final bool? isFavorite; // Initial favorite state (optional)
 
   const OpportunityCardV2({
     super.key,
     required this.opportunity,
+    this.isFavorite,
   });
 
   @override
+  State<OpportunityCardV2> createState() => _OpportunityCardV2State();
+}
+
+class _OpportunityCardV2State extends State<OpportunityCardV2> {
+  bool _isFavorite = false;
+  bool _isLoading = false;
+  final FavoriteRepository _favoriteRepository = FavoriteRepository.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  @override
+  void initState() {
+    super.initState();
+    _isFavorite = widget.isFavorite ?? false;
+    // Kullanıcı giriş yapmışsa favori durumunu kontrol et
+    if (_auth.currentUser != null && widget.isFavorite == null) {
+      _checkFavoriteStatus();
+    }
+  }
+
+  Future<void> _checkFavoriteStatus() async {
+    try {
+      final isFav = await _favoriteRepository.isFavorite(widget.opportunity.id);
+      if (mounted) {
+        setState(() {
+          _isFavorite = isFav;
+        });
+      }
+    } catch (e) {
+      // Silent fail - favori durumu kontrol edilemezse varsayılan olarak false
+    }
+  }
+
+  Future<void> _toggleFavorite() async {
+    // Kullanıcı giriş yapmamışsa işlem yapma
+    if (_auth.currentUser == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Favori eklemek için giriş yapmanız gerekiyor'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    if (_isLoading) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      if (_isFavorite) {
+        // Favoriden çıkar
+        final result = await _favoriteRepository.removeFavorite(widget.opportunity.id);
+        if (result is NetworkSuccess) {
+          if (mounted) {
+            setState(() {
+              _isFavorite = false;
+              _isLoading = false;
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Favorilerden çıkarıldı'),
+                duration: Duration(seconds: 1),
+                backgroundColor: AppColors.success,
+              ),
+            );
+          }
+        } else {
+          throw Exception(result.error ?? 'Favoriden çıkarılamadı');
+        }
+      } else {
+        // Favoriye ekle
+        final result = await _favoriteRepository.addFavorite(widget.opportunity.id);
+        if (result is NetworkSuccess) {
+          if (mounted) {
+            setState(() {
+              _isFavorite = true;
+              _isLoading = false;
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Favorilere eklendi'),
+                duration: Duration(seconds: 1),
+                backgroundColor: AppColors.success,
+              ),
+            );
+          }
+        } else {
+          throw Exception(result.error ?? 'Favoriye eklenemedi');
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceFirst('Exception: ', '')),
+            backgroundColor: AppColors.error,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final sourceColor = SourceLogoHelper.getLogoBackgroundColor(opportunity.sourceName);
+    final sourceColor = SourceLogoHelper.getLogoBackgroundColor(widget.opportunity.sourceName);
     
     return InkWell(
       onTap: () {
         Navigator.of(context).push(
           SlidePageRoute(
             child: CampaignDetailScreen(
-              title: opportunity.title,
-              description: opportunity.subtitle,
+              title: widget.opportunity.title,
+              description: widget.opportunity.subtitle,
               detailText: 'Bu kampanyayı kullanmak için ilgili kartınızla alışveriş yapmanız yeterli.',
-              logoColor: opportunity.iconColor,
-              affiliateUrl: opportunity.affiliateUrl,
-              campaignId: opportunity.id,
-              originalUrl: opportunity.originalUrl ?? '',
+              logoColor: widget.opportunity.iconColor,
+              affiliateUrl: widget.opportunity.affiliateUrl,
+              campaignId: widget.opportunity.id,
+              originalUrl: widget.opportunity.originalUrl ?? '',
             ),
             direction: SlideDirection.right,
           ),
@@ -100,7 +215,7 @@ class OpportunityCardV2 extends StatelessWidget {
                     child: Padding(
                       padding: const EdgeInsets.all(14.0),
                       child: SourceLogoHelper.getLogoWidget(
-                        opportunity.sourceName,
+                        widget.opportunity.sourceName,
                         width: 52,
                         height: 52,
                       ),
@@ -113,7 +228,7 @@ class OpportunityCardV2 extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          opportunity.sourceName,
+                          widget.opportunity.sourceName,
                           style: AppTextStyles.cardTitle(isDark: false).copyWith(
                             fontSize: 20,
                             fontWeight: FontWeight.w700,
@@ -124,7 +239,7 @@ class OpportunityCardV2 extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 4),
-                        if (opportunity.tags.isNotEmpty)
+                        if (widget.opportunity.tags.isNotEmpty)
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
@@ -132,7 +247,7 @@ class OpportunityCardV2 extends StatelessWidget {
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
-                              opportunity.tags.first,
+                              widget.opportunity.tags.first,
                               style: AppTextStyles.small(isDark: false).copyWith(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
@@ -145,6 +260,40 @@ class OpportunityCardV2 extends StatelessWidget {
                       ],
                     ),
                   ),
+                  // Favori Butonu
+                  if (_auth.currentUser != null)
+                    GestureDetector(
+                      onTap: _toggleFavorite,
+                      child: Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: _isFavorite 
+                              ? AppColors.discountRed.withOpacity(0.1)
+                              : Colors.white.withOpacity(0.8),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: _isFavorite 
+                                ? AppColors.discountRed.withOpacity(0.3)
+                                : Colors.grey.withOpacity(0.3),
+                            width: 1.5,
+                          ),
+                        ),
+                        child: _isLoading
+                            ? const Padding(
+                                padding: EdgeInsets.all(12.0),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.discountRed),
+                                ),
+                              )
+                            : Icon(
+                                _isFavorite ? Icons.favorite : Icons.favorite_border,
+                                color: _isFavorite ? AppColors.discountRed : Colors.grey,
+                                size: 22,
+                              ),
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -157,14 +306,14 @@ class OpportunityCardV2 extends StatelessWidget {
                 children: [
                   // Title - Çok Büyük ve Belirgin
                   Text(
-                    opportunity.title,
+                    widget.opportunity.title,
                     style: AppTextStyles.cardTitle(isDark: false).copyWith(
                       fontSize: 20,
                       fontWeight: FontWeight.w800,
                       letterSpacing: -0.5,
                       height: 1.3,
-                      color: opportunity.title.contains('%') || 
-                             opportunity.title.toLowerCase().contains('indirim')
+                      color: widget.opportunity.title.contains('%') || 
+                             widget.opportunity.title.toLowerCase().contains('indirim')
                           ? AppColors.discountRed
                           : AppColors.textPrimaryLight,
                     ),
@@ -174,9 +323,9 @@ class OpportunityCardV2 extends StatelessWidget {
                   const SizedBox(height: 12),
                   
                   // Subtitle
-                  if (opportunity.subtitle.isNotEmpty)
+                  if (widget.opportunity.subtitle.isNotEmpty)
                     Text(
-                      opportunity.subtitle,
+                      widget.opportunity.subtitle,
                       style: AppTextStyles.cardSubtitle(isDark: false).copyWith(
                         fontSize: 15,
                         height: 1.5,
@@ -189,11 +338,11 @@ class OpportunityCardV2 extends StatelessWidget {
                   const SizedBox(height: 16),
                   
                   // Tags - Daha Büyük ve Görsel
-                  if (opportunity.tags.length > 1)
+                  if (widget.opportunity.tags.length > 1)
                     Wrap(
                       spacing: 10,
                       runSpacing: 10,
-                      children: opportunity.tags.skip(1).take(3).map((tag) {
+                      children: widget.opportunity.tags.skip(1).take(3).map((tag) {
                         final isDiscount = tag.toLowerCase().contains('%') || 
                                          tag.toLowerCase().contains('indirim') ||
                                          tag.toLowerCase().contains('son');
