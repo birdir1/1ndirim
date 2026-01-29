@@ -262,20 +262,12 @@ class _CompareScreenState extends State<CompareScreen> {
       {
         'label': 'Başlık',
         'values': _selectedCampaigns.map((c) => c.title).toList(),
-      },
-      {
-        'label': 'Kaynak',
-        'values': _selectedCampaigns.map((c) => c.sourceName).toList(),
+        'maxLines': 4, // Daha fazla satır için başlık
       },
       {
         'label': 'Açıklama',
         'values': _selectedCampaigns.map((c) => c.subtitle).toList(),
-      },
-      {
-        'label': 'Etiketler',
-        'values': _selectedCampaigns
-            .map((c) => c.tags.isNotEmpty ? c.tags.join(', ') : 'Etiket yok')
-            .toList(),
+        'maxLines': 5, // Daha fazla satır için açıklama
       },
       {
         'label': 'Bitiş Tarihi',
@@ -288,6 +280,7 @@ class _CompareScreenState extends State<CompareScreen> {
             return 'Geçersiz tarih';
           }
         }).toList(),
+        'maxLines': 2,
       },
     ];
 
@@ -301,6 +294,7 @@ class _CompareScreenState extends State<CompareScreen> {
           return _buildComparisonRow(
             label: row['label'] as String,
             values: row['values'] as List<String>,
+            maxLines: row['maxLines'] as int? ?? 3,
             isLast: isLast,
           );
         }),
@@ -313,10 +307,11 @@ class _CompareScreenState extends State<CompareScreen> {
   Widget _buildComparisonRow({
     required String label,
     required List<String> values,
+    int maxLines = 3,
     bool isLast = false,
   }) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
       decoration: BoxDecoration(
         border: Border(
           bottom: isLast
@@ -360,9 +355,10 @@ class _CompareScreenState extends State<CompareScreen> {
                             ? AppColors.textSecondaryLight
                             : AppColors.textPrimaryLight,
                         fontSize: 11,
+                        height: 1.3,
                       ),
                       textAlign: TextAlign.center,
-                      maxLines: 3,
+                      maxLines: maxLines,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
