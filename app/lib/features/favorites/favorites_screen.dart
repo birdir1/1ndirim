@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../core/theme/app_colors.dart';
-import '../../core/widgets/empty_state.dart' show AppEmptyState;
+import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/network_result.dart';
+import '../../core/utils/source_logo_helper.dart';
+import '../../core/utils/page_transitions.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../data/models/opportunity_model.dart';
 import '../../data/repositories/favorite_repository.dart';
-import '../home/widgets/opportunity_card_v2.dart';
+import '../home/campaign_detail_screen.dart';
 import '../auth/login_screen.dart';
 
 /// Favoriler Sayfası
@@ -31,7 +33,6 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   @override
   void initState() {
     super.initState();
-    // Context'e bağımlı işlemleri didChangeDependencies'e taşıdık
   }
 
   @override
@@ -43,18 +44,13 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     }
   }
 
-  /// Kullanıcı giriş kontrolü ve favorileri yükle
   Future<void> _checkAuthAndLoadFavorites() async {
     if (_auth.currentUser == null) {
-      // Kullanıcı giriş yapmamışsa, build metodunda zaten kontrol ediliyor
-      // Burada hata mesajı göstermeye gerek yok
       return;
     }
-
     await _loadFavorites();
   }
 
-  /// Favorileri yükle
   Future<void> _loadFavorites({bool force = false}) async {
     if (!mounted || (_isLoading && !force)) return;
 
@@ -89,131 +85,376 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     }
   }
 
+  Future<void> _removeFavorite(OpportunityModel campaign) async {
+    try {
+      final result = await _favoriteRepository.removeFavorite(campaign.id);
+      if (result is NetworkSuccess && mounted) {
+        setState(() {
+          _favorites.removeWhere((c) => c.id == campaign.id);
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Favorilerden kaldırıldı'),
+            backgroundColor: AppColors.success,
+            duration: Duration(seconds: 1),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Hata: $e'), backgroundColor: AppColors.error),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-
     // Kullanıcı giriş yapmamışsa login ekranına yönlendir
     if (_auth.currentUser == null) {
       return Scaffold(
+        backgroundColor: AppColors.backgroundLight,
         appBar: AppBar(
+          backgroundColor: AppColors.backgroundLight,
+          elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
+            icon: const Icon(
+              Icons.arrow_back,
+              color: AppColors.textPrimaryLight,
+            ),
             onPressed: () => Navigator.of(context).pop(),
           ),
-          title: Text(l10n?.myFavorites ?? 'Favorilerim'),
-          backgroundColor: Colors.white,
-          elevation: 0,
+          title: Text(
+            'Favoriler',
+            style: AppTextStyles.headline(isDark: false),
+          ),
+          centerTitle: true,
         ),
-        body: AppEmptyState(
-          icon: Icons.favorite_border,
-          title: l10n?.signIn ?? 'Giriş Yapın',
-          description:
-              l10n?.loginRequiredForFavorites ??
-              'Favorilerinizi görmek için giriş yapmanız gerekiyor',
-          actionText: l10n?.signIn ?? 'Giriş Yap',
-          onAction: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (context) => const LoginScreen()),
-            );
-          },
-        ),
+        body: _buildLoginRequired(),
       );
     }
 
     return Scaffold(
+      backgroundColor: AppColors.backgroundLight,
       appBar: AppBar(
+        backgroundColor: AppColors.backgroundLight,
+        elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimaryLight),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: Text(
-          l10n?.myFavorites ?? 'Favorilerim',
-          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 24),
-        ),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        actions: [
-          if (_isLoading)
-            const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    AppColors.discountRed,
-                  ),
-                ),
-              ),
-            )
-          else
-            IconButton(
-              icon: const Icon(Icons.refresh),
-              onPressed: () => _loadFavorites(force: true),
-              tooltip: l10n?.refresh ?? 'Yenile',
-            ),
-        ],
+        title: Text('Favoriler', style: AppTextStyles.headline(isDark: false)),
+        centerTitle: true,
       ),
       body: RefreshIndicator(
         onRefresh: () => _loadFavorites(force: true),
-        color: AppColors.discountRed,
+        color: AppColors.primaryLight,
         child: _buildBody(),
       ),
     );
   }
 
-  Widget _buildBody() {
-    final l10n = AppLocalizations.of(context);
+  Widget _buildLoginRequired() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                color: AppColors.primaryLight.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.favorite_border,
+                size: 60,
+                color: AppColors.primaryLight,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Giriş Yapın',
+              style: AppTextStyles.title(isDark: false),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Favorilerinizi görmek için giriş yapmanız gerekiyor',
+              style: AppTextStyles.body(
+                isDark: false,
+              ).copyWith(color: AppColors.textSecondaryLight),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 32),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => const LoginScreen()),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryLight,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 16,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text('Giriş Yap'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
+  Widget _buildBody() {
     if (_favoritesResult is NetworkLoading) {
       return const Center(
         child: CircularProgressIndicator(
-          valueColor: AlwaysStoppedAnimation<Color>(AppColors.discountRed),
+          valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryLight),
         ),
       );
     }
 
     if (_favoritesResult is NetworkError) {
       final error = _favoritesResult as NetworkError<List<OpportunityModel>>;
-      return AppEmptyState(
-        icon: Icons.error_outline,
-        title: l10n?.errorOccurred ?? 'Bir Hata Oluştu',
-        description: error.message,
-        actionText: l10n?.retry ?? 'Tekrar Dene',
-        onAction: () => _loadFavorites(force: true),
-      );
+      return _buildErrorState(error.message);
     }
 
     if (_favoritesResult is NetworkSuccess<List<OpportunityModel>>) {
       if (_favorites.isEmpty) {
-        return AppEmptyState(
-          icon: Icons.favorite_border,
-          title: l10n?.noFavoritesYet ?? 'Henüz Favoriniz Yok',
-          description:
-              l10n?.noFavoritesDescription ??
-              'Beğendiğiniz kampanyaları favorilere ekleyerek burada görebilirsiniz',
-          actionText: l10n?.exploreCampaigns ?? 'Kampanyaları Keşfet',
-          onAction: () {
-            Navigator.of(context).pop();
-          },
-        );
+        return _buildEmptyState();
       }
 
-      return ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: _favorites.length,
-        itemBuilder: (context, index) {
-          final campaign = _favorites[index];
-          return OpportunityCardV2(
-            opportunity: campaign,
-            isFavorite: true, // Favori sayfasında olduğu için true
-          );
-        },
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+            child: Text(
+              'Kaydettiğin tüm fırsatlar burada.',
+              style: AppTextStyles.title(isDark: false).copyWith(fontSize: 20),
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              itemCount: _favorites.length,
+              itemBuilder: (context, index) {
+                final campaign = _favorites[index];
+                return _buildFavoriteCard(campaign);
+              },
+            ),
+          ),
+        ],
       );
     }
 
     return const SizedBox.shrink();
+  }
+
+  Widget _buildFavoriteCard(OpportunityModel campaign) {
+    final sourceColor = SourceLogoHelper.getLogoBackgroundColor(
+      campaign.sourceName,
+    );
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.shadowDark.withValues(alpha: 0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            Navigator.of(context).push(
+              SlidePageRoute(
+                child: CampaignDetailScreen.fromOpportunity(
+                  opportunity: campaign,
+                ),
+                direction: SlideDirection.right,
+              ),
+            );
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                // Logo
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: sourceColor.withValues(alpha: 0.3),
+                      width: 2,
+                    ),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: SourceLogoHelper.getLogoWidget(
+                      campaign.sourceName,
+                      width: 44,
+                      height: 44,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                // Content
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        campaign.sourceName,
+                        style: AppTextStyles.caption(isDark: false).copyWith(
+                          color: AppColors.textSecondaryLight,
+                          fontSize: 12,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        campaign.title,
+                        style: AppTextStyles.body(isDark: false).copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primaryLight,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        campaign.subtitle,
+                        style: AppTextStyles.caption(isDark: false).copyWith(
+                          color: AppColors.textSecondaryLight,
+                          fontSize: 12,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                // Favorite button
+                IconButton(
+                  onPressed: () => _removeFavorite(campaign),
+                  icon: const Icon(
+                    Icons.favorite,
+                    color: AppColors.primaryLight,
+                    size: 28,
+                  ),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                color: AppColors.primaryLight.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.favorite_border,
+                size: 60,
+                color: AppColors.primaryLight.withValues(alpha: 0.5),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Henüz favorin yok',
+              style: AppTextStyles.title(isDark: false),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Beğendiğin fırsatları kalbe basarak buraya ekleyebilirsin.',
+              style: AppTextStyles.body(
+                isDark: false,
+              ).copyWith(color: AppColors.textSecondaryLight),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorState(String message) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, size: 64, color: AppColors.error),
+            const SizedBox(height: 16),
+            Text(
+              'Bir Hata Oluştu',
+              style: AppTextStyles.title(isDark: false),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              message,
+              style: AppTextStyles.body(
+                isDark: false,
+              ).copyWith(color: AppColors.textSecondaryLight),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () => _loadFavorites(force: true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryLight,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 16,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text('Tekrar Dene'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
