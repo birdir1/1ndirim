@@ -42,12 +42,76 @@ class _ProfileHeaderState extends State<ProfileHeader> {
     }
   }
 
+  Future<void> _showEditDialog(BuildContext context) async {
+    final TextEditingController nameController = TextEditingController(
+      text: _userName ?? '',
+    );
+
+    return showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Profili Düzenle'),
+        content: TextField(
+          controller: nameController,
+          decoration: const InputDecoration(
+            labelText: 'İsim',
+            hintText: 'Adınızı girin',
+          ),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('İptal'),
+          ),
+          TextButton(
+            onPressed: () async {
+              final newName = nameController.text.trim();
+              if (newName.isNotEmpty) {
+                try {
+                  await PreferencesService.instance.setUserName(newName);
+                  if (context.mounted) {
+                    Navigator.of(context).pop();
+                    setState(() {
+                      _userName = newName;
+                    });
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Profil güncellendi'),
+                        backgroundColor: AppColors.success,
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Hata: $e'),
+                        backgroundColor: AppColors.error,
+                      ),
+                    );
+                  }
+                }
+              }
+            },
+            child: const Text('Kaydet'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Consumer<PremiumProvider>(
       builder: (context, premiumProvider, child) {
         final isPremium = premiumProvider.isPremium == true;
-        
+        final backgroundColor = isDark
+            ? AppColors.backgroundDark
+            : AppColors.backgroundLight;
+
         return Column(
           children: [
             Stack(
@@ -56,7 +120,9 @@ class _ProfileHeaderState extends State<ProfileHeader> {
                   width: 112,
                   height: 112,
                   decoration: BoxDecoration(
-                    color: AppColors.cardBackground,
+                    color: isDark
+                        ? AppColors.surfaceDark
+                        : AppColors.cardBackground,
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
@@ -69,34 +135,36 @@ class _ProfileHeaderState extends State<ProfileHeader> {
                   child: Icon(
                     Icons.account_circle,
                     size: 56,
-                    color: isPremium ? AppColors.warning : AppColors.secondaryLight,
+                    color: isPremium
+                        ? AppColors.warning
+                        : AppColors.secondaryLight,
                   ),
                 ),
                 Positioned(
                   bottom: 0,
                   right: 0,
-                  child: Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: AppColors.secondaryLight,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: AppColors.backgroundLight,
-                        width: 3,
+                  child: GestureDetector(
+                    onTap: () => _showEditDialog(context),
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: AppColors.secondaryLight,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: backgroundColor, width: 3),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.shadowLight,
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.shadowLight,
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.edit,
-                      size: 16,
-                      color: AppColors.cardBackground,
+                      child: const Icon(
+                        Icons.edit,
+                        size: 16,
+                        color: AppColors.cardBackground,
+                      ),
                     ),
                   ),
                 ),
@@ -109,10 +177,7 @@ class _ProfileHeaderState extends State<ProfileHeader> {
                       decoration: BoxDecoration(
                         color: AppColors.warning,
                         shape: BoxShape.circle,
-                        border: Border.all(
-                          color: AppColors.backgroundLight,
-                          width: 2,
-                        ),
+                        border: Border.all(color: backgroundColor, width: 2),
                       ),
                       child: const Icon(
                         Icons.star,
@@ -123,15 +188,15 @@ class _ProfileHeaderState extends State<ProfileHeader> {
                   ),
               ],
             ),
-        const SizedBox(height: 16),
-        Text(
-          _isLoading
-              ? 'Hesabın'
-              : (_userName != null && _userName!.isNotEmpty
-                  ? 'Sayın $_userName'
-                  : 'Hesabın'),
-          style: AppTextStyles.title(isDark: false),
-        ),
+            const SizedBox(height: 16),
+            Text(
+              _isLoading
+                  ? 'Hesabın'
+                  : (_userName != null && _userName!.isNotEmpty
+                        ? 'Sayın $_userName'
+                        : 'Hesabın'),
+              style: AppTextStyles.title(isDark: isDark),
+            ),
             const SizedBox(height: 8),
             if (isPremium)
               Container(
@@ -152,15 +217,11 @@ class _ProfileHeaderState extends State<ProfileHeader> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(
-                      Icons.star,
-                      size: 14,
-                      color: Colors.white,
-                    ),
+                    const Icon(Icons.star, size: 14, color: Colors.white),
                     const SizedBox(width: 4),
                     Text(
                       'Premium',
-                      style: AppTextStyles.caption(isDark: false).copyWith(
+                      style: AppTextStyles.caption(isDark: isDark).copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                       ),
@@ -169,17 +230,16 @@ class _ProfileHeaderState extends State<ProfileHeader> {
                 ),
               ),
             Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 6,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
               decoration: BoxDecoration(
-                color: AppColors.overlayWhiteLight,
+                color: isDark
+                    ? AppColors.surfaceDark.withValues(alpha: 0.5)
+                    : AppColors.overlayWhiteLight,
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
                 'Sadece seçimlerinize göre çalışır',
-                style: AppTextStyles.caption(isDark: false),
+                style: AppTextStyles.caption(isDark: isDark),
               ),
             ),
           ],

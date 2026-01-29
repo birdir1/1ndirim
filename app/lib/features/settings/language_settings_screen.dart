@@ -13,19 +13,26 @@ class LanguageSettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final localeProvider = Provider.of<LocaleProvider>(context);
     final l10n = AppLocalizations.of(context)!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final backgroundColor = isDark
+        ? AppColors.backgroundDark
+        : AppColors.backgroundLight;
+    final textColor = isDark
+        ? AppColors.textPrimaryDark
+        : AppColors.textPrimaryLight;
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
+      backgroundColor: backgroundColor,
       appBar: AppBar(
-        backgroundColor: AppColors.backgroundLight,
+        backgroundColor: backgroundColor,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimaryLight),
+          icon: Icon(Icons.arrow_back, color: textColor),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
           l10n.languageSettings,
-          style: AppTextStyles.headline(isDark: false),
+          style: AppTextStyles.headline(isDark: isDark),
         ),
         centerTitle: false,
       ),
@@ -34,24 +41,41 @@ class LanguageSettingsScreen extends StatelessWidget {
         children: [
           Text(
             l10n.selectLanguage,
-            style: AppTextStyles.body(isDark: false).copyWith(
-              color: AppColors.textSecondaryLight,
+            style: AppTextStyles.body(isDark: isDark).copyWith(
+              color: isDark
+                  ? AppColors.textSecondaryDark
+                  : AppColors.textSecondaryLight,
             ),
           ),
           const SizedBox(height: 20),
           ...LocaleProvider.supportedLocales.map((locale) {
-            final isSelected = localeProvider.locale.languageCode == locale.languageCode;
-            final languageName = LocaleProvider.languageNames[locale.languageCode] ?? locale.languageCode;
+            final isSelected =
+                localeProvider.locale.languageCode == locale.languageCode;
+            final languageName =
+                LocaleProvider.languageNames[locale.languageCode] ??
+                locale.languageCode;
+            final primaryColor = isDark
+                ? AppColors.primaryDark
+                : AppColors.primaryLight;
+            final cardColor = isDark
+                ? AppColors.surfaceDark
+                : AppColors.cardBackground;
+            final surfaceColor = isDark
+                ? AppColors.backgroundDark
+                : AppColors.surfaceLight;
 
             return Container(
               margin: const EdgeInsets.only(bottom: 12),
               decoration: BoxDecoration(
-                color: AppColors.cardBackground,
+                color: cardColor,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                   color: isSelected
-                      ? AppColors.primaryLight
-                      : AppColors.textSecondaryLight.withValues(alpha: 0.1),
+                      ? primaryColor
+                      : (isDark
+                                ? AppColors.textSecondaryDark
+                                : AppColors.textSecondaryLight)
+                            .withValues(alpha: 0.1),
                   width: isSelected ? 2 : 1,
                 ),
                 boxShadow: [
@@ -72,36 +96,35 @@ class LanguageSettingsScreen extends StatelessWidget {
                   height: 40,
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? AppColors.primaryLight.withValues(alpha: 0.1)
-                        : AppColors.surfaceLight,
+                        ? primaryColor.withValues(alpha: 0.1)
+                        : surfaceColor,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Center(
                     child: Text(
                       locale.languageCode.toUpperCase(),
-                      style: AppTextStyles.body(isDark: false).copyWith(
+                      style: AppTextStyles.body(isDark: isDark).copyWith(
                         fontWeight: FontWeight.bold,
                         color: isSelected
-                            ? AppColors.primaryLight
-                            : AppColors.textSecondaryLight,
+                            ? primaryColor
+                            : (isDark
+                                  ? AppColors.textSecondaryDark
+                                  : AppColors.textSecondaryLight),
                       ),
                     ),
                   ),
                 ),
                 title: Text(
                   languageName,
-                  style: AppTextStyles.body(isDark: false).copyWith(
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                    color: isSelected
-                        ? AppColors.primaryLight
-                        : AppColors.textPrimaryLight,
+                  style: AppTextStyles.body(isDark: isDark).copyWith(
+                    fontWeight: isSelected
+                        ? FontWeight.bold
+                        : FontWeight.normal,
+                    color: isSelected ? primaryColor : textColor,
                   ),
                 ),
                 trailing: isSelected
-                    ? Icon(
-                        Icons.check_circle,
-                        color: AppColors.primaryLight,
-                      )
+                    ? Icon(Icons.check_circle, color: primaryColor)
                     : null,
                 onTap: () async {
                   await localeProvider.setLocale(locale);
@@ -109,7 +132,7 @@ class LanguageSettingsScreen extends StatelessWidget {
                     Navigator.of(context).pop();
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('${l10n.language} ${l10n.save.toLowerCase()}'),
+                        content: Text('Dil ayarı güncellendi: $languageName'),
                         backgroundColor: AppColors.success,
                         duration: const Duration(seconds: 2),
                       ),

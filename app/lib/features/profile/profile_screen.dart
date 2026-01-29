@@ -10,16 +10,10 @@ import 'widgets/profile_header.dart';
 import 'widgets/profile_menu_item.dart';
 import 'widgets/sources_section.dart';
 import 'widgets/notifications_section.dart';
-import 'widgets/stats_section.dart';
-import 'widgets/gamification_section.dart';
-import '../../data/repositories/user_stats_repository.dart';
-import '../../data/models/user_stats_model.dart';
-import '../../core/utils/network_result.dart';
 import '../how_it_works/how_it_works_screen.dart';
 import '../settings/kvkk_screen.dart';
 import '../settings/terms_of_use_screen.dart';
 import '../settings/language_settings_screen.dart';
-import '../community/community_screen.dart';
 import '../blog/blog_screen.dart';
 import '../premium/premium_screen.dart';
 
@@ -34,30 +28,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _newOpportunitiesEnabled = true;
   bool _expiringOpportunitiesEnabled = false;
   bool _isLoading = true;
-  bool _isLoadingStats = true;
-  NetworkResult<UserStatsModel>? _statsResult;
-  final UserStatsRepository _statsRepository = UserStatsRepository.instance;
 
   @override
   void initState() {
     super.initState();
     _loadNotificationSettings();
-    _loadUserStats();
-  }
-
-  Future<void> _loadUserStats() async {
-    setState(() {
-      _isLoadingStats = true;
-    });
-
-    final result = await _statsRepository.getUserStats();
-
-    if (mounted) {
-      setState(() {
-        _statsResult = result;
-        _isLoadingStats = false;
-      });
-    }
   }
 
   Future<void> _loadNotificationSettings() async {
@@ -133,13 +108,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final backgroundColor = isDark
+        ? AppColors.backgroundDark
+        : AppColors.backgroundLight;
+    final textColor = isDark
+        ? AppColors.textPrimaryDark
+        : AppColors.textPrimaryLight;
+
     return Scaffold(
-      backgroundColor: AppColors.backgroundLight, // #FFF2C6
+      backgroundColor: backgroundColor,
       appBar: AppBar(
-        backgroundColor: AppColors.backgroundLight,
+        backgroundColor: backgroundColor,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimaryLight),
+          icon: Icon(Icons.arrow_back, color: textColor),
           onPressed: () {
             Navigator.of(context).pop();
           },
@@ -159,13 +142,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     const SizedBox(height: 20),
                     const ProfileHeader(),
                     const SizedBox(height: 32),
-                    StatsSection(
-                      statsResult: _statsResult,
-                      isLoading: _isLoadingStats,
-                    ),
-                    const SizedBox(height: 20),
-                    const GamificationSection(),
-                    const SizedBox(height: 20),
                     const SourcesSection(),
                     const SizedBox(height: 20),
                     NotificationsSection(
@@ -180,18 +156,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     const SizedBox(height: 12),
                     Column(
                       children: [
-                        ProfileMenuItem(
-                          icon: Icons.people,
-                          title: 'Topluluk',
-                          onTap: () {
-                            Navigator.of(context).push(
-                              SlidePageRoute(
-                                child: const CommunityScreen(),
-                                direction: SlideDirection.right,
-                              ),
-                            );
-                          },
-                        ),
                         ProfileMenuItem(
                           icon: Icons.article,
                           title: 'Blog & Rehberler',
