@@ -8,10 +8,10 @@ import '../../core/utils/network_result.dart';
 class OpportunityRepository {
   // API datasource (ana kaynak)
   final OpportunityApiDataSource _apiDataSource;
-  
+
   // Mock datasource (fallback veya test için)
   final OpportunityMockDataSource _mockDataSource;
-  
+
   // API kullanımını kontrol eder (şimdilik true, backend hazır olduğunda)
   static const bool _useApi = true;
 
@@ -23,9 +23,9 @@ class OpportunityRepository {
   }
 
   OpportunityRepository._()
-      : _apiDataSource = OpportunityApiDataSource(),
-        _mockDataSource = OpportunityMockDataSource();
-  
+    : _apiDataSource = OpportunityApiDataSource(),
+      _mockDataSource = OpportunityMockDataSource();
+
   // Aktif datasource'u döndürür
   dynamic get _dataSource => _useApi ? _apiDataSource : _mockDataSource;
 
@@ -36,15 +36,12 @@ class OpportunityRepository {
       return NetworkSuccess(opportunities);
     } catch (e) {
       // Exception mesajını extract et
-      final errorMessage = e is Exception 
+      final errorMessage = e is Exception
           ? e.toString().replaceFirst('Exception: ', '')
           : 'Fırsatlar yüklenirken bir hata oluştu';
-      
+
       // Hata durumunda NetworkError döndür (app crash etmeyecek)
-      return NetworkError.general(
-        errorMessage,
-        error: e,
-      );
+      return NetworkError.general(errorMessage, error: e);
     }
   }
 
@@ -56,19 +53,18 @@ class OpportunityRepository {
       if (sourceNames.isEmpty) {
         return const NetworkSuccess([]);
       }
-      final opportunities = await _dataSource.getOpportunitiesBySources(sourceNames);
+      final opportunities = await _dataSource.getOpportunitiesBySources(
+        sourceNames,
+      );
       return NetworkSuccess(opportunities);
     } catch (e) {
       // Exception mesajını extract et
-      final errorMessage = e is Exception 
+      final errorMessage = e is Exception
           ? e.toString().replaceFirst('Exception: ', '')
           : 'Fırsatlar yüklenirken bir hata oluştu';
-      
+
       // Hata durumunda NetworkError döndür (app crash etmeyecek)
-      return NetworkError.general(
-        errorMessage,
-        error: e,
-      );
+      return NetworkError.general(errorMessage, error: e);
     }
   }
 
@@ -95,15 +91,12 @@ class OpportunityRepository {
       return NetworkSuccess(opportunities);
     } catch (e) {
       // Exception mesajını extract et
-      final errorMessage = e is Exception 
+      final errorMessage = e is Exception
           ? e.toString().replaceFirst('Exception: ', '')
           : 'Arama yapılırken bir hata oluştu';
-      
+
       // Hata durumunda NetworkError döndür (app crash etmeyecek)
-      return NetworkError.general(
-        errorMessage,
-        error: e,
-      );
+      return NetworkError.general(errorMessage, error: e);
     }
   }
 
@@ -119,14 +112,25 @@ class OpportunityRepository {
       );
       return NetworkSuccess(opportunities);
     } catch (e) {
-      final errorMessage = e is Exception 
+      final errorMessage = e is Exception
           ? e.toString().replaceFirst('Exception: ', '')
           : 'Yakında bitecek kampanyalar yüklenirken bir hata oluştu';
-      
-      return NetworkError.general(
-        errorMessage,
-        error: e,
-      );
+
+      return NetworkError.general(errorMessage, error: e);
+    }
+  }
+
+  /// Tüm kampanyaları getirir (Discovery için - kaynak filtresi olmadan)
+  Future<NetworkResult<List<OpportunityModel>>> getAllOpportunities() async {
+    try {
+      final opportunities = await _dataSource.getOpportunities();
+      return NetworkSuccess(opportunities);
+    } catch (e) {
+      final errorMessage = e is Exception
+          ? e.toString().replaceFirst('Exception: ', '')
+          : 'Kampanyalar yüklenirken bir hata oluştu';
+
+      return NetworkError.general(errorMessage, error: e);
     }
   }
 }

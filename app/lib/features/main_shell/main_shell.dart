@@ -6,9 +6,8 @@ import '../../core/theme/app_text_styles.dart';
 import '../../widgets/app_bottom_navigation_bar.dart';
 import '../home/home_screen.dart';
 import '../favorites/favorites_screen.dart';
-// V2 için: Discover ve Notifications geri eklenebilir
-// import '../discover/discover_screen.dart';
-// import '../notifications/notifications_screen.dart';
+import '../compare/compare_screen_tab.dart';
+import '../discovery/discovery_screen.dart';
 
 /// Ana Shell Widget - Bottom Navigation ile tüm ana ekranları yönetir
 class MainShell extends StatefulWidget {
@@ -24,9 +23,8 @@ class _MainShellState extends State<MainShell> {
   final List<Widget> _screens = const [
     HomeScreen(),
     FavoritesScreen(),
-    // V2 için: Discover ve Notifications geri eklenebilir
-    // DiscoverScreen(),
-    // NotificationsScreen(),
+    CompareScreenTab(),
+    DiscoveryScreen(),
   ];
 
   void _onTabTapped(int index) {
@@ -42,19 +40,19 @@ class _MainShellState extends State<MainShell> {
     if (!Platform.isAndroid) {
       return true;
     }
-    
+
     // Android'de geri tuşuna basıldığında uygulamadan çıkış için double-tap kontrolü
     final now = DateTime.now();
-    if (_lastBackPressed == null || 
+    if (_lastBackPressed == null ||
         now.difference(_lastBackPressed!) > const Duration(seconds: 2)) {
       _lastBackPressed = now;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             'Çıkmak için tekrar geri tuşuna bas',
-            style: AppTextStyles.caption(isDark: false).copyWith(
-              color: AppColors.cardBackground,
-            ),
+            style: AppTextStyles.caption(
+              isDark: false,
+            ).copyWith(color: AppColors.cardBackground),
           ),
           backgroundColor: AppColors.textPrimaryLight,
           duration: const Duration(seconds: 2),
@@ -77,7 +75,7 @@ class _MainShellState extends State<MainShell> {
             Navigator.of(context).pop();
             return;
           }
-          
+
           // Ana ekrandaysak double-tap kontrolü yap
           final shouldPop = await _onWillPop();
           if (shouldPop && mounted) {
@@ -91,10 +89,7 @@ class _MainShellState extends State<MainShell> {
         body: SafeArea(
           top: true,
           bottom: false, // Bottom navigation bar kendi SafeArea'sını yönetiyor
-          child: IndexedStack(
-            index: _currentIndex,
-            children: _screens,
-          ),
+          child: IndexedStack(index: _currentIndex, children: _screens),
         ),
         bottomNavigationBar: AppBottomNavigationBar(
           currentIndex: _currentIndex,

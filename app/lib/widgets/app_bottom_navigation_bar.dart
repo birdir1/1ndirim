@@ -20,10 +20,7 @@ class AppBottomNavigationBar extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.overlayWhite,
           border: Border(
-            top: BorderSide(
-              color: AppColors.dividerLight,
-              width: 1,
-            ),
+            top: BorderSide(color: AppColors.dividerLight, width: 1),
           ),
           borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(20),
@@ -54,19 +51,18 @@ class AppBottomNavigationBar extends StatelessWidget {
                 label: 'Favoriler',
                 index: 1,
               ),
-              // V2 için: Discover ve Notifications geri eklenebilir
-              // _buildNavItem(
-              //   icon: Icons.explore_outlined,
-              //   activeIcon: Icons.explore,
-              //   label: 'Keşfet',
-              //   index: 2,
-              // ),
-              // _buildNavItem(
-              //   icon: Icons.notifications_outlined,
-              //   activeIcon: Icons.notifications,
-              //   label: 'Bildirimler',
-              //   index: 3,
-              // ),
+              _buildNavItem(
+                icon: Icons.compare_arrows,
+                activeIcon: Icons.compare_arrows,
+                label: 'Karşılaştır',
+                index: 2,
+              ),
+              _buildNavItem(
+                icon: Icons.explore_outlined,
+                activeIcon: Icons.explore,
+                label: 'Keşif',
+                index: 3,
+              ),
             ],
           ),
         ),
@@ -93,7 +89,8 @@ class AppBottomNavigationBar extends StatelessWidget {
                 isActive ? activeIcon : icon,
                 size: 26,
                 color: isActive
-                    ? AppColors.primaryLight // Mavi (primary)
+                    ? AppColors
+                          .primaryLight // Mavi (primary)
                     : AppColors.iconSecondary,
               ),
               const SizedBox(height: 4),
@@ -103,7 +100,8 @@ class AppBottomNavigationBar extends StatelessWidget {
                   fontSize: 10,
                   fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
                   color: isActive
-                      ? AppColors.primaryLight // Mavi (primary)
+                      ? AppColors
+                            .primaryLight // Mavi (primary)
                       : AppColors.iconSecondary,
                 ),
               ),
