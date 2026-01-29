@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/page_transitions.dart';
+import '../../core/utils/source_logo_helper.dart';
 import '../../data/models/opportunity_model.dart';
 import '../home/campaign_detail_screen.dart';
 
@@ -189,25 +190,43 @@ class _CompareScreenState extends State<CompareScreen> {
           Expanded(
             child: Row(
               children: _selectedCampaigns.map((campaign) {
+                final sourceColor = SourceLogoHelper.getLogoBackgroundColor(
+                  campaign.sourceName,
+                );
+
                 return Expanded(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 8),
                     child: Column(
                       children: [
                         Container(
-                          width: 40,
-                          height: 40,
+                          width: 60,
+                          height: 60,
                           decoration: BoxDecoration(
-                            color: campaign.iconBgColor,
-                            shape: BoxShape.circle,
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: sourceColor.withValues(alpha: 0.3),
+                              width: 2,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: sourceColor.withValues(alpha: 0.15),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
                           ),
-                          child: Icon(
-                            campaign.icon,
-                            color: campaign.iconColor,
-                            size: 20,
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: SourceLogoHelper.getLogoWidget(
+                              campaign.sourceName,
+                              width: 44,
+                              height: 44,
+                            ),
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 8),
                         Text(
                           campaign.sourceName,
                           style: AppTextStyles.caption(isDark: false).copyWith(
@@ -215,7 +234,7 @@ class _CompareScreenState extends State<CompareScreen> {
                             color: AppColors.textPrimaryLight,
                           ),
                           textAlign: TextAlign.center,
-                          maxLines: 1,
+                          maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ],
