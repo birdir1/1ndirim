@@ -60,7 +60,6 @@ class _SearchScreenState extends State<SearchScreen> {
         setState(() {
           _searchResult = const NetworkSuccess([]);
           _searchResults = [];
-          _isSearching = false;
           _lastSearchTerm = '';
         });
       } else if (searchTerm != _lastSearchTerm) {

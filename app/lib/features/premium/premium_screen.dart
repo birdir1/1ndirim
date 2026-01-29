@@ -45,9 +45,6 @@ class _PremiumScreenState extends State<PremiumScreen> {
     if (mounted) {
       setState(() {
         _isLoading = false;
-        _statusResult = statusResult;
-        _plansResult = plansResult;
-        _featuresResult = featuresResult;
 
         if (statusResult is NetworkSuccess<Map<String, dynamic>>) {
           _isPremium = statusResult.data['isPremium'] as bool? ?? false;

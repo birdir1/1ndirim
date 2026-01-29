@@ -41,14 +41,13 @@ class _ReferralScreenState extends State<ReferralScreen> {
     if (mounted) {
       setState(() {
         _isLoading = false;
-        _statsResult = statsResult;
 
         if (codeResult is NetworkSuccess<String>) {
-          _referralCode = (codeResult as NetworkSuccess<String>).data;
+          _referralCode = codeResult.data;
         }
 
         if (statsResult is NetworkSuccess<ReferralStatsModel>) {
-          _stats = (statsResult as NetworkSuccess<ReferralStatsModel>).data;
+          _stats = statsResult.data;
           _referralCode ??= _stats?.referralCode;
         }
       });
@@ -225,7 +224,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
                     icon: const Icon(Icons.share, size: 20),
                     label: const Text('Paylaş'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white.withOpacity(0.2),
+                      backgroundColor: Colors.white.withValues(alpha: 0.2),
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
@@ -294,7 +293,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppColors.shadowDark.withOpacity(0.1),
+            color: AppColors.shadowDark.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -306,7 +305,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, color: color, size: 24),
@@ -352,7 +351,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.shadowDark.withOpacity(0.05),
+                  color: AppColors.shadowDark.withValues(alpha: 0.05),
                   blurRadius: 4,
                   offset: const Offset(0, 2),
                 ),
@@ -364,7 +363,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: AppColors.primaryLight.withOpacity(0.1),
+                    color: AppColors.primaryLight.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Icon(
@@ -402,7 +401,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.success.withOpacity(0.1),
+                    color: AppColors.success.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
