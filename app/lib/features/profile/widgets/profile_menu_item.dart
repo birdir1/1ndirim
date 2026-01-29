@@ -17,6 +17,14 @@ class ProfileMenuItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark
+        ? AppColors.textPrimaryDark
+        : AppColors.textPrimaryLight;
+    final iconColor = isDark
+        ? AppColors.textSecondaryDark
+        : AppColors.textSecondaryLight;
+
     return InkWell(
       onTap: onTap,
       child: Container(
@@ -26,25 +34,17 @@ class ProfileMenuItem extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(
-                  icon,
-                  size: 20,
-                  color: AppColors.textSecondaryLight,
-                ),
+                Icon(icon, size: 20, color: iconColor),
                 const SizedBox(width: 12),
                 Text(
                   title,
-                  style: AppTextStyles.caption(isDark: false).copyWith(
-                    color: AppColors.textPrimaryLight,
-                  ),
+                  style: AppTextStyles.caption(
+                    isDark: isDark,
+                  ).copyWith(color: textColor),
                 ),
               ],
             ),
-            Icon(
-              Icons.chevron_right,
-              size: 20,
-              color: AppColors.textSecondaryLight,
-            ),
+            Icon(Icons.chevron_right, size: 20, color: iconColor),
           ],
         ),
       ),

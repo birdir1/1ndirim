@@ -44,12 +44,18 @@ class _NotificationsSectionState extends State<NotificationsSection> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? AppColors.surfaceDark : AppColors.cardBackground;
+    final secondaryTextColor = isDark
+        ? AppColors.textSecondaryDark
+        : AppColors.textSecondaryLight;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       margin: const EdgeInsets.symmetric(horizontal: 5),
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: cardColor,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -79,10 +85,7 @@ class _NotificationsSectionState extends State<NotificationsSection> {
                   onChanged: widget.onNewOpportunitiesChanged,
                 ),
                 const SizedBox(height: 20),
-                Divider(
-                  color: AppColors.divider,
-                  height: 1,
-                ),
+                Divider(color: AppColors.divider, height: 1),
                 const SizedBox(height: 20),
                 NotificationToggleTile(
                   title: 'Süresi dolmak üzere olanlar',
@@ -91,10 +94,7 @@ class _NotificationsSectionState extends State<NotificationsSection> {
                   onChanged: widget.onExpiringChanged,
                 ),
                 const SizedBox(height: 20),
-                Divider(
-                  color: AppColors.divider,
-                  height: 1,
-                ),
+                Divider(color: AppColors.divider, height: 1),
                 const SizedBox(height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -102,29 +102,29 @@ class _NotificationsSectionState extends State<NotificationsSection> {
                     Row(
                       children: [
                         Icon(
-                          _fcmTokenStatus == 'Aktif' 
-                            ? Icons.check_circle 
-                            : Icons.info_outline,
+                          _fcmTokenStatus == 'Aktif'
+                              ? Icons.check_circle
+                              : Icons.info_outline,
                           size: 16,
                           color: _fcmTokenStatus == 'Aktif'
-                            ? AppColors.success
-                            : AppColors.textSecondaryLight,
+                              ? AppColors.success
+                              : secondaryTextColor,
                         ),
                         const SizedBox(width: 8),
                         Text(
                           'Bildirim durumu',
-                          style: AppTextStyles.caption(isDark: false).copyWith(
-                            color: AppColors.textSecondaryLight,
-                          ),
+                          style: AppTextStyles.caption(
+                            isDark: isDark,
+                          ).copyWith(color: secondaryTextColor),
                         ),
                       ],
                     ),
                     Text(
                       _fcmTokenStatus ?? 'Kontrol ediliyor...',
-                      style: AppTextStyles.caption(isDark: false).copyWith(
+                      style: AppTextStyles.caption(isDark: isDark).copyWith(
                         color: _fcmTokenStatus == 'Aktif'
-                          ? AppColors.success
-                          : AppColors.textSecondaryLight,
+                            ? AppColors.success
+                            : secondaryTextColor,
                       ),
                     ),
                   ],

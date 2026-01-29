@@ -79,7 +79,9 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
     try {
       if (_isFavorite) {
         // Favoriden çıkar
-        final result = await _favoriteRepository.removeFavorite(widget.opportunity.id);
+        final result = await _favoriteRepository.removeFavorite(
+          widget.opportunity.id,
+        );
         if (result is NetworkSuccess) {
           if (mounted) {
             setState(() {
@@ -101,7 +103,9 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
         }
       } else {
         // Favoriye ekle
-        final result = await _favoriteRepository.addFavorite(widget.opportunity.id);
+        final result = await _favoriteRepository.addFavorite(
+          widget.opportunity.id,
+        );
         if (result is NetworkSuccess) {
           if (mounted) {
             setState(() {
@@ -140,8 +144,15 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
 
   @override
   Widget build(BuildContext context) {
-    final sourceColor = SourceLogoHelper.getLogoBackgroundColor(widget.opportunity.sourceName);
-    
+    final sourceColor = SourceLogoHelper.getLogoBackgroundColor(
+      widget.opportunity.sourceName,
+    );
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? AppColors.surfaceDark : Colors.white;
+    final logoBackgroundColor = isDark
+        ? AppColors.backgroundDark
+        : Colors.white;
+
     return InkWell(
       onTap: () {
         Navigator.of(context).push(
@@ -157,7 +168,7 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
       child: Container(
         margin: const EdgeInsets.only(bottom: 20),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: cardColor,
           borderRadius: BorderRadius.circular(28),
           border: Border.all(
             color: sourceColor.withValues(alpha: 0.25),
@@ -184,7 +195,9 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: sourceColor.withValues(alpha: 0.05),
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(28),
+                ),
                 border: Border(
                   bottom: BorderSide(
                     color: sourceColor.withValues(alpha: 0.1),
@@ -199,7 +212,7 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
                     width: 80,
                     height: 80,
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: logoBackgroundColor,
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
                         color: sourceColor.withValues(alpha: 0.3),
@@ -230,30 +243,35 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
                       children: [
                         Text(
                           widget.opportunity.sourceName,
-                          style: AppTextStyles.cardTitle(isDark: false).copyWith(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                            color: sourceColor,
-                            letterSpacing: -0.5,
-                          ),
+                          style: AppTextStyles.cardTitle(isDark: isDark)
+                              .copyWith(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w700,
+                                color: sourceColor,
+                                letterSpacing: -0.5,
+                              ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 4),
                         if (widget.opportunity.tags.isNotEmpty)
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
                               color: sourceColor.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
                               widget.opportunity.tags.first,
-                              style: AppTextStyles.small(isDark: false).copyWith(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                                color: sourceColor,
-                              ),
+                              style: AppTextStyles.small(isDark: isDark)
+                                  .copyWith(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                    color: sourceColor,
+                                  ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -267,33 +285,45 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
                       // Karşılaştırma Butonu
                       Consumer<CompareProvider>(
                         builder: (context, compareProvider, child) {
-                          final isInCompare = compareProvider.contains(widget.opportunity.id);
+                          final isInCompare = compareProvider.contains(
+                            widget.opportunity.id,
+                          );
                           final isFull = compareProvider.isFull && !isInCompare;
-                          
+
                           return GestureDetector(
                             onTap: () {
                               if (isInCompare) {
-                                compareProvider.removeCampaign(widget.opportunity.id);
+                                compareProvider.removeCampaign(
+                                  widget.opportunity.id,
+                                );
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
-                                    content: Text('Karşılaştırmadan kaldırıldı'),
+                                    content: Text(
+                                      'Karşılaştırmadan kaldırıldı',
+                                    ),
                                     duration: Duration(seconds: 1),
                                   ),
                                 );
                               } else if (isFull) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: Text('En fazla ${CompareProvider.maxCompareCount} kampanya karşılaştırabilirsiniz'),
+                                    content: Text(
+                                      'En fazla ${CompareProvider.maxCompareCount} kampanya karşılaştırabilirsiniz',
+                                    ),
                                     duration: const Duration(seconds: 2),
                                     backgroundColor: AppColors.error,
                                   ),
                                 );
                               } else {
-                                final added = compareProvider.addCampaign(widget.opportunity);
+                                final added = compareProvider.addCampaign(
+                                  widget.opportunity,
+                                );
                                 if (added) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                      content: Text('${compareProvider.count}/${CompareProvider.maxCompareCount} kampanya seçildi'),
+                                      content: Text(
+                                        '${compareProvider.count}/${CompareProvider.maxCompareCount} kampanya seçildi',
+                                      ),
                                       duration: const Duration(seconds: 1),
                                       action: compareProvider.count >= 2
                                           ? SnackBarAction(
@@ -303,9 +333,11 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
                                                 Navigator.of(context).push(
                                                   SlidePageRoute(
                                                     child: CompareScreen(
-                                                      campaigns: compareProvider.campaigns,
+                                                      campaigns: compareProvider
+                                                          .campaigns,
                                                     ),
-                                                    direction: SlideDirection.up,
+                                                    direction:
+                                                        SlideDirection.up,
                                                   ),
                                                 );
                                               },
@@ -321,12 +353,16 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
                               height: 40,
                               decoration: BoxDecoration(
                                 color: isInCompare
-                                    ? AppColors.primaryLight.withValues(alpha: 0.1)
+                                    ? AppColors.primaryLight.withValues(
+                                        alpha: 0.1,
+                                      )
                                     : Colors.white.withValues(alpha: 0.8),
                                 shape: BoxShape.circle,
                                 border: Border.all(
                                   color: isInCompare
-                                      ? AppColors.primaryLight.withValues(alpha: 0.3)
+                                      ? AppColors.primaryLight.withValues(
+                                          alpha: 0.3,
+                                        )
                                       : Colors.grey.withValues(alpha: 0.3),
                                   width: 1.5,
                                 ),
@@ -335,7 +371,9 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
                                 Icons.compare_arrows,
                                 color: isInCompare
                                     ? AppColors.primaryLight
-                                    : (isFull ? Colors.grey.withValues(alpha: 0.5) : Colors.grey),
+                                    : (isFull
+                                          ? Colors.grey.withValues(alpha: 0.5)
+                                          : Colors.grey),
                                 size: 20,
                               ),
                             ),
@@ -351,13 +389,15 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
                             width: 40,
                             height: 40,
                             decoration: BoxDecoration(
-                              color: _isFavorite 
+                              color: _isFavorite
                                   ? AppColors.discountRed.withValues(alpha: 0.1)
                                   : Colors.white.withValues(alpha: 0.8),
                               shape: BoxShape.circle,
                               border: Border.all(
-                                color: _isFavorite 
-                                    ? AppColors.discountRed.withValues(alpha: 0.3)
+                                color: _isFavorite
+                                    ? AppColors.discountRed.withValues(
+                                        alpha: 0.3,
+                                      )
                                     : Colors.grey.withValues(alpha: 0.3),
                                 width: 1.5,
                               ),
@@ -367,12 +407,18 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
                                     padding: EdgeInsets.all(10.0),
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.discountRed),
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        AppColors.discountRed,
+                                      ),
                                     ),
                                   )
                                 : Icon(
-                                    _isFavorite ? Icons.favorite : Icons.favorite_border,
-                                    color: _isFavorite ? AppColors.discountRed : Colors.grey,
+                                    _isFavorite
+                                        ? Icons.favorite
+                                        : Icons.favorite_border,
+                                    color: _isFavorite
+                                        ? AppColors.discountRed
+                                        : Colors.grey,
                                     size: 20,
                                   ),
                           ),
@@ -382,7 +428,7 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
                 ],
               ),
             ),
-            
+
             // Content
             Padding(
               padding: const EdgeInsets.all(20),
@@ -392,13 +438,16 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
                   // Title - Çok Büyük ve Belirgin
                   Text(
                     widget.opportunity.title,
-                    style: AppTextStyles.cardTitle(isDark: false).copyWith(
+                    style: AppTextStyles.cardTitle(isDark: isDark).copyWith(
                       fontSize: 20,
                       fontWeight: FontWeight.w800,
                       letterSpacing: -0.5,
                       height: 1.3,
-                      color: widget.opportunity.title.contains('%') || 
-                             widget.opportunity.title.toLowerCase().contains('indirim')
+                      color:
+                          widget.opportunity.title.contains('%') ||
+                              widget.opportunity.title.toLowerCase().contains(
+                                'indirim',
+                              )
                           ? AppColors.discountRed
                           : AppColors.textPrimaryLight,
                     ),
@@ -406,12 +455,12 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 12),
-                  
+
                   // Subtitle
                   if (widget.opportunity.subtitle.isNotEmpty)
                     Text(
                       widget.opportunity.subtitle,
-                      style: AppTextStyles.cardSubtitle(isDark: false).copyWith(
+                      style: AppTextStyles.cardSubtitle(isDark: isDark).copyWith(
                         fontSize: 15,
                         height: 1.5,
                         color: AppColors.textSecondaryLight,
@@ -419,44 +468,50 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
                       maxLines: 3,
                       overflow: TextOverflow.ellipsis,
                     ),
-                  
+
                   const SizedBox(height: 16),
-                  
+
                   // Tags - Daha Büyük ve Görsel
                   if (widget.opportunity.tags.length > 1)
                     Wrap(
                       spacing: 10,
                       runSpacing: 10,
-                      children: widget.opportunity.tags.skip(1).take(3).map((tag) {
-                        final isDiscount = tag.toLowerCase().contains('%') || 
-                                         tag.toLowerCase().contains('indirim') ||
-                                         tag.toLowerCase().contains('son');
+                      children: widget.opportunity.tags.skip(1).take(3).map((
+                        tag,
+                      ) {
+                        final isDiscount =
+                            tag.toLowerCase().contains('%') ||
+                            tag.toLowerCase().contains('indirim') ||
+                            tag.toLowerCase().contains('son');
                         return Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 14,
                             vertical: 8,
                           ),
                           decoration: BoxDecoration(
-                            color: isDiscount 
-                                ? AppColors.badgeDiscountBackground 
+                            color: isDiscount
+                                ? AppColors.badgeDiscountBackground
                                 : AppColors.badgeBackground,
                             borderRadius: BorderRadius.circular(22),
                             border: Border.all(
-                              color: isDiscount 
-                                  ? AppColors.badgeDiscountText.withValues(alpha: 0.3)
+                              color: isDiscount
+                                  ? AppColors.badgeDiscountText.withValues(
+                                      alpha: 0.3,
+                                    )
                                   : AppColors.badgeText.withValues(alpha: 0.3),
                               width: 1.5,
                             ),
                           ),
                           child: Text(
                             tag,
-                            style: AppTextStyles.badgeText(isDark: false).copyWith(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: isDiscount 
-                                  ? AppColors.badgeDiscountText 
-                                  : AppColors.badgeText,
-                            ),
+                            style: AppTextStyles.badgeText(isDark: isDark)
+                                .copyWith(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: isDiscount
+                                      ? AppColors.badgeDiscountText
+                                      : AppColors.badgeText,
+                                ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
