@@ -118,13 +118,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
         appBar: AppBar(
           backgroundColor: AppColors.backgroundLight,
           elevation: 0,
-          leading: IconButton(
-            icon: const Icon(
-              Icons.arrow_back,
-              color: AppColors.textPrimaryLight,
-            ),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
+          automaticallyImplyLeading: false,
           title: Text(
             'Favoriler',
             style: AppTextStyles.headline(isDark: false),
@@ -140,10 +134,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.backgroundLight,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimaryLight),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
+        automaticallyImplyLeading: false,
         title: Text('Favoriler', style: AppTextStyles.headline(isDark: false)),
         centerTitle: true,
       ),

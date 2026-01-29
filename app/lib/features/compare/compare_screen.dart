@@ -176,19 +176,26 @@ class _CompareScreenState extends State<CompareScreen> {
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 120,
-            child: Text(
-              'Özellik',
-              style: AppTextStyles.body(isDark: false).copyWith(
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimaryLight,
+            width: 100,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 20),
+              child: Text(
+                'Özellik',
+                style: AppTextStyles.caption(isDark: false).copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimaryLight,
+                  fontSize: 12,
+                ),
               ),
             ),
           ),
+          const SizedBox(width: 8),
           Expanded(
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: _selectedCampaigns.map((campaign) {
                 final sourceColor = SourceLogoHelper.getLogoBackgroundColor(
                   campaign.sourceName,
@@ -196,42 +203,43 @@ class _CompareScreenState extends State<CompareScreen> {
 
                 return Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
                     child: Column(
                       children: [
                         Container(
-                          width: 60,
-                          height: 60,
+                          width: 50,
+                          height: 50,
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(10),
                             border: Border.all(
                               color: sourceColor.withValues(alpha: 0.3),
-                              width: 2,
+                              width: 1.5,
                             ),
                             boxShadow: [
                               BoxShadow(
                                 color: sourceColor.withValues(alpha: 0.15),
-                                blurRadius: 8,
+                                blurRadius: 6,
                                 offset: const Offset(0, 2),
                               ),
                             ],
                           ),
                           child: Padding(
-                            padding: const EdgeInsets.all(8.0),
+                            padding: const EdgeInsets.all(6.0),
                             child: SourceLogoHelper.getLogoWidget(
                               campaign.sourceName,
-                              width: 44,
-                              height: 44,
+                              width: 38,
+                              height: 38,
                             ),
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 6),
                         Text(
                           campaign.sourceName,
                           style: AppTextStyles.caption(isDark: false).copyWith(
                             fontWeight: FontWeight.bold,
                             color: AppColors.textPrimaryLight,
+                            fontSize: 11,
                           ),
                           textAlign: TextAlign.center,
                           maxLines: 2,
@@ -308,7 +316,7 @@ class _CompareScreenState extends State<CompareScreen> {
     bool isLast = false,
   }) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         border: Border(
           bottom: isLast
@@ -326,16 +334,18 @@ class _CompareScreenState extends State<CompareScreen> {
             width: 100,
             child: Text(
               label,
-              style: AppTextStyles.body(isDark: false).copyWith(
+              style: AppTextStyles.caption(isDark: false).copyWith(
                 fontWeight: FontWeight.bold,
                 color: AppColors.textPrimaryLight,
+                fontSize: 12,
               ),
             ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 8),
           Expanded(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: values.asMap().entries.map((entry) {
                 final value = entry.value;
                 final isEmpty = value.isEmpty || value == 'null';
@@ -349,6 +359,7 @@ class _CompareScreenState extends State<CompareScreen> {
                         color: isEmpty
                             ? AppColors.textSecondaryLight
                             : AppColors.textPrimaryLight,
+                        fontSize: 11,
                       ),
                       textAlign: TextAlign.center,
                       maxLines: 3,
@@ -366,13 +377,15 @@ class _CompareScreenState extends State<CompareScreen> {
 
   Widget _buildActionsRow() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(width: 100),
-          const SizedBox(width: 16),
+          const SizedBox(width: 8),
           Expanded(
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: _selectedCampaigns.map((c) {
                 return Expanded(
                   child: Padding(
@@ -382,14 +395,20 @@ class _CompareScreenState extends State<CompareScreen> {
                         // Detay butonu
                         SizedBox(
                           width: double.infinity,
-                          child: ElevatedButton.icon(
-                            icon: const Icon(Icons.visibility, size: 16),
-                            label: const Text('Detay'),
+                          child: ElevatedButton(
+                            child: const Text(
+                              'Detay',
+                              style: TextStyle(fontSize: 11),
+                            ),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.primaryLight,
                               foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 8),
-                              textStyle: const TextStyle(fontSize: 12),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 8,
+                                horizontal: 4,
+                              ),
+                              textStyle: const TextStyle(fontSize: 11),
+                              minimumSize: const Size(0, 32),
                             ),
                             onPressed: () {
                               Navigator.of(context).push(
@@ -403,18 +422,24 @@ class _CompareScreenState extends State<CompareScreen> {
                             },
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 6),
                         // Kaldır butonu
                         SizedBox(
                           width: double.infinity,
-                          child: OutlinedButton.icon(
-                            icon: const Icon(Icons.close, size: 16),
-                            label: const Text('Kaldır'),
+                          child: OutlinedButton(
+                            child: const Text(
+                              'Kaldır',
+                              style: TextStyle(fontSize: 11),
+                            ),
                             style: OutlinedButton.styleFrom(
                               foregroundColor: AppColors.error,
                               side: BorderSide(color: AppColors.error),
-                              padding: const EdgeInsets.symmetric(vertical: 8),
-                              textStyle: const TextStyle(fontSize: 12),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 8,
+                                horizontal: 4,
+                              ),
+                              textStyle: const TextStyle(fontSize: 11),
+                              minimumSize: const Size(0, 32),
                             ),
                             onPressed: () => _removeCampaign(c),
                           ),
