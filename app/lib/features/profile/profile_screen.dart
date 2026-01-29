@@ -13,7 +13,6 @@ import 'widgets/notifications_section.dart';
 import '../how_it_works/how_it_works_screen.dart';
 import '../settings/kvkk_screen.dart';
 import '../settings/terms_of_use_screen.dart';
-import '../settings/language_settings_screen.dart';
 import '../blog/blog_screen.dart';
 import '../premium/premium_screen.dart';
 
@@ -108,21 +107,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final backgroundColor = isDark
-        ? AppColors.backgroundDark
-        : AppColors.backgroundLight;
-    final textColor = isDark
-        ? AppColors.textPrimaryDark
-        : AppColors.textPrimaryLight;
-
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: AppColors.backgroundLight,
       appBar: AppBar(
-        backgroundColor: backgroundColor,
+        backgroundColor: AppColors.backgroundLight,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: textColor),
+          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimaryLight),
           onPressed: () {
             Navigator.of(context).pop();
           },
@@ -189,46 +180,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 child: const HowItWorksScreen(),
                                 direction: SlideDirection.right,
                               ),
-                            );
-                          },
-                        ),
-                        ProfileMenuItem(
-                          icon: Icons.language,
-                          title: 'Dil',
-                          onTap: () {
-                            Navigator.of(context).push(
-                              SlidePageRoute(
-                                child: const LanguageSettingsScreen(),
-                                direction: SlideDirection.right,
-                              ),
-                            );
-                          },
-                        ),
-                        Consumer<ThemeProvider>(
-                          builder: (context, themeProvider, child) {
-                            return ProfileMenuItem(
-                              icon: themeProvider.isDarkMode
-                                  ? Icons.light_mode
-                                  : Icons.dark_mode,
-                              title: themeProvider.isDarkMode
-                                  ? 'Açık Tema'
-                                  : 'Koyu Tema',
-                              onTap: () async {
-                                await themeProvider.toggleDarkMode();
-                                if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        themeProvider.isDarkMode
-                                            ? 'Koyu tema aktif edildi'
-                                            : 'Açık tema aktif edildi',
-                                      ),
-                                      backgroundColor: AppColors.success,
-                                      duration: const Duration(seconds: 2),
-                                    ),
-                                  );
-                                }
-                              },
                             );
                           },
                         ),

@@ -11,21 +11,12 @@ class SourcesSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardColor = isDark ? AppColors.surfaceDark : AppColors.cardBackground;
-    final buttonBgColor = isDark
-        ? AppColors.backgroundDark
-        : AppColors.badgeBackgroundSecondary;
-    final buttonIconBg = isDark
-        ? AppColors.surfaceDark
-        : AppColors.cardBackground;
-
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       margin: const EdgeInsets.symmetric(horizontal: 5),
       decoration: BoxDecoration(
-        color: cardColor,
+        color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -58,7 +49,7 @@ class SourcesSection extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: buttonBgColor,
+                color: AppColors.badgeBackgroundSecondary,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: Colors.transparent),
               ),
@@ -67,7 +58,7 @@ class SourcesSection extends StatelessWidget {
                 children: [
                   Text(
                     'Kaynakları düzenle',
-                    style: AppTextStyles.caption(isDark: isDark).copyWith(
+                    style: AppTextStyles.caption(isDark: false).copyWith(
                       fontWeight: FontWeight.w600,
                       color: AppColors.secondaryLight,
                     ),
@@ -76,7 +67,7 @@ class SourcesSection extends StatelessWidget {
                     width: 32,
                     height: 32,
                     decoration: BoxDecoration(
-                      color: buttonIconBg,
+                      color: AppColors.cardBackground,
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(

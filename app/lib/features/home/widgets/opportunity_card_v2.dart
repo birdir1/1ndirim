@@ -147,11 +147,6 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
     final sourceColor = SourceLogoHelper.getLogoBackgroundColor(
       widget.opportunity.sourceName,
     );
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardColor = isDark ? AppColors.surfaceDark : Colors.white;
-    final logoBackgroundColor = isDark
-        ? AppColors.backgroundDark
-        : Colors.white;
 
     return InkWell(
       onTap: () {
@@ -168,7 +163,7 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
       child: Container(
         margin: const EdgeInsets.only(bottom: 20),
         decoration: BoxDecoration(
-          color: cardColor,
+          color: Colors.white,
           borderRadius: BorderRadius.circular(28),
           border: Border.all(
             color: sourceColor.withValues(alpha: 0.25),
@@ -212,7 +207,7 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
                     width: 80,
                     height: 80,
                     decoration: BoxDecoration(
-                      color: logoBackgroundColor,
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
                         color: sourceColor.withValues(alpha: 0.3),
@@ -243,7 +238,7 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
                       children: [
                         Text(
                           widget.opportunity.sourceName,
-                          style: AppTextStyles.cardTitle(isDark: isDark)
+                          style: AppTextStyles.cardTitle(isDark: false)
                               .copyWith(
                                 fontSize: 20,
                                 fontWeight: FontWeight.w700,
@@ -266,7 +261,7 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
                             ),
                             child: Text(
                               widget.opportunity.tags.first,
-                              style: AppTextStyles.small(isDark: isDark)
+                              style: AppTextStyles.small(isDark: false)
                                   .copyWith(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w500,
@@ -438,7 +433,7 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
                   // Title - Çok Büyük ve Belirgin
                   Text(
                     widget.opportunity.title,
-                    style: AppTextStyles.cardTitle(isDark: isDark).copyWith(
+                    style: AppTextStyles.cardTitle(isDark: false).copyWith(
                       fontSize: 20,
                       fontWeight: FontWeight.w800,
                       letterSpacing: -0.5,
@@ -460,7 +455,7 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
                   if (widget.opportunity.subtitle.isNotEmpty)
                     Text(
                       widget.opportunity.subtitle,
-                      style: AppTextStyles.cardSubtitle(isDark: isDark).copyWith(
+                      style: AppTextStyles.cardSubtitle(isDark: false).copyWith(
                         fontSize: 15,
                         height: 1.5,
                         color: AppColors.textSecondaryLight,
@@ -504,7 +499,7 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
                           ),
                           child: Text(
                             tag,
-                            style: AppTextStyles.badgeText(isDark: isDark)
+                            style: AppTextStyles.badgeText(isDark: false)
                                 .copyWith(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,

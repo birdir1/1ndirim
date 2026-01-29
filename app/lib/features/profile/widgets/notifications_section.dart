@@ -44,18 +44,12 @@ class _NotificationsSectionState extends State<NotificationsSection> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardColor = isDark ? AppColors.surfaceDark : AppColors.cardBackground;
-    final secondaryTextColor = isDark
-        ? AppColors.textSecondaryDark
-        : AppColors.textSecondaryLight;
-
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       margin: const EdgeInsets.symmetric(horizontal: 5),
       decoration: BoxDecoration(
-        color: cardColor,
+        color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -108,23 +102,23 @@ class _NotificationsSectionState extends State<NotificationsSection> {
                           size: 16,
                           color: _fcmTokenStatus == 'Aktif'
                               ? AppColors.success
-                              : secondaryTextColor,
+                              : AppColors.textSecondaryLight,
                         ),
                         const SizedBox(width: 8),
                         Text(
                           'Bildirim durumu',
                           style: AppTextStyles.caption(
-                            isDark: isDark,
-                          ).copyWith(color: secondaryTextColor),
+                            isDark: false,
+                          ).copyWith(color: AppColors.textSecondaryLight),
                         ),
                       ],
                     ),
                     Text(
                       _fcmTokenStatus ?? 'Kontrol ediliyor...',
-                      style: AppTextStyles.caption(isDark: isDark).copyWith(
+                      style: AppTextStyles.caption(isDark: false).copyWith(
                         color: _fcmTokenStatus == 'Aktif'
                             ? AppColors.success
-                            : secondaryTextColor,
+                            : AppColors.textSecondaryLight,
                       ),
                     ),
                   ],

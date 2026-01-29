@@ -129,14 +129,21 @@ class LanguageSettingsScreen extends StatelessWidget {
                 onTap: () async {
                   await localeProvider.setLocale(locale);
                   if (context.mounted) {
+                    // Profil ekranına geri dön ve uygulamanın yeniden yüklenmesini bekle
                     Navigator.of(context).pop();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Dil ayarı güncellendi: $languageName'),
-                        backgroundColor: AppColors.success,
-                        duration: const Duration(seconds: 2),
-                      ),
-                    );
+
+                    // Kısa bir gecikme ile mesaj göster
+                    await Future.delayed(const Duration(milliseconds: 100));
+
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Dil değiştirildi: $languageName'),
+                          backgroundColor: AppColors.success,
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    }
                   }
                 },
               ),

@@ -103,14 +103,9 @@ class _ProfileHeaderState extends State<ProfileHeader> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return Consumer<PremiumProvider>(
       builder: (context, premiumProvider, child) {
         final isPremium = premiumProvider.isPremium == true;
-        final backgroundColor = isDark
-            ? AppColors.backgroundDark
-            : AppColors.backgroundLight;
 
         return Column(
           children: [
@@ -120,9 +115,7 @@ class _ProfileHeaderState extends State<ProfileHeader> {
                   width: 112,
                   height: 112,
                   decoration: BoxDecoration(
-                    color: isDark
-                        ? AppColors.surfaceDark
-                        : AppColors.cardBackground,
+                    color: AppColors.cardBackground,
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
@@ -151,7 +144,10 @@ class _ProfileHeaderState extends State<ProfileHeader> {
                       decoration: BoxDecoration(
                         color: AppColors.secondaryLight,
                         shape: BoxShape.circle,
-                        border: Border.all(color: backgroundColor, width: 3),
+                        border: Border.all(
+                          color: AppColors.backgroundLight,
+                          width: 3,
+                        ),
                         boxShadow: [
                           BoxShadow(
                             color: AppColors.shadowLight,
@@ -177,7 +173,10 @@ class _ProfileHeaderState extends State<ProfileHeader> {
                       decoration: BoxDecoration(
                         color: AppColors.warning,
                         shape: BoxShape.circle,
-                        border: Border.all(color: backgroundColor, width: 2),
+                        border: Border.all(
+                          color: AppColors.backgroundLight,
+                          width: 2,
+                        ),
                       ),
                       child: const Icon(
                         Icons.star,
@@ -195,7 +194,7 @@ class _ProfileHeaderState extends State<ProfileHeader> {
                   : (_userName != null && _userName!.isNotEmpty
                         ? 'Sayın $_userName'
                         : 'Hesabın'),
-              style: AppTextStyles.title(isDark: isDark),
+              style: AppTextStyles.title(isDark: false),
             ),
             const SizedBox(height: 8),
             if (isPremium)
@@ -221,7 +220,7 @@ class _ProfileHeaderState extends State<ProfileHeader> {
                     const SizedBox(width: 4),
                     Text(
                       'Premium',
-                      style: AppTextStyles.caption(isDark: isDark).copyWith(
+                      style: AppTextStyles.caption(isDark: false).copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                       ),
@@ -232,14 +231,12 @@ class _ProfileHeaderState extends State<ProfileHeader> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
               decoration: BoxDecoration(
-                color: isDark
-                    ? AppColors.surfaceDark.withValues(alpha: 0.5)
-                    : AppColors.overlayWhiteLight,
+                color: AppColors.overlayWhiteLight,
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
                 'Sadece seçimlerinize göre çalışır',
-                style: AppTextStyles.caption(isDark: isDark),
+                style: AppTextStyles.caption(isDark: false),
               ),
             ),
           ],
