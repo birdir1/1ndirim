@@ -451,18 +451,44 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
                   ),
                   const SizedBox(height: 12),
 
-                  // Subtitle
-                  if (widget.opportunity.subtitle.isNotEmpty)
-                    Text(
-                      widget.opportunity.subtitle,
-                      style: AppTextStyles.cardSubtitle(isDark: false).copyWith(
-                        fontSize: 15,
-                        height: 1.5,
-                        color: AppColors.textSecondaryLight,
-                      ),
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                  // Subtitle - Eğer anlamsız veya çok kısaysa tags'den göster
+                  Builder(
+                    builder: (context) {
+                      String displayText = widget.opportunity.subtitle;
+
+                      // Eğer subtitle boş, çok kısa veya anlamsızsa tags'den al
+                      if (displayText.isEmpty ||
+                          displayText.length < 10 ||
+                          displayText.toUpperCase() ==
+                              displayText || // Tamamı büyük harf
+                          displayText.contains(RegExp(r'^[A-Z0-9]+$'))) {
+                        // Sadece büyük harf ve rakam
+                        // Tags'den anlamlı bir açıklama bul
+                        if (widget.opportunity.tags.isNotEmpty) {
+                          displayText = widget.opportunity.tags
+                              .where(
+                                (tag) => tag.length > 10,
+                              ) // En az 10 karakter
+                              .take(2)
+                              .join(' • ');
+                        }
+                      }
+
+                      if (displayText.isEmpty) return const SizedBox.shrink();
+
+                      return Text(
+                        displayText,
+                        style: AppTextStyles.cardSubtitle(isDark: false)
+                            .copyWith(
+                              fontSize: 15,
+                              height: 1.5,
+                              color: AppColors.textSecondaryLight,
+                            ),
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                      );
+                    },
+                  ),
 
                   const SizedBox(height: 16),
 

@@ -266,7 +266,26 @@ class _CompareScreenState extends State<CompareScreen> {
       },
       {
         'label': 'Açıklama',
-        'values': _selectedCampaigns.map((c) => c.subtitle).toList(),
+        'values': _selectedCampaigns.map((c) {
+          String displayText = c.subtitle;
+
+          // Eğer subtitle boş, çok kısa veya anlamsızsa tags'den al
+          if (displayText.isEmpty ||
+              displayText.length < 10 ||
+              displayText.toUpperCase() == displayText || // Tamamı büyük harf
+              displayText.contains(RegExp(r'^[A-Z0-9]+$'))) {
+            // Sadece büyük harf ve rakam
+            // Tags'den anlamlı bir açıklama bul
+            if (c.tags.isNotEmpty) {
+              displayText = c.tags
+                  .where((tag) => tag.length > 10) // En az 10 karakter
+                  .take(2)
+                  .join(' • ');
+            }
+          }
+
+          return displayText.isEmpty ? 'Açıklama yok' : displayText;
+        }).toList(),
         'maxLines': 5, // Daha fazla satır için açıklama
       },
       {
@@ -392,10 +411,6 @@ class _CompareScreenState extends State<CompareScreen> {
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
-                            child: const Text(
-                              'Detay',
-                              style: TextStyle(fontSize: 11),
-                            ),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.primaryLight,
                               foregroundColor: Colors.white,
@@ -416,6 +431,10 @@ class _CompareScreenState extends State<CompareScreen> {
                                 ),
                               );
                             },
+                            child: const Text(
+                              'Detay',
+                              style: TextStyle(fontSize: 11),
+                            ),
                           ),
                         ),
                         const SizedBox(height: 6),
@@ -423,10 +442,6 @@ class _CompareScreenState extends State<CompareScreen> {
                         SizedBox(
                           width: double.infinity,
                           child: OutlinedButton(
-                            child: const Text(
-                              'Kaldır',
-                              style: TextStyle(fontSize: 11),
-                            ),
                             style: OutlinedButton.styleFrom(
                               foregroundColor: AppColors.error,
                               side: BorderSide(color: AppColors.error),
@@ -438,6 +453,10 @@ class _CompareScreenState extends State<CompareScreen> {
                               minimumSize: const Size(0, 32),
                             ),
                             onPressed: () => _removeCampaign(c),
+                            child: const Text(
+                              'Kaldır',
+                              style: TextStyle(fontSize: 11),
+                            ),
                           ),
                         ),
                       ],

@@ -333,14 +333,43 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 4),
-                      Text(
-                        campaign.subtitle,
-                        style: AppTextStyles.caption(isDark: false).copyWith(
-                          color: AppColors.textSecondaryLight,
-                          fontSize: 12,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                      Builder(
+                        builder: (context) {
+                          String displayText = campaign.subtitle;
+
+                          // Eğer subtitle boş, çok kısa veya anlamsızsa tags'den al
+                          if (displayText.isEmpty ||
+                              displayText.length < 10 ||
+                              displayText.toUpperCase() ==
+                                  displayText || // Tamamı büyük harf
+                              displayText.contains(RegExp(r'^[A-Z0-9]+$'))) {
+                            // Sadece büyük harf ve rakam
+                            // Tags'den anlamlı bir açıklama bul
+                            if (campaign.tags.isNotEmpty) {
+                              displayText = campaign.tags
+                                  .where(
+                                    (tag) => tag.length > 10,
+                                  ) // En az 10 karakter
+                                  .take(2)
+                                  .join(' • ');
+                            }
+                          }
+
+                          if (displayText.isEmpty) {
+                            return const SizedBox.shrink();
+                          }
+
+                          return Text(
+                            displayText,
+                            style: AppTextStyles.caption(isDark: false)
+                                .copyWith(
+                                  color: AppColors.textSecondaryLight,
+                                  fontSize: 12,
+                                ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          );
+                        },
                       ),
                     ],
                   ),
