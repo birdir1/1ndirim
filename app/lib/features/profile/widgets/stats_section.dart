@@ -42,7 +42,7 @@ class StatsSection extends StatelessWidget {
             subtitle: 'Aktivitelerinizin özeti',
           ),
           const SizedBox(height: 24),
-          
+
           if (isLoading)
             const Center(
               child: Padding(
@@ -51,11 +51,28 @@ class StatsSection extends StatelessWidget {
               ),
             )
           else if (statsResult is NetworkError)
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(
-                (statsResult as NetworkError).message,
-                style: AppTextStyles.bodySecondary(isDark: false),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.error.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: AppColors.error.withValues(alpha: 0.3),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline, color: AppColors.error, size: 20),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'İstatistikler şu anda yüklenemiyor. Lütfen daha sonra tekrar deneyin.',
+                      style: AppTextStyles.body(
+                        isDark: false,
+                      ).copyWith(color: AppColors.error),
+                    ),
+                  ),
+                ],
               ),
             )
           else if (statsResult is NetworkSuccess)
@@ -149,9 +166,7 @@ class StatsSection extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             label,
-            style: AppTextStyles.caption(isDark: false).copyWith(
-              fontSize: 12,
-            ),
+            style: AppTextStyles.caption(isDark: false).copyWith(fontSize: 12),
             textAlign: TextAlign.center,
           ),
         ],

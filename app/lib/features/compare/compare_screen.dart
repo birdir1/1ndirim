@@ -17,6 +17,7 @@ class CompareScreen extends StatefulWidget {
 }
 
 class _CompareScreenState extends State<CompareScreen> {
+  static const int minCompareCount = 2;
   static const int maxCompareCount = 3;
   List<OpportunityModel> _selectedCampaigns = [];
 
@@ -103,7 +104,7 @@ class _CompareScreenState extends State<CompareScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'En fazla $maxCompareCount kampanyayı karşılaştırabilirsiniz',
+            'En az $minCompareCount, en fazla $maxCompareCount kampanyayı karşılaştırabilirsiniz',
             style: AppTextStyles.body(
               isDark: false,
             ).copyWith(color: AppColors.textSecondaryLight),
@@ -131,7 +132,7 @@ class _CompareScreenState extends State<CompareScreen> {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              '${_selectedCampaigns.length} kampanya karşılaştırılıyor (Maksimum: $maxCompareCount)',
+              '${_selectedCampaigns.length} kampanya karşılaştırılıyor (Min: $minCompareCount, Maks: $maxCompareCount)',
               style: AppTextStyles.body(
                 isDark: false,
               ).copyWith(color: AppColors.textPrimaryLight),
@@ -159,12 +160,8 @@ class _CompareScreenState extends State<CompareScreen> {
         children: [
           // Başlık satırı
           _buildTableHeader(),
-          // Kampanya satırları
-          ..._selectedCampaigns.asMap().entries.map((entry) {
-            final index = entry.key;
-            final campaign = entry.value;
-            return _buildCampaignRow(campaign, index);
-          }),
+          // Kampanya bilgileri
+          _buildComparisonRows(),
         ],
       ),
     );
@@ -233,10 +230,66 @@ class _CompareScreenState extends State<CompareScreen> {
     );
   }
 
-  Widget _buildCampaignRow(OpportunityModel campaign, int index) {
-    final isLast = index == _selectedCampaigns.length - 1;
+  Widget _buildComparisonRows() {
+    final rows = [
+      {
+        'label': 'Başlık',
+        'values': _selectedCampaigns.map((c) => c.title).toList(),
+      },
+      {
+        'label': 'Kaynak',
+        'values': _selectedCampaigns.map((c) => c.sourceName).toList(),
+      },
+      {
+        'label': 'Açıklama',
+        'values': _selectedCampaigns.map((c) => c.subtitle).toList(),
+      },
+      {
+        'label': 'Etiketler',
+        'values': _selectedCampaigns
+            .map((c) => c.tags.isNotEmpty ? c.tags.join(', ') : 'Etiket yok')
+            .toList(),
+      },
+      {
+        'label': 'Bitiş Tarihi',
+        'values': _selectedCampaigns.map((c) {
+          if (c.expiresAt == null) return 'Belirtilmemiş';
+          try {
+            final date = DateTime.parse(c.expiresAt!);
+            return '${date.day}/${date.month}/${date.year}';
+          } catch (e) {
+            return 'Geçersiz tarih';
+          }
+        }).toList(),
+      },
+    ];
 
+    return Column(
+      children: [
+        ...rows.asMap().entries.map((entry) {
+          final index = entry.key;
+          final row = entry.value;
+          final isLast = index == rows.length - 1;
+
+          return _buildComparisonRow(
+            label: row['label'] as String,
+            values: row['values'] as List<String>,
+            isLast: isLast,
+          );
+        }),
+        // İşlemler satırı
+        _buildActionsRow(),
+      ],
+    );
+  }
+
+  Widget _buildComparisonRow({
+    required String label,
+    required List<String> values,
+    bool isLast = false,
+  }) {
     return Container(
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         border: Border(
           bottom: isLast
@@ -247,126 +300,11 @@ class _CompareScreenState extends State<CompareScreen> {
                 ),
         ),
       ),
-      child: Column(
-        children: [
-          // Başlık
-          _buildComparisonRow(
-            label: 'Başlık',
-            values: _selectedCampaigns.map((c) => c.title).toList(),
-            campaignIndex: index,
-          ),
-          // Kaynak
-          _buildComparisonRow(
-            label: 'Kaynak',
-            values: _selectedCampaigns.map((c) => c.sourceName).toList(),
-            campaignIndex: index,
-          ),
-          // Açıklama
-          _buildComparisonRow(
-            label: 'Açıklama',
-            values: _selectedCampaigns.map((c) => c.subtitle).toList(),
-            campaignIndex: index,
-            isMultiline: true,
-          ),
-          // Etiketler
-          _buildComparisonRow(
-            label: 'Etiketler',
-            values: _selectedCampaigns.map((c) => c.tags.join(', ')).toList(),
-            campaignIndex: index,
-            isEmptyFallback: 'Etiket yok',
-          ),
-          // Bitiş Tarihi
-          _buildComparisonRow(
-            label: 'Bitiş Tarihi',
-            values: _selectedCampaigns.map((c) {
-              if (c.expiresAt == null) return 'Belirtilmemiş';
-              try {
-                final date = DateTime.parse(c.expiresAt!);
-                return '${date.day}/${date.month}/${date.year}';
-              } catch (e) {
-                return 'Geçersiz tarih';
-              }
-            }).toList(),
-            campaignIndex: index,
-          ),
-          // İşlemler
-          Container(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                const SizedBox(width: 120),
-                Expanded(
-                  child: Row(
-                    children: _selectedCampaigns.map((c) {
-                      return Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              // Detay butonu
-                              IconButton(
-                                icon: const Icon(Icons.visibility, size: 18),
-                                color: AppColors.primaryLight,
-                                onPressed: () {
-                                  Navigator.of(context).push(
-                                    SlidePageRoute(
-                                      child:
-                                          CampaignDetailScreen.fromOpportunity(
-                                            opportunity: c,
-                                          ),
-                                      direction: SlideDirection.left,
-                                    ),
-                                  );
-                                },
-                                tooltip: 'Detayları gör',
-                              ),
-                              // Kaldır butonu
-                              IconButton(
-                                icon: const Icon(Icons.close, size: 18),
-                                color: AppColors.error,
-                                onPressed: () => _removeCampaign(c),
-                                tooltip: 'Kaldır',
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildComparisonRow({
-    required String label,
-    required List<String> values,
-    required int campaignIndex,
-    bool isMultiline = false,
-    String? isEmptyFallback,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(
-            color: AppColors.textSecondaryLight.withValues(alpha: 0.1),
-            width: 1,
-          ),
-        ),
-      ),
       child: Row(
-        crossAxisAlignment: isMultiline
-            ? CrossAxisAlignment.start
-            : CrossAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 120,
+            width: 100,
             child: Text(
               label,
               style: AppTextStyles.body(isDark: false).copyWith(
@@ -375,28 +313,94 @@ class _CompareScreenState extends State<CompareScreen> {
               ),
             ),
           ),
+          const SizedBox(width: 16),
           Expanded(
             child: Row(
-              crossAxisAlignment: isMultiline
-                  ? CrossAxisAlignment.start
-                  : CrossAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: values.asMap().entries.map((entry) {
                 final value = entry.value;
                 final isEmpty = value.isEmpty || value == 'null';
 
                 return Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
                     child: Text(
-                      isEmpty ? (isEmptyFallback ?? '-') : value,
-                      style: AppTextStyles.body(isDark: false).copyWith(
+                      isEmpty ? '-' : value,
+                      style: AppTextStyles.caption(isDark: false).copyWith(
                         color: isEmpty
                             ? AppColors.textSecondaryLight
                             : AppColors.textPrimaryLight,
                       ),
                       textAlign: TextAlign.center,
-                      maxLines: isMultiline ? 3 : 1,
+                      maxLines: 3,
                       overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionsRow() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          const SizedBox(width: 100),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Row(
+              children: _selectedCampaigns.map((c) {
+                return Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: Column(
+                      children: [
+                        // Detay butonu
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            icon: const Icon(Icons.visibility, size: 16),
+                            label: const Text('Detay'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primaryLight,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              textStyle: const TextStyle(fontSize: 12),
+                            ),
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                SlidePageRoute(
+                                  child: CampaignDetailScreen.fromOpportunity(
+                                    opportunity: c,
+                                  ),
+                                  direction: SlideDirection.left,
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        // Kaldır butonu
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            icon: const Icon(Icons.close, size: 16),
+                            label: const Text('Kaldır'),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AppColors.error,
+                              side: BorderSide(color: AppColors.error),
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              textStyle: const TextStyle(fontSize: 12),
+                            ),
+                            onPressed: () => _removeCampaign(c),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 );

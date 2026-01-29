@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'core/providers/compare_provider.dart';
 import 'core/providers/locale_provider.dart';
 import 'core/providers/premium_provider.dart';
+import 'core/providers/theme_provider.dart';
 import 'core/theme/app_theme.dart';
 import 'core/l10n/app_localizations.dart';
 import 'core/services/preferences_service.dart';
@@ -27,34 +28,37 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Firebase'i initialize et (hata durumunda uygulama çalışmaya devam eder)
   try {
     await Firebase.initializeApp();
     AppLogger.firebaseInit(true);
-    
+
     // Background message handler'ı ayarla
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
-    
+
     // Notification service'i başlat
     await NotificationService().initialize();
   } catch (e) {
     AppLogger.firebaseInit(false, e);
   }
-  
+
   // Set status bar style for iOS and Android
   // iOS: Dark content on light background
   // Android: Dark icons on light background
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent, // Transparent for edge-to-edge
-      statusBarIconBrightness: Brightness.dark, // Dark icons for light background
+      statusBarIconBrightness:
+          Brightness.dark, // Dark icons for light background
       statusBarBrightness: Brightness.light, // iOS: Light status bar content
-      systemNavigationBarColor: Colors.transparent, // Transparent navigation bar
-      systemNavigationBarIconBrightness: Brightness.dark, // Dark navigation icons
+      systemNavigationBarColor:
+          Colors.transparent, // Transparent navigation bar
+      systemNavigationBarIconBrightness:
+          Brightness.dark, // Dark navigation icons
     ),
   );
-  
+
   runApp(const IndirimApp());
 }
 
@@ -65,27 +69,24 @@ class IndirimApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(
-          create: (_) => LocaleProvider(),
-        ),
+        ChangeNotifierProvider(create: (_) => LocaleProvider()),
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(
           create: (_) => PremiumProvider()..loadPremiumStatus(),
         ),
         ChangeNotifierProvider(
           create: (_) => SelectedSourcesProvider()..loadSelectedSources(),
         ),
-        ChangeNotifierProvider(
-          create: (_) => CompareProvider(),
-        ),
+        ChangeNotifierProvider(create: (_) => CompareProvider()),
       ],
-      child: Consumer<LocaleProvider>(
-        builder: (context, localeProvider, child) {
+      child: Consumer2<LocaleProvider, ThemeProvider>(
+        builder: (context, localeProvider, themeProvider, child) {
           return MaterialApp(
             title: '1ndirim',
             debugShowCheckedModeBanner: false,
             theme: AppTheme.light(),
             darkTheme: AppTheme.dark(),
-            themeMode: ThemeMode.light, // Default light
+            themeMode: themeProvider.themeMode,
             locale: localeProvider.locale,
             localizationsDelegates: const [
               AppLocalizations.delegate,
@@ -126,7 +127,7 @@ class _AppNavigatorState extends State<AppNavigator> {
       final authService = AuthService.instance;
       final firebaseUser = authService.getCurrentFirebaseUser();
       final isLoggedIn = firebaseUser != null;
-      
+
       // Eğer otomatik giriş yapılmışsa bildirim izni iste
       if (isLoggedIn) {
         try {
@@ -135,12 +136,12 @@ class _AppNavigatorState extends State<AppNavigator> {
           AppLogger.warning('Bildirim izni istenemedi: $e');
         }
       }
-      
+
       final prefsService = PreferencesService.instance;
       final onboardingComplete = await prefsService.isOnboardingComplete();
-      
+
       if (!mounted) return;
-      
+
       setState(() {
         _showSplash = false;
         if (isLoggedIn && onboardingComplete) {
@@ -164,19 +165,19 @@ class _AppNavigatorState extends State<AppNavigator> {
     Future.microtask(() async {
       // Biraz bekle ki PreferencesService güncellemesi tamamlansın
       await Future.delayed(const Duration(milliseconds: 100));
-      
+
       // Giriş yaptıktan sonra bildirim izni iste
       try {
         await NotificationService().requestPermissionAndSetup();
       } catch (e) {
         AppLogger.warning('Bildirim izni istenemedi: $e');
       }
-      
+
       final prefsService = PreferencesService.instance;
       final onboardingComplete = await prefsService.isOnboardingComplete();
-      
+
       if (!mounted) return;
-      
+
       setState(() {
         _showAuth = false;
         if (!onboardingComplete) {
@@ -188,7 +189,7 @@ class _AppNavigatorState extends State<AppNavigator> {
 
   Future<void> _onOnboardingComplete() async {
     if (!mounted) return;
-    
+
     setState(() {
       _showOnboarding = false;
     });

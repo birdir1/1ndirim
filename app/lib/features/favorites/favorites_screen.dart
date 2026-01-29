@@ -26,22 +26,28 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
       const NetworkLoading();
   List<OpportunityModel> _favorites = [];
   bool _isLoading = false;
+  bool _didInitialize = false;
 
   @override
   void initState() {
     super.initState();
-    _checkAuthAndLoadFavorites();
+    // Context'e bağımlı işlemleri didChangeDependencies'e taşıdık
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_didInitialize) {
+      _didInitialize = true;
+      _checkAuthAndLoadFavorites();
+    }
   }
 
   /// Kullanıcı giriş kontrolü ve favorileri yükle
   Future<void> _checkAuthAndLoadFavorites() async {
-    final l10n = AppLocalizations.of(context);
     if (_auth.currentUser == null) {
-      setState(() {
-        _favoritesResult = NetworkError.general(
-          l10n?.loginRequired ?? 'Giriş yapmanız gerekiyor',
-        );
-      });
+      // Kullanıcı giriş yapmamışsa, build metodunda zaten kontrol ediliyor
+      // Burada hata mesajı göstermeye gerek yok
       return;
     }
 

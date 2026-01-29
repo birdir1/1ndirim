@@ -4,6 +4,7 @@ import '../../data/models/opportunity_model.dart';
 /// Karşılaştırma Provider
 /// Kullanıcının seçtiği kampanyaları yönetir
 class CompareProvider extends ChangeNotifier {
+  static const int minCompareCount = 2;
   static const int maxCompareCount = 3;
   final List<OpportunityModel> _campaigns = [];
 
@@ -11,6 +12,7 @@ class CompareProvider extends ChangeNotifier {
   int get count => _campaigns.length;
   bool get isFull => _campaigns.length >= maxCompareCount;
   bool get isEmpty => _campaigns.isEmpty;
+  bool get canCompare => _campaigns.length >= minCompareCount;
 
   /// Kampanya ekle
   bool addCampaign(OpportunityModel campaign) {

@@ -40,7 +40,7 @@ class AppLocalizations {
       'no_data': 'Veri bulunamadı',
       'no_internet': 'İnternet bağlantısı yok',
       'something_went_wrong': 'Bir şeyler ters gitti',
-      
+
       // Ana Ekran
       'home': 'Ana Sayfa',
       'campaigns': 'Kampanyalar',
@@ -52,13 +52,15 @@ class AppLocalizations {
       'no_favorites': 'Henüz favori kampanyanız yok',
       'my_favorites': 'Favorilerim',
       'login_required': 'Giriş yapmanız gerekiyor',
-      'login_required_for_favorites': 'Favorilerinizi görmek için giriş yapmanız gerekiyor',
+      'login_required_for_favorites':
+          'Favorilerinizi görmek için giriş yapmanız gerekiyor',
       'error_occurred': 'Bir Hata Oluştu',
       'no_favorites_yet': 'Henüz Favoriniz Yok',
-      'no_favorites_description': 'Beğendiğiniz kampanyaları favorilere ekleyerek burada görebilirsiniz',
+      'no_favorites_description':
+          'Beğendiğiniz kampanyaları favorilere ekleyerek burada görebilirsiniz',
       'explore_campaigns': 'Kampanyaları Keşfet',
       'error_loading_favorites': 'Favoriler yüklenirken bir hata oluştu',
-      
+
       // Kampanya Detay
       'campaign_details': 'Kampanya Detayları',
       'source': 'Kaynak',
@@ -73,7 +75,7 @@ class AppLocalizations {
       'price_tracking': 'Fiyat Takibi',
       'track_price': 'Fiyatı Takip Et',
       'stop_tracking': 'Takibi Durdur',
-      
+
       // Profil
       'my_profile': 'Profilim',
       'settings': 'Ayarlar',
@@ -96,14 +98,14 @@ class AppLocalizations {
       'community': 'Topluluk',
       'price_tracking_menu': 'Fiyat Takibi',
       'blog': 'Blog & Rehberler',
-      
+
       // Gamification
       'your_points': 'Puanlarınız',
       'your_level': 'Seviyeniz',
       'points_to_next_level': 'Sonraki seviyeye kalan puan',
       'earned_badges': 'Kazanılan Rozetler',
       'no_badges': 'Henüz rozet kazanmadınız',
-      
+
       // Topluluk
       'leaderboard': 'Liderlik Tablosu',
       'community_stats': 'Topluluk İstatistikleri',
@@ -116,22 +118,23 @@ class AppLocalizations {
       'max_level': 'En Yüksek Seviye',
       'rank': 'Sıra',
       'you': 'Sen',
-      
+
       // Takvim
       'calendar': 'Takvim',
       'campaign_calendar': 'Kampanya Takvimi',
       'select_date': 'Tarih Seçin',
       'no_campaigns_on_date': 'Bu tarihte kampanya yok',
       'campaigns_on_date': '{count} kampanya',
-      
+
       // Karşılaştırma
       'compare_campaigns': 'Kampanyaları Karşılaştır',
       'select_campaigns': 'Kampanya Seçin',
+      'min_compare': 'En az 2 kampanya seçmelisiniz',
       'max_compare': 'En fazla 3 kampanya karşılaştırabilirsiniz',
       'add_more': 'Daha Fazla Ekle',
       'remove': 'Kaldır',
       'clear_all': 'Tümünü Temizle',
-      
+
       // Fiyat Takibi
       'tracked_campaigns': 'Takip Edilen Kampanyalar',
       'price_history': 'Fiyat Geçmişi',
@@ -143,7 +146,7 @@ class AppLocalizations {
       'price_decreased': 'Fiyat Azaldı',
       'price_stable': 'Fiyat Sabit',
       'no_tracked_campaigns': 'Takip edilen kampanya yok',
-      
+
       // Blog
       'blog_title': 'Blog & Rehberler',
       'featured_posts': 'Öne Çıkanlar',
@@ -153,7 +156,7 @@ class AppLocalizations {
       'author': 'Yazar',
       'category': 'Kategori',
       'all_categories': 'Tümü',
-      
+
       // Yorumlar
       'comments': 'Yorumlar',
       'add_comment': 'Yorum Ekle',
@@ -161,21 +164,21 @@ class AppLocalizations {
       'no_comments': 'Henüz yorum yok',
       'comment_added': 'Yorum eklendi',
       'comment_deleted': 'Yorum silindi',
-      
+
       // Puanlama
       'rating': 'Puanlama',
       'rate_campaign': 'Kampanyayı Puanla',
       'your_rating': 'Puanınız',
       'average_rating': 'Ortalama Puan',
       'no_ratings': 'Henüz puanlama yok',
-      
+
       // Bildirimler
       'notifications': 'Bildirimler',
       'enable_notifications': 'Bildirimleri Etkinleştir',
       'campaign_notifications': 'Kampanya Bildirimleri',
       'price_drop_notifications': 'Fiyat Düşüş Bildirimleri',
       'new_campaign_notifications': 'Yeni Kampanya Bildirimleri',
-      
+
       // Ayarlar
       'settings': 'Ayarlar',
       'app_settings': 'Uygulama Ayarları',
@@ -184,7 +187,7 @@ class AppLocalizations {
       'notification_settings': 'Bildirim Ayarları',
       'language_settings': 'Dil Ayarları',
       'select_language': 'Dil Seçin',
-      
+
       // Hata Mesajları
       'error_loading': 'Yüklenirken hata oluştu',
       'error_saving': 'Kaydedilirken hata oluştu',
@@ -219,7 +222,7 @@ class AppLocalizations {
       'no_data': 'No data found',
       'no_internet': 'No internet connection',
       'something_went_wrong': 'Something went wrong',
-      
+
       // Home Screen
       'home': 'Home',
       'campaigns': 'Campaigns',
@@ -234,10 +237,11 @@ class AppLocalizations {
       'login_required_for_favorites': 'Please sign in to view your favorites',
       'error_occurred': 'An Error Occurred',
       'no_favorites_yet': 'No Favorites Yet',
-      'no_favorites_description': 'Add campaigns you like to favorites to see them here',
+      'no_favorites_description':
+          'Add campaigns you like to favorites to see them here',
       'explore_campaigns': 'Explore Campaigns',
       'error_loading_favorites': 'An error occurred while loading favorites',
-      
+
       // Campaign Detail
       'campaign_details': 'Campaign Details',
       'source': 'Source',
@@ -252,7 +256,7 @@ class AppLocalizations {
       'price_tracking': 'Price Tracking',
       'track_price': 'Track Price',
       'stop_tracking': 'Stop Tracking',
-      
+
       // Profile
       'my_profile': 'My Profile',
       'settings': 'Settings',
@@ -275,14 +279,14 @@ class AppLocalizations {
       'community': 'Community',
       'price_tracking_menu': 'Price Tracking',
       'blog': 'Blog & Guides',
-      
+
       // Gamification
       'your_points': 'Your Points',
       'your_level': 'Your Level',
       'points_to_next_level': 'Points to Next Level',
       'earned_badges': 'Earned Badges',
       'no_badges': 'You haven\'t earned any badges yet',
-      
+
       // Community
       'leaderboard': 'Leaderboard',
       'community_stats': 'Community Statistics',
@@ -295,22 +299,23 @@ class AppLocalizations {
       'max_level': 'Max Level',
       'rank': 'Rank',
       'you': 'You',
-      
+
       // Calendar
       'calendar': 'Calendar',
       'campaign_calendar': 'Campaign Calendar',
       'select_date': 'Select Date',
       'no_campaigns_on_date': 'No campaigns on this date',
       'campaigns_on_date': '{count} campaigns',
-      
+
       // Comparison
       'compare_campaigns': 'Compare Campaigns',
       'select_campaigns': 'Select Campaigns',
+      'min_compare': 'You must select at least 2 campaigns',
       'max_compare': 'You can compare up to 3 campaigns',
       'add_more': 'Add More',
       'remove': 'Remove',
       'clear_all': 'Clear All',
-      
+
       // Price Tracking
       'tracked_campaigns': 'Tracked Campaigns',
       'price_history': 'Price History',
@@ -322,7 +327,7 @@ class AppLocalizations {
       'price_decreased': 'Price Decreased',
       'price_stable': 'Price Stable',
       'no_tracked_campaigns': 'No tracked campaigns',
-      
+
       // Blog
       'blog_title': 'Blog & Guides',
       'featured_posts': 'Featured',
@@ -332,7 +337,7 @@ class AppLocalizations {
       'author': 'Author',
       'category': 'Category',
       'all_categories': 'All',
-      
+
       // Comments
       'comments': 'Comments',
       'add_comment': 'Add Comment',
@@ -340,21 +345,21 @@ class AppLocalizations {
       'no_comments': 'No comments yet',
       'comment_added': 'Comment added',
       'comment_deleted': 'Comment deleted',
-      
+
       // Rating
       'rating': 'Rating',
       'rate_campaign': 'Rate Campaign',
       'your_rating': 'Your Rating',
       'average_rating': 'Average Rating',
       'no_ratings': 'No ratings yet',
-      
+
       // Notifications
       'notifications': 'Notifications',
       'enable_notifications': 'Enable Notifications',
       'campaign_notifications': 'Campaign Notifications',
       'price_drop_notifications': 'Price Drop Notifications',
       'new_campaign_notifications': 'New Campaign Notifications',
-      
+
       // Settings
       'settings': 'Settings',
       'app_settings': 'App Settings',
@@ -363,7 +368,7 @@ class AppLocalizations {
       'notification_settings': 'Notification Settings',
       'language_settings': 'Language Settings',
       'select_language': 'Select Language',
-      
+
       // Error Messages
       'error_loading': 'Error loading',
       'error_saving': 'Error saving',
@@ -376,9 +381,9 @@ class AppLocalizations {
   };
 
   String translate(String key) {
-    return _localizedValues[locale.languageCode]?[key] ?? 
-           _localizedValues['tr']?[key] ?? 
-           key;
+    return _localizedValues[locale.languageCode]?[key] ??
+        _localizedValues['tr']?[key] ??
+        key;
   }
 
   // Helper getters for common translations
@@ -405,7 +410,7 @@ class AppLocalizations {
   String get noData => translate('no_data');
   String get noInternet => translate('no_internet');
   String get somethingWentWrong => translate('something_went_wrong');
-  
+
   // Home Screen
   String get home => translate('home');
   String get campaigns => translate('campaigns');
@@ -417,13 +422,14 @@ class AppLocalizations {
   String get noFavorites => translate('no_favorites');
   String get myFavorites => translate('my_favorites');
   String get loginRequired => translate('login_required');
-  String get loginRequiredForFavorites => translate('login_required_for_favorites');
+  String get loginRequiredForFavorites =>
+      translate('login_required_for_favorites');
   String get errorOccurred => translate('error_occurred');
   String get noFavoritesYet => translate('no_favorites_yet');
   String get noFavoritesDescription => translate('no_favorites_description');
   String get exploreCampaigns => translate('explore_campaigns');
   String get errorLoadingFavorites => translate('error_loading_favorites');
-  
+
   // Campaign Detail
   String get campaignDetails => translate('campaign_details');
   String get source => translate('source');
@@ -438,7 +444,7 @@ class AppLocalizations {
   String get priceTracking => translate('price_tracking');
   String get trackPrice => translate('track_price');
   String get stopTracking => translate('stop_tracking');
-  
+
   // Profile
   String get myProfile => translate('my_profile');
   String get settings => translate('settings');
@@ -461,14 +467,14 @@ class AppLocalizations {
   String get community => translate('community');
   String get priceTrackingMenu => translate('price_tracking_menu');
   String get blog => translate('blog');
-  
+
   // Gamification
   String get yourPoints => translate('your_points');
   String get yourLevel => translate('your_level');
   String get pointsToNextLevel => translate('points_to_next_level');
   String get earnedBadges => translate('earned_badges');
   String get noBadges => translate('no_badges');
-  
+
   // Community
   String get leaderboard => translate('leaderboard');
   String get communityStats => translate('community_stats');
@@ -481,22 +487,24 @@ class AppLocalizations {
   String get maxLevel => translate('max_level');
   String get rank => translate('rank');
   String get you => translate('you');
-  
+
   // Calendar
   String get calendar => translate('calendar');
   String get campaignCalendar => translate('campaign_calendar');
   String get selectDate => translate('select_date');
   String noCampaignsOnDate(String date) => translate('no_campaigns_on_date');
-  String campaignsOnDate(int count) => translate('campaigns_on_date').replaceAll('{count}', count.toString());
-  
+  String campaignsOnDate(int count) =>
+      translate('campaigns_on_date').replaceAll('{count}', count.toString());
+
   // Comparison
   String get compareCampaigns => translate('compare_campaigns');
   String get selectCampaigns => translate('select_campaigns');
+  String get minCompare => translate('min_compare');
   String get maxCompare => translate('max_compare');
   String get addMore => translate('add_more');
   String get remove => translate('remove');
   String get clearAll => translate('clear_all');
-  
+
   // Price Tracking
   String get trackedCampaigns => translate('tracked_campaigns');
   String get priceHistory => translate('price_history');
@@ -508,7 +516,7 @@ class AppLocalizations {
   String get priceDecreased => translate('price_decreased');
   String get priceStable => translate('price_stable');
   String get noTrackedCampaigns => translate('no_tracked_campaigns');
-  
+
   // Blog
   String get blogTitle => translate('blog_title');
   String get featuredPosts => translate('featured_posts');
@@ -518,7 +526,7 @@ class AppLocalizations {
   String get author => translate('author');
   String get category => translate('category');
   String get allCategories => translate('all_categories');
-  
+
   // Comments
   String get comments => translate('comments');
   String get addComment => translate('add_comment');
@@ -526,20 +534,21 @@ class AppLocalizations {
   String get noComments => translate('no_comments');
   String get commentAdded => translate('comment_added');
   String get commentDeleted => translate('comment_deleted');
-  
+
   // Rating
   String get rating => translate('rating');
   String get rateCampaign => translate('rate_campaign');
   String get yourRating => translate('your_rating');
   String get averageRating => translate('average_rating');
   String get noRatings => translate('no_ratings');
-  
+
   // Notifications
   String get enableNotifications => translate('enable_notifications');
   String get campaignNotifications => translate('campaign_notifications');
   String get priceDropNotifications => translate('price_drop_notifications');
-  String get newCampaignNotifications => translate('new_campaign_notifications');
-  
+  String get newCampaignNotifications =>
+      translate('new_campaign_notifications');
+
   // Settings
   String get appSettings => translate('app_settings');
   String get accountSettings => translate('account_settings');
@@ -547,7 +556,7 @@ class AppLocalizations {
   String get notificationSettings => translate('notification_settings');
   String get languageSettings => translate('language_settings');
   String get selectLanguage => translate('select_language');
-  
+
   // Error Messages
   String get errorLoading => translate('error_loading');
   String get errorSaving => translate('error_saving');
@@ -558,7 +567,8 @@ class AppLocalizations {
   String get errorServer => translate('error_server');
 }
 
-class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
+class _AppLocalizationsDelegate
+    extends LocalizationsDelegate<AppLocalizations> {
   const _AppLocalizationsDelegate();
 
   @override

@@ -2,17 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:dio/dio.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:intl/intl.dart';
 import 'package:video_player/video_player.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/config/api_config.dart';
-import '../../core/utils/network_result.dart';
-import '../../data/repositories/comment_repository.dart';
-import '../../data/repositories/rating_repository.dart';
-import '../../data/models/comment_model.dart';
-import '../../data/models/rating_model.dart';
-import '../../core/services/auth_service.dart';
 
 class CampaignDetailScreen extends StatefulWidget {
   final String title;
@@ -41,13 +34,12 @@ class CampaignDetailScreen extends StatefulWidget {
   });
 
   /// OpportunityModel'den CampaignDetailScreen oluşturur
-  factory CampaignDetailScreen.fromOpportunity({
-    required opportunity,
-  }) {
+  factory CampaignDetailScreen.fromOpportunity({required opportunity}) {
     return CampaignDetailScreen(
       title: opportunity.title,
       description: opportunity.subtitle,
-      detailText: 'Bu kampanyayı kullanmak için ilgili kartınızla alışveriş yapmanız yeterli.',
+      detailText:
+          'Bu kampanyayı kullanmak için ilgili kartınızla alışveriş yapmanız yeterli.',
       logoColor: opportunity.iconColor,
       affiliateUrl: opportunity.affiliateUrl,
       campaignId: opportunity.id,
@@ -63,19 +55,6 @@ class CampaignDetailScreen extends StatefulWidget {
 }
 
 class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
-  final CommentRepository _commentRepository = CommentRepository.instance;
-  final RatingRepository _ratingRepository = RatingRepository.instance;
-  final AuthService _authService = AuthService.instance;
-  
-  List<CommentModel> _comments = [];
-  RatingModel? _ratingStats;
-  NetworkResult<List<CommentModel>>? _commentsResult;
-  NetworkResult<RatingModel>? _ratingResult;
-  bool _isLoadingComments = false;
-  bool _isLoadingRating = false;
-  final TextEditingController _commentController = TextEditingController();
-  int? _selectedRating;
-  
   // Video player
   VideoPlayerController? _videoController;
   bool _isVideoInitialized = false;
@@ -84,18 +63,11 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
   @override
   void initState() {
     super.initState();
-    _commentController.addListener(() {
-      setState(() {}); // Buton durumunu güncelle
-    });
-    _loadComments();
-    _loadRatingStats();
     _initializeVideo();
   }
 
-
   @override
   void dispose() {
-    _commentController.dispose();
     _videoController?.dispose();
     super.dispose();
   }
@@ -110,9 +82,9 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
       _videoController = VideoPlayerController.networkUrl(
         Uri.parse(widget.videoUrl!),
       );
-      
+
       await _videoController!.initialize();
-      
+
       if (mounted) {
         setState(() {
           _isVideoInitialized = true;
@@ -130,121 +102,17 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
     }
   }
 
-  Future<void> _loadComments() async {
-    setState(() {
-      _isLoadingComments = true;
-    });
-
-    final result = await _commentRepository.getComments(
-      campaignId: widget.campaignId,
-      limit: 20,
-    );
-
-    setState(() {
-      _commentsResult = result;
-      _isLoadingComments = false;
-      if (result is NetworkSuccess<List<CommentModel>>) {
-        _comments = result.data;
-      }
-    });
-  }
-
-  Future<void> _loadRatingStats() async {
-    setState(() {
-      _isLoadingRating = true;
-    });
-
-    final result = await _ratingRepository.getRatingStats(widget.campaignId);
-
-    setState(() {
-      _ratingResult = result;
-      _isLoadingRating = false;
-      if (result is NetworkSuccess<RatingModel>) {
-        _ratingStats = result.data;
-        _selectedRating = result.data.userRating;
-      }
-    });
-  }
-
-  Future<void> _submitComment() async {
-    if (_commentController.text.trim().isEmpty) return;
-
-    final commentText = _commentController.text.trim();
-    _commentController.clear();
-
-    final result = await _commentRepository.addComment(
-      campaignId: widget.campaignId,
-      commentText: commentText,
-    );
-
-    if (result is NetworkSuccess<CommentModel>) {
-      _loadComments();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Yorumunuz eklendi'),
-            backgroundColor: AppColors.success,
-            duration: Duration(seconds: 2),
-          ),
-        );
-      }
-    } else if (result is NetworkError<CommentModel> && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(result.message),
-          backgroundColor: AppColors.error,
-          duration: const Duration(seconds: 3),
-        ),
-      );
-    }
-  }
-
-  Future<void> _submitRating(int rating) async {
-    setState(() {
-      _selectedRating = rating;
-    });
-
-    final result = await _ratingRepository.submitRating(
-      campaignId: widget.campaignId,
-      rating: rating,
-    );
-
-    if (result is NetworkSuccess<void>) {
-      _loadRatingStats();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Puanınız kaydedildi'),
-            backgroundColor: AppColors.success,
-            duration: Duration(seconds: 2),
-          ),
-        );
-      }
-    } else if (result is NetworkError<void> && mounted) {
-      setState(() {
-        _selectedRating = _ratingStats?.userRating;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(result.message),
-          backgroundColor: AppColors.error,
-          duration: const Duration(seconds: 3),
-        ),
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundLight, // #FFF2C6
+      backgroundColor: AppColors.backgroundLight,
       appBar: AppBar(
         backgroundColor: AppColors.backgroundLight,
         elevation: 0,
         leading: IconButton(
           icon: Icon(
             Icons.arrow_back_ios_new,
-            color: AppColors.textPrimaryLight, // #1F2937
+            color: AppColors.textPrimaryLight,
             size: 20,
           ),
           onPressed: () => Navigator.of(context).pop(),
@@ -269,7 +137,7 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
               Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: AppColors.cardBackground, // White
+                  color: AppColors.cardBackground,
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
@@ -287,34 +155,36 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
                     children: [
                       // Kampanya Özet Bölümü
                       _buildCampaignSummary(),
-                      
+
                       const SizedBox(height: 32),
-                      
+
                       // Video Bölümü (varsa)
-                      if (widget.videoUrl != null && widget.videoUrl!.isNotEmpty)
+                      if (widget.videoUrl != null &&
+                          widget.videoUrl!.isNotEmpty)
                         _buildVideoSection(),
-                      
-                      if (widget.videoUrl != null && widget.videoUrl!.isNotEmpty)
+
+                      if (widget.videoUrl != null &&
+                          widget.videoUrl!.isNotEmpty)
                         const SizedBox(height: 32),
-                      
+
                       // Kampanya Detayları Bölümü
                       _buildCampaignDetails(),
-                      
+
                       const SizedBox(height: 32),
-                      
+
                       // Nasıl Kullanılır Bölümü
                       _buildHowToUse(),
-                      
+
                       const SizedBox(height: 32),
-                      
+
                       // Geçerlilik Bölümü
                       _buildValidity(),
-                      
+
                       const SizedBox(height: 32),
-                      
+
                       // CTA Butonu
                       _buildCTAButton(),
-                      
+
                       const SizedBox(height: 12),
                     ],
                   ),
@@ -323,13 +193,35 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
 
               const SizedBox(height: 20),
 
-              // Puanlama Bölümü
-              _buildRatingSection(),
-
-              const SizedBox(height: 20),
-
-              // Yorumlar Bölümü
-              _buildCommentsSection(),
+              // Bilgi notu
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryLight.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: AppColors.primaryLight.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      color: AppColors.primaryLight,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Kampanya hakkında sorularınız için müşteri hizmetleri ile iletişime geçebilirsiniz.',
+                        style: AppTextStyles.body(
+                          isDark: false,
+                        ).copyWith(color: AppColors.primaryLight),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
@@ -361,7 +253,7 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
           ),
         ),
         const SizedBox(height: 20),
-        
+
         // Kampanya Başlığı
         Text(
           widget.title,
@@ -369,7 +261,7 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 8),
-        
+
         // Alt Başlık
         Text(
           widget.description,
@@ -381,8 +273,11 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
   }
 
   Widget _buildCampaignDetails() {
-    // detailText'i satırlara böl (örnek format için)
-    final details = widget.detailText.split('\n').where((line) => line.trim().isNotEmpty).toList();
+    // detailText'i satırlara böl
+    final details = widget.detailText
+        .split('\n')
+        .where((line) => line.trim().isNotEmpty)
+        .toList();
     if (details.isEmpty) {
       details.add(widget.detailText);
     }
@@ -401,42 +296,44 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
           ),
         ),
         const SizedBox(height: 16),
-        
+
         // Check İkonlu Maddeler
-        ...details.map((detail) => Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 24,
-                height: 24,
-                decoration: BoxDecoration(
-                  color: AppColors.primaryLight,
-                  shape: BoxShape.circle,
+        ...details.map(
+          (detail) => Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryLight,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.check,
+                    color: AppColors.cardBackground,
+                    size: 16,
+                  ),
                 ),
-                child: const Icon(
-                  Icons.check,
-                  color: AppColors.cardBackground,
-                  size: 16,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    detail.trim(),
+                    style: AppTextStyles.body(isDark: false),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  detail.trim(),
-                  style: AppTextStyles.body(isDark: false),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
-        )),
+        ),
       ],
     );
   }
 
   Widget _buildHowToUse() {
-    // Örnek adımlar (gerçek uygulamada parametre olarak geçilebilir)
+    // Örnek adımlar
     final steps = [
       'Yapı Kredi Mobil > Kampanyalar menüsünden "Katıl" butonuna tıklayın.',
       'Netflix ödemenizi kayıtlı Yapı Kredi kartınız ile yapın.',
@@ -457,7 +354,7 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
           ),
         ),
         const SizedBox(height: 16),
-        
+
         // Numaralı Adımlar
         ...steps.asMap().entries.map((entry) {
           final index = entry.key + 1;
@@ -487,10 +384,7 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Text(
-                    step,
-                    style: AppTextStyles.body(isDark: false),
-                  ),
+                  child: Text(step, style: AppTextStyles.body(isDark: false)),
                 ),
               ],
             ),
@@ -515,7 +409,7 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
           ),
         ),
         const SizedBox(height: 16),
-        
+
         // Chip'ler
         Wrap(
           spacing: 8,
@@ -543,14 +437,14 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
                   const SizedBox(width: 6),
                   Text(
                     '30 Kasım\'a kadar',
-                    style: AppTextStyles.bodySecondary(isDark: false).copyWith(
-                      fontSize: 13,
-                    ),
+                    style: AppTextStyles.bodySecondary(
+                      isDark: false,
+                    ).copyWith(fontSize: 13),
                   ),
                 ],
               ),
             ),
-            
+
             // Kanal Çipi
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -560,13 +454,12 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
               ),
               child: Text(
                 'Online',
-                style: AppTextStyles.bodySecondary(isDark: false).copyWith(
-                  fontSize: 13,
-                  color: AppColors.cardBackground,
-                ),
+                style: AppTextStyles.bodySecondary(
+                  isDark: false,
+                ).copyWith(fontSize: 13, color: AppColors.cardBackground),
               ),
             ),
-            
+
             // Durum Çipi
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -576,10 +469,9 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
               ),
               child: Text(
                 'Aktif',
-                style: AppTextStyles.bodySecondary(isDark: false).copyWith(
-                  fontSize: 13,
-                  color: AppColors.success,
-                ),
+                style: AppTextStyles.bodySecondary(
+                  isDark: false,
+                ).copyWith(fontSize: 13, color: AppColors.success),
               ),
             ),
           ],
@@ -598,7 +490,9 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
           color: AppColors.surfaceLight,
           borderRadius: BorderRadius.circular(16),
         ),
-        child: widget.videoThumbnailUrl != null && widget.videoThumbnailUrl!.isNotEmpty
+        child:
+            widget.videoThumbnailUrl != null &&
+                widget.videoThumbnailUrl!.isNotEmpty
             ? ClipRRect(
                 borderRadius: BorderRadius.circular(16),
                 child: Image.network(
@@ -617,9 +511,9 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
                           const SizedBox(height: 8),
                           Text(
                             'Video yükleniyor...',
-                            style: AppTextStyles.caption(isDark: false).copyWith(
-                              color: AppColors.textSecondaryLight,
-                            ),
+                            style: AppTextStyles.caption(
+                              isDark: false,
+                            ).copyWith(color: AppColors.textSecondaryLight),
                           ),
                         ],
                       ),
@@ -639,9 +533,9 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
                     const SizedBox(height: 8),
                     Text(
                       'Video yükleniyor...',
-                      style: AppTextStyles.caption(isDark: false).copyWith(
-                        color: AppColors.textSecondaryLight,
-                      ),
+                      style: AppTextStyles.caption(
+                        isDark: false,
+                      ).copyWith(color: AppColors.textSecondaryLight),
                     ),
                   ],
                 ),
@@ -654,9 +548,9 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
       children: [
         Text(
           'Kampanya Videosu',
-          style: AppTextStyles.body(isDark: false).copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          style: AppTextStyles.body(
+            isDark: false,
+          ).copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
         Container(
@@ -703,9 +597,9 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
             padding: const EdgeInsets.only(top: 8),
             child: Text(
               'Süre: ${_formatDuration(widget.videoDuration!)}',
-              style: AppTextStyles.caption(isDark: false).copyWith(
-                color: AppColors.textSecondaryLight,
-              ),
+              style: AppTextStyles.caption(
+                isDark: false,
+              ).copyWith(color: AppColors.textSecondaryLight),
             ),
           ),
       ],
@@ -719,7 +613,6 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
     return '${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
   }
 
-
   Widget _buildCTAButton() {
     return SizedBox(
       width: double.infinity,
@@ -729,8 +622,8 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
           await _handleCampaignClick();
         },
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primaryLight, // #8CA9FF
-          foregroundColor: AppColors.textPrimaryLight, // #1F2937
+          backgroundColor: AppColors.primaryLight,
+          foregroundColor: AppColors.textPrimaryLight,
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
@@ -759,24 +652,25 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
     try {
       // 1. Backend'e click event gönder
       final redirectUrl = await _trackCampaignClick();
-      
+
       if (redirectUrl == null || redirectUrl.isEmpty) {
         // Backend down veya URL yok, fallback kullan
         _openCampaignUrlFallback();
         return;
       }
-      
+
       // 2. URL'yi aç
       await _openUrl(redirectUrl);
-      
     } catch (e) {
       // Hata durumunda fallback URL'yi aç
       _openCampaignUrlFallback();
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Bir hata oluştu, kampanya sayfasına yönlendiriliyorsunuz'),
+            content: const Text(
+              'Bir hata oluştu, kampanya sayfasına yönlendiriliyorsunuz',
+            ),
             backgroundColor: AppColors.warning,
             duration: const Duration(seconds: 2),
           ),
@@ -787,25 +681,26 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
 
   Future<String?> _trackCampaignClick() async {
     try {
-      final dio = Dio(BaseOptions(
-        baseUrl: ApiConfig.baseUrl,
-        connectTimeout: ApiConfig.connectTimeout,
-        receiveTimeout: ApiConfig.receiveTimeout,
-      ));
-      
+      final dio = Dio(
+        BaseOptions(
+          baseUrl: ApiConfig.baseUrl,
+          connectTimeout: ApiConfig.connectTimeout,
+          receiveTimeout: ApiConfig.receiveTimeout,
+        ),
+      );
+
       final response = await dio.post(
         '${ApiConfig.campaigns}/${widget.campaignId}/click',
-        data: {}, // Boş body (sadeleştirilmiş)
+        data: {},
       );
-      
+
       if (response.statusCode == 200 && response.data['success'] == true) {
         final data = response.data['data'] as Map<String, dynamic>?;
         return data?['redirectUrl'] as String?;
       }
-      
+
       return null;
     } catch (e) {
-      // Backend down veya network error → null döner, fallback kullanılır
       return null;
     }
   }
@@ -832,9 +727,10 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
     try {
       // Paylaşılacak URL (affiliate varsa onu kullan, yoksa original)
       final shareUrl = widget.affiliateUrl ?? widget.originalUrl;
-      
+
       // Paylaşım metni oluştur
-      final shareText = '''${widget.title}
+      final shareText =
+          '''${widget.title}
 
 ${widget.description}
 
@@ -843,10 +739,7 @@ ${shareUrl}
 1ndirim ile keşfet''';
 
       // Native share sheet'i aç
-      await Share.share(
-        shareText,
-        subject: widget.title,
-      );
+      await Share.share(shareText, subject: widget.title);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -857,349 +750,6 @@ ${shareUrl}
           ),
         );
       }
-    }
-  }
-
-  /// Puanlama bölümü
-  Widget _buildRatingSection() {
-    final isLoggedIn = _authService.getCurrentFirebaseUser() != null;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.textPrimaryLight.withValues(alpha: 0.08),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-            spreadRadius: 0,
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'PUANLAMA',
-            style: AppTextStyles.bodySecondary(isDark: false).copyWith(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.5,
-              color: AppColors.textSecondaryLight,
-            ),
-          ),
-          const SizedBox(height: 16),
-          
-          if (_isLoadingRating)
-            const Center(
-              child: Padding(
-                padding: EdgeInsets.all(16.0),
-                child: CircularProgressIndicator(),
-              ),
-            )
-          else if (_ratingResult is NetworkError)
-            Text(
-              (_ratingResult as NetworkError).message,
-              style: AppTextStyles.bodySecondary(isDark: false),
-            )
-          else if (_ratingStats != null) ...[
-            // Ortalama puan
-            Row(
-              children: [
-                Text(
-                  _ratingStats!.averageRating.toStringAsFixed(1),
-                  style: AppTextStyles.headline(isDark: false).copyWith(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                _buildStarRating(_ratingStats!.averageRating, size: 24),
-                const SizedBox(width: 8),
-                Text(
-                  '(${_ratingStats!.totalRatings} değerlendirme)',
-                  style: AppTextStyles.bodySecondary(isDark: false),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            
-            // Kullanıcı puanı (eğer giriş yapmışsa)
-            if (isLoggedIn) ...[
-              const Divider(),
-              const SizedBox(height: 16),
-              Text(
-                'Puanınız',
-                style: AppTextStyles.body(isDark: false).copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 8),
-              _buildStarRatingInput(),
-            ],
-          ],
-        ],
-      ),
-    );
-  }
-
-  /// Yıldız puanlama widget'ı (görüntüleme)
-  Widget _buildStarRating(double rating, {double size = 20}) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: List.generate(5, (index) {
-        final starValue = index + 1;
-        if (rating >= starValue) {
-          return Icon(Icons.star, color: AppColors.warning, size: size);
-        } else if (rating > starValue - 1) {
-          return Icon(Icons.star_half, color: AppColors.warning, size: size);
-        } else {
-          return Icon(Icons.star_border, color: AppColors.textSecondaryLight, size: size);
-        }
-      }),
-    );
-  }
-
-  /// Yıldız puanlama widget'ı (input)
-  Widget _buildStarRatingInput() {
-    return Row(
-      children: List.generate(5, (index) {
-        final starValue = index + 1;
-        final isSelected = _selectedRating != null && starValue <= _selectedRating!;
-        
-        return GestureDetector(
-          onTap: () => _submitRating(starValue),
-          child: Icon(
-            isSelected ? Icons.star : Icons.star_border,
-            color: isSelected ? AppColors.warning : AppColors.textSecondaryLight,
-            size: 32,
-          ),
-        );
-      }),
-    );
-  }
-
-  /// Yorumlar bölümü
-  Widget _buildCommentsSection() {
-    final isLoggedIn = _authService.getCurrentFirebaseUser() != null;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.textPrimaryLight.withValues(alpha: 0.08),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-            spreadRadius: 0,
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'YORUMLAR',
-            style: AppTextStyles.bodySecondary(isDark: false).copyWith(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.5,
-              color: AppColors.textSecondaryLight,
-            ),
-          ),
-          const SizedBox(height: 16),
-          
-          // Yorum ekleme alanı (giriş yapmışsa)
-          if (isLoggedIn) ...[
-            TextField(
-              controller: _commentController,
-              maxLines: 3,
-              decoration: InputDecoration(
-                hintText: 'Yorumunuzu yazın...',
-                hintStyle: AppTextStyles.bodySecondary(isDark: false),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(
-                    color: AppColors.textSecondaryLight.withValues(alpha: 0.3),
-                  ),
-                ),
-                filled: true,
-                fillColor: AppColors.backgroundLight,
-              ),
-              style: AppTextStyles.body(isDark: false),
-            ),
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _commentController.text.trim().isEmpty ? null : _submitComment,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primaryLight,
-                  foregroundColor: AppColors.textPrimaryLight,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: const Text('Yorum Ekle'),
-              ),
-            ),
-            const SizedBox(height: 24),
-            const Divider(),
-            const SizedBox(height: 16),
-          ] else ...[
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppColors.backgroundLight,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.info_outline, color: AppColors.textSecondaryLight, size: 20),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'Yorum yapmak için giriş yapın',
-                      style: AppTextStyles.bodySecondary(isDark: false),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-          ],
-          
-          // Yorumlar listesi
-          if (_isLoadingComments)
-            const Center(
-              child: Padding(
-                padding: EdgeInsets.all(16.0),
-                child: CircularProgressIndicator(),
-              ),
-            )
-          else if (_commentsResult is NetworkError)
-            Text(
-              (_commentsResult as NetworkError).message,
-              style: AppTextStyles.bodySecondary(isDark: false),
-            )
-          else if (_comments.isEmpty)
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text(
-                'Henüz yorum yok. İlk yorumu siz yapın!',
-                style: AppTextStyles.bodySecondary(isDark: false),
-                textAlign: TextAlign.center,
-              ),
-            )
-          else
-            ..._comments.map((comment) => _buildCommentItem(comment)),
-        ],
-      ),
-    );
-  }
-
-  /// Yorum item widget'ı
-  Widget _buildCommentItem(CommentModel comment) {
-    final dateFormat = DateFormat('dd MMM yyyy, HH:mm', 'tr_TR');
-    
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 16,
-                backgroundColor: AppColors.primaryLight.withValues(alpha: 0.2),
-                child: Text(
-                  comment.userId.substring(0, 1).toUpperCase(),
-                  style: AppTextStyles.body(isDark: false).copyWith(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Kullanıcı ${comment.userId.substring(0, 8)}',
-                      style: AppTextStyles.body(isDark: false).copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    Text(
-                      dateFormat.format(comment.createdAt) + (comment.isEdited ? ' (düzenlendi)' : ''),
-                      style: AppTextStyles.caption(isDark: false).copyWith(
-                        fontSize: 11,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (comment.isOwnComment)
-                PopupMenuButton(
-                  icon: const Icon(Icons.more_vert, size: 18),
-                  itemBuilder: (context) => [
-                    const PopupMenuItem(
-                      value: 'edit',
-                      child: Text('Düzenle'),
-                    ),
-                    const PopupMenuItem(
-                      value: 'delete',
-                      child: Text('Sil'),
-                    ),
-                  ],
-                  onSelected: (value) {
-                    if (value == 'delete') {
-                      _deleteComment(comment.id);
-                    }
-                  },
-                ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            comment.commentText,
-            style: AppTextStyles.body(isDark: false),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _deleteComment(String commentId) async {
-    final result = await _commentRepository.deleteComment(commentId);
-    
-    if (result is NetworkSuccess<void>) {
-      _loadComments();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Yorum silindi'),
-            backgroundColor: AppColors.success,
-            duration: Duration(seconds: 2),
-          ),
-        );
-      }
-    } else if (result is NetworkError<void> && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(result.message),
-          backgroundColor: AppColors.error,
-          duration: const Duration(seconds: 3),
-        ),
-      );
     }
   }
 }

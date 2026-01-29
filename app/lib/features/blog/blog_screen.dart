@@ -81,6 +81,30 @@ class _BlogScreenState extends State<BlogScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Eğer veri yoksa örnek içerik göster
+    if (_posts.isEmpty && !_isLoading) {
+      return Scaffold(
+        backgroundColor: AppColors.backgroundLight,
+        appBar: AppBar(
+          backgroundColor: AppColors.backgroundLight,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(
+              Icons.arrow_back,
+              color: AppColors.textPrimaryLight,
+            ),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          title: Text(
+            'Blog & Rehberler',
+            style: AppTextStyles.headline(isDark: false),
+          ),
+          centerTitle: false,
+        ),
+        body: _buildSampleContent(),
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
       appBar: AppBar(
@@ -105,9 +129,7 @@ class _BlogScreenState extends State<BlogScreen> {
       ),
       body: _isLoading && _posts.isEmpty
           ? const Center(
-              child: CircularProgressIndicator(
-                color: AppColors.primaryLight,
-              ),
+              child: CircularProgressIndicator(color: AppColors.primaryLight),
             )
           : RefreshIndicator(
               onRefresh: _loadData,
@@ -116,32 +138,177 @@ class _BlogScreenState extends State<BlogScreen> {
                 slivers: [
                   // Kategoriler
                   if (_categories.isNotEmpty)
-                    SliverToBoxAdapter(
-                      child: _buildCategoriesSection(),
-                    ),
+                    SliverToBoxAdapter(child: _buildCategoriesSection()),
 
                   // Öne Çıkan Yazılar
                   if (_posts.any((p) => p.isFeatured))
-                    SliverToBoxAdapter(
-                      child: _buildFeaturedSection(),
-                    ),
+                    SliverToBoxAdapter(child: _buildFeaturedSection()),
 
                   // Tüm Yazılar
                   SliverPadding(
                     padding: const EdgeInsets.all(20),
                     sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final post = _posts[index];
-                          return _buildPostCard(post);
-                        },
-                        childCount: _posts.length,
-                      ),
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        final post = _posts[index];
+                        return _buildPostCard(post);
+                      }, childCount: _posts.length),
                     ),
                   ),
                 ],
               ),
             ),
+    );
+  }
+
+  Widget _buildSampleContent() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Bilgi kartı
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.primaryLight.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: AppColors.primaryLight.withValues(alpha: 0.3),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.info_outline,
+                  color: AppColors.primaryLight,
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Blog içerikleri yakında eklenecek. Şimdilik örnek rehberler mevcut.',
+                    style: AppTextStyles.body(
+                      isDark: false,
+                    ).copyWith(color: AppColors.primaryLight),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // Örnek rehberler
+          Text(
+            'Faydalı Rehberler',
+            style: AppTextStyles.headline(isDark: false).copyWith(fontSize: 20),
+          ),
+
+          const SizedBox(height: 16),
+
+          _buildSampleGuideCard(
+            'Nasıl Daha Çok Tasarruf Ederim?',
+            'Günlük alışverişlerinizde tasarruf etmenin 10 etkili yolu',
+            Icons.savings,
+            AppColors.success,
+          ),
+
+          _buildSampleGuideCard(
+            'Kampanya Takibi İpuçları',
+            'En iyi kampanyaları kaçırmamak için bilmeniz gerekenler',
+            Icons.lightbulb,
+            AppColors.warning,
+          ),
+
+          _buildSampleGuideCard(
+            'Güvenli Online Alışveriş',
+            'İnternetten alışveriş yaparken dikkat edilmesi gerekenler',
+            Icons.security,
+            AppColors.primaryLight,
+          ),
+
+          _buildSampleGuideCard(
+            'Bütçe Yönetimi',
+            'Aylık bütçenizi nasıl daha iyi yönetebilirsiniz',
+            Icons.account_balance_wallet,
+            AppColors.error,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSampleGuideCard(
+    String title,
+    String description,
+    IconData icon,
+    Color color,
+  ) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.shadowDark.withValues(alpha: 0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: InkWell(
+        onTap: () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('$title - Yakında eklenecek!'),
+              backgroundColor: color,
+            ),
+          );
+        },
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: color, size: 24),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: AppTextStyles.body(
+                        isDark: false,
+                      ).copyWith(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      description,
+                      style: AppTextStyles.caption(
+                        isDark: false,
+                      ).copyWith(color: AppColors.textSecondaryLight),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.arrow_forward_ios,
+                size: 16,
+                color: AppColors.textSecondaryLight,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -266,17 +433,13 @@ class _BlogScreenState extends State<BlogScreen> {
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
           child: Row(
             children: [
-              Icon(
-                Icons.star,
-                color: AppColors.warning,
-                size: 20,
-              ),
+              Icon(Icons.star, color: AppColors.warning, size: 20),
               const SizedBox(width: 8),
               Text(
                 'Öne Çıkanlar',
-                style: AppTextStyles.headline(isDark: false).copyWith(
-                  fontSize: 18,
-                ),
+                style: AppTextStyles.headline(
+                  isDark: false,
+                ).copyWith(fontSize: 18),
               ),
             ],
           ),
@@ -330,9 +493,12 @@ class _BlogScreenState extends State<BlogScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Featured Image
-            if (post.featuredImageUrl != null && post.featuredImageUrl!.isNotEmpty)
+            if (post.featuredImageUrl != null &&
+                post.featuredImageUrl!.isNotEmpty)
               ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(20),
+                ),
                 child: Image.network(
                   post.featuredImageUrl!,
                   height: isCompact ? 120 : 180,
@@ -367,17 +533,24 @@ class _BlogScreenState extends State<BlogScreen> {
                           ),
                           decoration: BoxDecoration(
                             color: post.category!.color != null
-                                ? Color(int.parse(
-                                    post.category!.color!.replaceFirst('#', '0xFF')))
+                                ? Color(
+                                    int.parse(
+                                      post.category!.color!.replaceFirst(
+                                        '#',
+                                        '0xFF',
+                                      ),
+                                    ),
+                                  )
                                 : AppColors.primaryLight.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
                             post.category!.name,
-                            style: AppTextStyles.caption(isDark: false).copyWith(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: AppTextStyles.caption(isDark: false)
+                                .copyWith(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                ),
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -390,8 +563,10 @@ class _BlogScreenState extends State<BlogScreen> {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          DateFormat('dd MMM yyyy', 'tr_TR')
-                              .format(post.publishedAt!),
+                          DateFormat(
+                            'dd MMM yyyy',
+                            'tr_TR',
+                          ).format(post.publishedAt!),
                           style: AppTextStyles.caption(isDark: false).copyWith(
                             fontSize: 11,
                             color: AppColors.textSecondaryLight,
@@ -440,9 +615,9 @@ class _BlogScreenState extends State<BlogScreen> {
                       const SizedBox(width: 4),
                       Text(
                         post.authorName,
-                        style: AppTextStyles.caption(isDark: false).copyWith(
-                          color: AppColors.textSecondaryLight,
-                        ),
+                        style: AppTextStyles.caption(
+                          isDark: false,
+                        ).copyWith(color: AppColors.textSecondaryLight),
                       ),
                       const Spacer(),
                       Icon(
@@ -453,9 +628,9 @@ class _BlogScreenState extends State<BlogScreen> {
                       const SizedBox(width: 4),
                       Text(
                         '${post.viewCount}',
-                        style: AppTextStyles.caption(isDark: false).copyWith(
-                          color: AppColors.textSecondaryLight,
-                        ),
+                        style: AppTextStyles.caption(
+                          isDark: false,
+                        ).copyWith(color: AppColors.textSecondaryLight),
                       ),
                     ],
                   ),

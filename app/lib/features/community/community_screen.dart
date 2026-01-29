@@ -57,10 +57,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
           icon: const Icon(Icons.arrow_back, color: AppColors.textPrimaryLight),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: Text(
-          'Topluluk',
-          style: AppTextStyles.headline(isDark: false),
-        ),
+        title: Text('Topluluk', style: AppTextStyles.headline(isDark: false)),
         centerTitle: false,
         actions: [
           IconButton(
@@ -71,9 +68,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
       ),
       body: _isLoading
           ? const Center(
-              child: CircularProgressIndicator(
-                color: AppColors.primaryLight,
-              ),
+              child: CircularProgressIndicator(color: AppColors.primaryLight),
             )
           : RefreshIndicator(
               onRefresh: _loadData,
@@ -84,10 +79,8 @@ class _CommunityScreenState extends State<CommunityScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Topluluk İstatistikleri
                     _buildCommunityStats(),
                     const SizedBox(height: 24),
-                    // Leaderboard
                     _buildLeaderboard(),
                   ],
                 ),
@@ -101,19 +94,20 @@ class _CommunityScreenState extends State<CommunityScreen> {
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.error.withValues(alpha: 0.1),
+          color: AppColors.warning.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
         ),
         child: Row(
           children: [
-            Icon(Icons.error_outline, color: AppColors.error, size: 20),
+            Icon(Icons.info_outline, color: AppColors.warning, size: 20),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                (_statsResult as NetworkError).message,
-                style: AppTextStyles.caption(isDark: false).copyWith(
-                  color: AppColors.error,
-                ),
+                'Topluluk istatistikleri şu anda yüklenemiyor. Lütfen daha sonra tekrar deneyin.',
+                style: AppTextStyles.caption(
+                  isDark: false,
+                ).copyWith(color: AppColors.warning),
               ),
             ),
           ],
@@ -122,11 +116,36 @@ class _CommunityScreenState extends State<CommunityScreen> {
     }
 
     if (_statsResult is! NetworkSuccess<CommunityStatsModel>) {
-      return const SizedBox.shrink();
+      return _buildSampleStats();
     }
 
     final stats = (_statsResult as NetworkSuccess<CommunityStatsModel>).data;
+    return _buildStatsContainer(
+      totalUsers: stats.totalUsers,
+      totalFavorites: stats.totalFavorites,
+      totalComments: stats.totalComments,
+      totalRatings: stats.totalRatings,
+      totalBadges: stats.totalBadges,
+    );
+  }
 
+  Widget _buildSampleStats() {
+    return _buildStatsContainer(
+      totalUsers: 1234,
+      totalFavorites: 5678,
+      totalComments: 2345,
+      totalRatings: 8901,
+      totalBadges: 456,
+    );
+  }
+
+  Widget _buildStatsContainer({
+    required int totalUsers,
+    required int totalFavorites,
+    required int totalComments,
+    required int totalRatings,
+    required int totalBadges,
+  }) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -158,11 +177,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                   color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(
-                  Icons.people,
-                  color: Colors.white,
-                  size: 24,
-                ),
+                child: const Icon(Icons.people, color: Colors.white, size: 24),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -171,17 +186,16 @@ class _CommunityScreenState extends State<CommunityScreen> {
                   children: [
                     Text(
                       'Topluluk İstatistikleri',
-                      style: AppTextStyles.headline(isDark: false).copyWith(
-                        color: Colors.white,
-                        fontSize: 20,
-                      ),
+                      style: AppTextStyles.headline(
+                        isDark: false,
+                      ).copyWith(color: Colors.white, fontSize: 20),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${stats.totalUsers} aktif kullanıcı',
-                      style: AppTextStyles.body(isDark: false).copyWith(
-                        color: Colors.white.withValues(alpha: 0.9),
-                      ),
+                      '$totalUsers aktif kullanıcı',
+                      style: AppTextStyles.body(
+                        isDark: false,
+                      ).copyWith(color: Colors.white.withValues(alpha: 0.9)),
                     ),
                   ],
                 ),
@@ -189,14 +203,13 @@ class _CommunityScreenState extends State<CommunityScreen> {
             ],
           ),
           const SizedBox(height: 20),
-          // İstatistik Grid
           Row(
             children: [
               Expanded(
                 child: _buildStatItem(
                   icon: Icons.favorite,
                   label: 'Favoriler',
-                  value: stats.totalFavorites.toString(),
+                  value: totalFavorites.toString(),
                 ),
               ),
               const SizedBox(width: 12),
@@ -204,7 +217,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                 child: _buildStatItem(
                   icon: Icons.comment,
                   label: 'Yorumlar',
-                  value: stats.totalComments.toString(),
+                  value: totalComments.toString(),
                 ),
               ),
             ],
@@ -216,7 +229,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                 child: _buildStatItem(
                   icon: Icons.star,
                   label: 'Puanlar',
-                  value: stats.totalRatings.toString(),
+                  value: totalRatings.toString(),
                 ),
               ),
               const SizedBox(width: 12),
@@ -224,7 +237,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                 child: _buildStatItem(
                   icon: Icons.emoji_events,
                   label: 'Rozetler',
-                  value: stats.totalBadges.toString(),
+                  value: totalBadges.toString(),
                 ),
               ),
             ],
@@ -260,9 +273,9 @@ class _CommunityScreenState extends State<CommunityScreen> {
           const SizedBox(height: 4),
           Text(
             label,
-            style: AppTextStyles.caption(isDark: false).copyWith(
-              color: Colors.white.withValues(alpha: 0.9),
-            ),
+            style: AppTextStyles.caption(
+              isDark: false,
+            ).copyWith(color: Colors.white.withValues(alpha: 0.9)),
             textAlign: TextAlign.center,
           ),
         ],
@@ -275,19 +288,20 @@ class _CommunityScreenState extends State<CommunityScreen> {
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.error.withValues(alpha: 0.1),
+          color: AppColors.warning.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
         ),
         child: Row(
           children: [
-            Icon(Icons.error_outline, color: AppColors.error, size: 20),
+            Icon(Icons.info_outline, color: AppColors.warning, size: 20),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                (_leaderboardResult as NetworkError).message,
-                style: AppTextStyles.caption(isDark: false).copyWith(
-                  color: AppColors.error,
-                ),
+                'Liderlik tablosu şu anda yüklenemiyor. Lütfen daha sonra tekrar deneyin.',
+                style: AppTextStyles.caption(
+                  isDark: false,
+                ).copyWith(color: AppColors.warning),
               ),
             ),
           ],
@@ -296,16 +310,18 @@ class _CommunityScreenState extends State<CommunityScreen> {
     }
 
     if (_leaderboardResult is! NetworkSuccess<List<LeaderboardModel>>) {
-      return const SizedBox.shrink();
+      return _buildSampleLeaderboard();
     }
 
-    final leaderboard = (_leaderboardResult as NetworkSuccess<List<LeaderboardModel>>).data;
+    final leaderboard =
+        (_leaderboardResult as NetworkSuccess<List<LeaderboardModel>>).data;
 
     if (leaderboard.isEmpty) {
       return AppEmptyState(
         icon: Icons.leaderboard_outlined,
         title: 'Henüz lider yok',
-        description: 'İlk aktivitelerini yaparak liderlik tablosuna girebilirsin!',
+        description:
+            'İlk aktivitelerini yaparak liderlik tablosuna girebilirsin!',
       );
     }
 
@@ -314,9 +330,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
       children: [
         Text(
           'Liderlik Tablosu',
-          style: AppTextStyles.headline(isDark: false).copyWith(
-            fontSize: 20,
-          ),
+          style: AppTextStyles.headline(isDark: false).copyWith(fontSize: 20),
         ),
         const SizedBox(height: 16),
         ...leaderboard.asMap().entries.map((entry) {
@@ -328,18 +342,71 @@ class _CommunityScreenState extends State<CommunityScreen> {
     );
   }
 
+  Widget _buildSampleLeaderboard() {
+    final sampleUsers = [
+      {
+        'name': 'TasarrufKrali',
+        'level': 15,
+        'points': 2450,
+        'badges': 12,
+        'isMe': false,
+      },
+      {
+        'name': 'KampanyaAvcısı',
+        'level': 12,
+        'points': 1890,
+        'badges': 8,
+        'isMe': false,
+      },
+      {'name': 'Sen', 'level': 8, 'points': 1234, 'badges': 5, 'isMe': true},
+      {
+        'name': 'İndirimSever',
+        'level': 10,
+        'points': 1567,
+        'badges': 7,
+        'isMe': false,
+      },
+      {
+        'name': 'FırsatBulur',
+        'level': 6,
+        'points': 890,
+        'badges': 4,
+        'isMe': false,
+      },
+    ];
+
+    sampleUsers.sort(
+      (a, b) => (b['points'] as int).compareTo(a['points'] as int),
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Liderlik Tablosu',
+          style: AppTextStyles.headline(isDark: false).copyWith(fontSize: 20),
+        ),
+        const SizedBox(height: 16),
+        ...sampleUsers.asMap().entries.map((entry) {
+          final index = entry.key;
+          final user = entry.value;
+          return _buildSampleLeaderboardItem(user, index);
+        }),
+      ],
+    );
+  }
+
   Widget _buildLeaderboardItem(LeaderboardModel user, int index) {
-    // İlk 3 için özel renkler
     Color rankColor;
     IconData rankIcon;
     if (index == 0) {
-      rankColor = const Color(0xFFFFD700); // Altın
+      rankColor = const Color(0xFFFFD700);
       rankIcon = Icons.looks_one;
     } else if (index == 1) {
-      rankColor = const Color(0xFFC0C0C0); // Gümüş
+      rankColor = const Color(0xFFC0C0C0);
       rankIcon = Icons.looks_two;
     } else if (index == 2) {
-      rankColor = const Color(0xFFCD7F32); // Bronz
+      rankColor = const Color(0xFFCD7F32);
       rankIcon = Icons.looks_3;
     } else {
       rankColor = AppColors.textSecondaryLight;
@@ -355,15 +422,11 @@ class _CommunityScreenState extends State<CommunityScreen> {
             : AppColors.surfaceLight,
         borderRadius: BorderRadius.circular(16),
         border: user.isCurrentUser
-            ? Border.all(
-                color: AppColors.primaryLight,
-                width: 2,
-              )
+            ? Border.all(color: AppColors.primaryLight, width: 2)
             : null,
       ),
       child: Row(
         children: [
-          // Sıra
           Container(
             width: 40,
             height: 40,
@@ -376,15 +439,13 @@ class _CommunityScreenState extends State<CommunityScreen> {
                   ? Icon(rankIcon, color: rankColor, size: 24)
                   : Text(
                       '${index + 1}',
-                      style: AppTextStyles.body(isDark: false).copyWith(
-                        color: rankColor,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: AppTextStyles.body(
+                        isDark: false,
+                      ).copyWith(color: rankColor, fontWeight: FontWeight.bold),
                     ),
             ),
           ),
           const SizedBox(width: 16),
-          // Kullanıcı Bilgileri
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -433,9 +494,9 @@ class _CommunityScreenState extends State<CommunityScreen> {
                     const SizedBox(width: 4),
                     Text(
                       'Seviye ${user.level}',
-                      style: AppTextStyles.caption(isDark: false).copyWith(
-                        color: AppColors.textSecondaryLight,
-                      ),
+                      style: AppTextStyles.caption(
+                        isDark: false,
+                      ).copyWith(color: AppColors.textSecondaryLight),
                     ),
                     const SizedBox(width: 12),
                     Icon(
@@ -446,16 +507,15 @@ class _CommunityScreenState extends State<CommunityScreen> {
                     const SizedBox(width: 4),
                     Text(
                       '${user.points} puan',
-                      style: AppTextStyles.caption(isDark: false).copyWith(
-                        color: AppColors.textSecondaryLight,
-                      ),
+                      style: AppTextStyles.caption(
+                        isDark: false,
+                      ).copyWith(color: AppColors.textSecondaryLight),
                     ),
                   ],
                 ),
               ],
             ),
           ),
-          // Rozet Sayısı
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
@@ -472,6 +532,157 @@ class _CommunityScreenState extends State<CommunityScreen> {
                 const SizedBox(width: 4),
                 Text(
                   '${user.badgeCount}',
+                  style: AppTextStyles.caption(isDark: false).copyWith(
+                    color: AppColors.primaryLight,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSampleLeaderboardItem(Map<String, dynamic> user, int index) {
+    Color rankColor;
+    IconData rankIcon;
+    if (index == 0) {
+      rankColor = const Color(0xFFFFD700);
+      rankIcon = Icons.looks_one;
+    } else if (index == 1) {
+      rankColor = const Color(0xFFC0C0C0);
+      rankIcon = Icons.looks_two;
+    } else if (index == 2) {
+      rankColor = const Color(0xFFCD7F32);
+      rankIcon = Icons.looks_3;
+    } else {
+      rankColor = AppColors.textSecondaryLight;
+      rankIcon = Icons.circle;
+    }
+
+    final isCurrentUser = user['isMe'] as bool;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isCurrentUser
+            ? AppColors.primaryLight.withValues(alpha: 0.1)
+            : AppColors.surfaceLight,
+        borderRadius: BorderRadius.circular(16),
+        border: isCurrentUser
+            ? Border.all(color: AppColors.primaryLight, width: 2)
+            : null,
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: rankColor.withValues(alpha: 0.2),
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: index < 3
+                  ? Icon(rankIcon, color: rankColor, size: 24)
+                  : Text(
+                      '${index + 1}',
+                      style: AppTextStyles.body(
+                        isDark: false,
+                      ).copyWith(color: rankColor, fontWeight: FontWeight.bold),
+                    ),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      user['name'] as String,
+                      style: AppTextStyles.body(isDark: false).copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: isCurrentUser
+                            ? AppColors.primaryLight
+                            : AppColors.textPrimaryLight,
+                      ),
+                    ),
+                    if (isCurrentUser) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryLight,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          'Sen',
+                          style: AppTextStyles.caption(isDark: false).copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.emoji_events,
+                      size: 14,
+                      color: AppColors.textSecondaryLight,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Seviye ${user['level']}',
+                      style: AppTextStyles.caption(
+                        isDark: false,
+                      ).copyWith(color: AppColors.textSecondaryLight),
+                    ),
+                    const SizedBox(width: 12),
+                    Icon(
+                      Icons.star,
+                      size: 14,
+                      color: AppColors.textSecondaryLight,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${user['points']} puan',
+                      style: AppTextStyles.caption(
+                        isDark: false,
+                      ).copyWith(color: AppColors.textSecondaryLight),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.primaryLight.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.emoji_events,
+                  size: 16,
+                  color: AppColors.primaryLight,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  '${user['badges']}',
                   style: AppTextStyles.caption(isDark: false).copyWith(
                     color: AppColors.primaryLight,
                     fontWeight: FontWeight.bold,

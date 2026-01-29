@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/services/preferences_service.dart';
 import '../../core/utils/page_transitions.dart';
+import '../../core/providers/theme_provider.dart';
 import 'widgets/profile_header.dart';
 import 'widgets/profile_menu_item.dart';
 import 'widgets/sources_section.dart';
@@ -237,6 +240,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             );
                           },
                         ),
+                        Consumer<ThemeProvider>(
+                          builder: (context, themeProvider, child) {
+                            return ProfileMenuItem(
+                              icon: themeProvider.isDarkMode
+                                  ? Icons.light_mode
+                                  : Icons.dark_mode,
+                              title: themeProvider.isDarkMode
+                                  ? 'Açık Tema'
+                                  : 'Koyu Tema',
+                              onTap: () async {
+                                await themeProvider.toggleDarkMode();
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        themeProvider.isDarkMode
+                                            ? 'Koyu tema aktif edildi'
+                                            : 'Açık tema aktif edildi',
+                                      ),
+                                      backgroundColor: AppColors.success,
+                                      duration: const Duration(seconds: 2),
+                                    ),
+                                  );
+                                }
+                              },
+                            );
+                          },
+                        ),
                         ProfileMenuItem(
                           icon: Icons.lock_outline,
                           title: 'Gizlilik ve KVKK',
@@ -263,6 +294,89 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       ],
                     ),
+                    const SizedBox(height: 32),
+
+                    // Hesaptan Çıkış Butonu
+                    Container(
+                      width: double.infinity,
+                      margin: const EdgeInsets.symmetric(horizontal: 20),
+                      child: ElevatedButton.icon(
+                        onPressed: () async {
+                          // Onay dialogu göster
+                          final shouldLogout = await showDialog<bool>(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text('Hesaptan Çıkış'),
+                              content: const Text(
+                                'Hesaptan çıkmak istediğinizden emin misiniz?',
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () =>
+                                      Navigator.of(context).pop(false),
+                                  child: const Text('İptal'),
+                                ),
+                                TextButton(
+                                  onPressed: () =>
+                                      Navigator.of(context).pop(true),
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: AppColors.error,
+                                  ),
+                                  child: const Text('Çıkış Yap'),
+                                ),
+                              ],
+                            ),
+                          );
+
+                          if (shouldLogout == true && context.mounted) {
+                            try {
+                              // Firebase'den çıkış yap
+                              await FirebaseAuth.instance.signOut();
+
+                              // Preferences'ları temizle
+                              await PreferencesService.instance.clearAll();
+
+                              // Ana sayfaya yönlendir ve tüm stack'i temizle
+                              if (context.mounted) {
+                                Navigator.of(context).pushNamedAndRemoveUntil(
+                                  '/',
+                                  (route) => false,
+                                );
+
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Başarıyla çıkış yapıldı'),
+                                    backgroundColor: AppColors.success,
+                                  ),
+                                );
+                              }
+                            } catch (e) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      'Çıkış yapılırken hata oluştu: $e',
+                                    ),
+                                    backgroundColor: AppColors.error,
+                                  ),
+                                );
+                              }
+                            }
+                          }
+                        },
+                        icon: const Icon(Icons.logout),
+                        label: const Text('Hesaptan Çıkış Yap'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.error,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+
                     const SizedBox(height: 32),
 
                     // Footer

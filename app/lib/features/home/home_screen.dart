@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_text_styles.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/utils/page_transitions.dart';
 import '../../core/utils/network_result.dart';
@@ -22,8 +23,10 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   String _selectedFilter = 'Tümü';
-  NetworkResult<List<OpportunityModel>> _opportunitiesResult = const NetworkLoading();
-  NetworkResult<List<OpportunityModel>> _expiringSoonResult = const NetworkLoading();
+  NetworkResult<List<OpportunityModel>> _opportunitiesResult =
+      const NetworkLoading();
+  NetworkResult<List<OpportunityModel>> _expiringSoonResult =
+      const NetworkLoading();
   List<OpportunityModel> _allOpportunities = [];
   List<OpportunityModel> _expiringSoonOpportunities = [];
   List<Map<String, dynamic>> _filters = [];
@@ -32,14 +35,18 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isLoading = false; // Sürekli yenilemeyi önlemek için flag
   String? _lastSourceNamesKey; // Son yüklenen kaynakları takip et
 
-  final OpportunityRepository _opportunityRepository = OpportunityRepository.instance;
+  final OpportunityRepository _opportunityRepository =
+      OpportunityRepository.instance;
 
   @override
   void initState() {
     super.initState();
     // Provider'dan kaynakları dinle ve kampanyaları yükle
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final sourcesProvider = Provider.of<SelectedSourcesProvider>(context, listen: false);
+      final sourcesProvider = Provider.of<SelectedSourcesProvider>(
+        context,
+        listen: false,
+      );
       if (!sourcesProvider.isLoading) {
         _updateFilters();
         _loadOpportunities();
@@ -52,7 +59,10 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _loadExpiringSoon() async {
     if (!mounted) return;
 
-    final sourcesProvider = Provider.of<SelectedSourcesProvider>(context, listen: false);
+    final sourcesProvider = Provider.of<SelectedSourcesProvider>(
+      context,
+      listen: false,
+    );
     final selectedSourceNames = sourcesProvider.getSelectedSourceNames();
 
     setState(() {
@@ -62,13 +72,15 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       final result = await _opportunityRepository.getExpiringSoon(
         days: 7,
-        sourceNames: selectedSourceNames.isNotEmpty ? selectedSourceNames : null,
+        sourceNames: selectedSourceNames.isNotEmpty
+            ? selectedSourceNames
+            : null,
       );
 
       if (mounted) {
         setState(() {
           _expiringSoonResult = result;
-          if (result is NetworkSuccess) {
+          if (result is NetworkSuccess<List<OpportunityModel>>) {
             _expiringSoonOpportunities = result.data;
           }
         });
@@ -76,7 +88,9 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _expiringSoonResult = NetworkError.general('Yakında bitecek kampanyalar yüklenirken bir hata oluştu');
+          _expiringSoonResult = NetworkError.general(
+            'Yakında bitecek kampanyalar yüklenirken bir hata oluştu',
+          );
         });
       }
     }
@@ -86,18 +100,21 @@ class _HomeScreenState extends State<HomeScreen> {
   /// SADECE kullanıcının seçtiği kaynaklardan kampanyaları getirir
   Future<void> _loadOpportunities({bool force = false}) async {
     if (!mounted || (_isLoading && !force)) return;
-    
-    final sourcesProvider = Provider.of<SelectedSourcesProvider>(context, listen: false);
-    
+
+    final sourcesProvider = Provider.of<SelectedSourcesProvider>(
+      context,
+      listen: false,
+    );
+
     // Provider'dan seçili kaynakların isimlerini al (tek gerçek kaynak)
     final selectedSourceNames = sourcesProvider.getSelectedSourceNames();
     final sourceNamesKey = selectedSourceNames.join(',');
-    
+
     // Eğer kaynaklar değişmediyse ve zaten yükleniyorsa, tekrar yükleme
     if (!force && sourceNamesKey == _lastSourceNamesKey && _isLoading) {
       return;
     }
-    
+
     setState(() {
       _isLoading = true;
       _opportunitiesResult = const NetworkLoading();
@@ -120,8 +137,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
     try {
       // Sadece seçili kaynaklardan kampanyaları getir
-      final result = await _opportunityRepository.getOpportunitiesBySources(selectedSourceNames);
-      
+      final result = await _opportunityRepository.getOpportunitiesBySources(
+        selectedSourceNames,
+      );
+
       if (mounted) {
         setState(() {
           _opportunitiesResult = result;
@@ -137,7 +156,9 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _opportunitiesResult = NetworkError.general('Fırsatlar yüklenirken bir hata oluştu: ${e.toString()}');
+          _opportunitiesResult = NetworkError.general(
+            'Fırsatlar yüklenirken bir hata oluştu: ${e.toString()}',
+          );
           _isLoading = false;
         });
       }
@@ -146,13 +167,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
   /// Filtreleri günceller (Provider'dan kaynakları alır)
   void _updateFilters() {
-    final sourcesProvider = Provider.of<SelectedSourcesProvider>(context, listen: false);
+    final sourcesProvider = Provider.of<SelectedSourcesProvider>(
+      context,
+      listen: false,
+    );
     final selectedSources = sourcesProvider.selectedSources;
-    
+
     _filters = [
       {'name': 'Tümü', 'color': null, 'sourceId': null},
     ];
-    
+
     for (var source in selectedSources) {
       _filters.add({
         'name': source.name,
@@ -160,9 +184,9 @@ class _HomeScreenState extends State<HomeScreen> {
         'sourceId': source.id,
       });
     }
-    
+
     // Eğer seçili filtre artık listede yoksa, 'Tümü'ne geç
-    if (_selectedFilter != 'Tümü' && 
+    if (_selectedFilter != 'Tümü' &&
         !_filters.any((f) => f['name'] == _selectedFilter)) {
       _selectedFilter = 'Tümü';
     }
@@ -170,15 +194,18 @@ class _HomeScreenState extends State<HomeScreen> {
 
   /// Kaynak için filtre rengini döndürür
   Color? _getFilterColorForSource(String sourceName) {
-    final sourcesProvider = Provider.of<SelectedSourcesProvider>(context, listen: false);
+    final sourcesProvider = Provider.of<SelectedSourcesProvider>(
+      context,
+      listen: false,
+    );
     final selectedSources = sourcesProvider.selectedSources;
-    
+
     // Kaynağı bul
     final source = selectedSources.firstWhere(
       (s) => s.name == sourceName,
       orElse: () => selectedSources.first,
     );
-    
+
     // İlk birkaç kaynak için özel renkler (Mavi Tonları Paleti)
     final colors = [
       AppColors.filterBlue,
@@ -186,12 +213,12 @@ class _HomeScreenState extends State<HomeScreen> {
       AppColors.filterGreen,
       AppColors.filterTeal,
     ];
-    
+
     final index = selectedSources.indexOf(source);
     if (index < colors.length) {
       return colors[index];
     }
-    
+
     // Diğer kaynaklar için kaynağın kendi rengini kullan
     return source.color;
   }
@@ -205,7 +232,7 @@ class _HomeScreenState extends State<HomeScreen> {
         if (!sourcesProvider.isLoading) {
           final currentSourceNames = sourcesProvider.getSelectedSourceNames();
           final currentSourceNamesKey = currentSourceNames.join(',');
-          
+
           // Kaynaklar değiştiyse güncelle (sadece bir kez)
           if (currentSourceNamesKey != _lastSourceNamesKey) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -216,15 +243,13 @@ class _HomeScreenState extends State<HomeScreen> {
             });
           }
         }
-        
+
         return SafeArea(
           child: Column(
             children: [
               const HomeHeader(),
               _buildFilterBar(),
-              Expanded(
-                child: _buildContent(),
-              ),
+              Expanded(child: _buildContent()),
             ],
           ),
         );
@@ -264,20 +289,26 @@ class _HomeScreenState extends State<HomeScreen> {
   /// Seçili kaynaklara göre fırsatları filtreler (memoized)
   /// Not: _allOpportunities zaten sadece seçili kaynaklardan geliyor
   List<OpportunityModel> get _filteredOpportunities {
-    final sourcesProvider = Provider.of<SelectedSourcesProvider>(context, listen: false);
+    final sourcesProvider = Provider.of<SelectedSourcesProvider>(
+      context,
+      listen: false,
+    );
     final selectedSources = sourcesProvider.selectedSources;
-    final cacheKey = '${selectedSources.map((s) => s.id).join(',')}_$_selectedFilter';
-    
+    final cacheKey =
+        '${selectedSources.map((s) => s.id).join(',')}_$_selectedFilter';
+
     if (_cachedFilteredOpportunities != null && _cachedFilterKey == cacheKey) {
       return _cachedFilteredOpportunities!;
     }
-    
+
     // _allOpportunities zaten sadece seçili kaynaklardan geldiği için
     // Sadece seçili filtreye göre filtrele
     final result = _selectedFilter == 'Tümü'
         ? _allOpportunities
-        : _allOpportunities.where((opp) => opp.sourceName == _selectedFilter).toList();
-    
+        : _allOpportunities
+              .where((opp) => opp.sourceName == _selectedFilter)
+              .toList();
+
     _cachedFilteredOpportunities = result;
     _cachedFilterKey = cacheKey;
     return result;
@@ -285,35 +316,33 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildContent() {
     final sourcesProvider = Provider.of<SelectedSourcesProvider>(context);
-    
+
     // Kaynaklar yükleniyor
     if (sourcesProvider.isLoading) {
       return const Center(
-        child: CircularProgressIndicator(
-          color: AppColors.primaryLight,
-        ),
+        child: CircularProgressIndicator(color: AppColors.primaryLight),
       );
     }
-    
+
     // Hiç kaynak seçilmemişse
     if (!sourcesProvider.hasSelectedSources) {
       return _buildNoSourcesEmptyState();
     }
-    
+
     // Fırsatlar yükleniyor
     if (_opportunitiesResult is NetworkLoading) {
       return _buildLoadingSkeleton();
     }
-    
+
     // Fırsatlar yüklenirken hata oluştu
     if (_opportunitiesResult is NetworkError) {
       return _buildErrorState(_opportunitiesResult as NetworkError);
     }
-    
+
     // Başarılı sonuç
     if (_opportunitiesResult is NetworkSuccess) {
       final filtered = _filteredOpportunities;
-      
+
       // Filtre sonucu boşsa
       if (filtered.isEmpty) {
         return AppEmptyState(
@@ -334,36 +363,29 @@ class _HomeScreenState extends State<HomeScreen> {
               : null,
         );
       }
-      
+
       return CustomScrollView(
         slivers: [
           // Yakında Bitecek Bölümü
           if (_expiringSoonOpportunities.isNotEmpty)
-            SliverToBoxAdapter(
-              child: _buildExpiringSoonSection(),
-            ),
-          
+            SliverToBoxAdapter(child: _buildExpiringSoonSection()),
+
           // Ana Kampanyalar Listesi
           SliverPadding(
             padding: const EdgeInsets.fromLTRB(24, 4, 24, 80),
             sliver: SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final opportunity = filtered[index];
-                  return RepaintBoundary(
-                    child: OpportunityCardV2(
-                      opportunity: opportunity,
-                    ),
-                  );
-                },
-                childCount: filtered.length,
-              ),
+              delegate: SliverChildBuilderDelegate((context, index) {
+                final opportunity = filtered[index];
+                return RepaintBoundary(
+                  child: OpportunityCardV2(opportunity: opportunity),
+                );
+              }, childCount: filtered.length),
             ),
           ),
         ],
       );
     }
-    
+
     // Fallback (olmayacak ama güvenlik için)
     return const SizedBox.shrink();
   }
@@ -390,11 +412,7 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           Row(
             children: [
-              Icon(
-                Icons.access_time,
-                color: AppColors.warning,
-                size: 20,
-              ),
+              Icon(Icons.access_time, color: AppColors.warning, size: 20),
               const SizedBox(width: 8),
               Text(
                 'Yakında Bitecek',
@@ -406,9 +424,9 @@ class _HomeScreenState extends State<HomeScreen> {
               const Spacer(),
               Text(
                 '${_expiringSoonOpportunities.length} kampanya',
-                style: AppTextStyles.caption(isDark: false).copyWith(
-                  color: AppColors.textSecondaryLight,
-                ),
+                style: AppTextStyles.caption(
+                  isDark: false,
+                ).copyWith(color: AppColors.textSecondaryLight),
               ),
             ],
           ),
@@ -423,9 +441,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 return Container(
                   width: 280,
                   margin: const EdgeInsets.only(right: 12),
-                  child: OpportunityCardV2(
-                    opportunity: opportunity,
-                  ),
+                  child: OpportunityCardV2(opportunity: opportunity),
                 );
               },
             ),
@@ -552,13 +568,16 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             )
             .then((_) {
-          // Ekrandan dönünce Provider'ı refresh et (tek gerçek kaynak)
-          final sourcesProvider = Provider.of<SelectedSourcesProvider>(context, listen: false);
-          sourcesProvider.loadSelectedSources().then((_) {
-            // Provider güncellendi, kampanyaları yeniden yükle
-            _loadOpportunities();
-          });
-        });
+              // Ekrandan dönünce Provider'ı refresh et (tek gerçek kaynak)
+              final sourcesProvider = Provider.of<SelectedSourcesProvider>(
+                context,
+                listen: false,
+              );
+              sourcesProvider.loadSelectedSources().then((_) {
+                // Provider güncellendi, kampanyaları yeniden yükle
+                _loadOpportunities();
+              });
+            });
       },
     );
   }
