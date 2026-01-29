@@ -18,7 +18,6 @@ class ReferralScreen extends StatefulWidget {
 
 class _ReferralScreenState extends State<ReferralScreen> {
   final ReferralRepository _repository = ReferralRepository();
-  NetworkResult<ReferralStatsModel>? _statsResult;
   ReferralStatsModel? _stats;
   String? _referralCode;
   bool _isLoading = false;
@@ -158,7 +157,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
         gradient: LinearGradient(
           colors: [
             AppColors.primaryLight,
-            AppColors.primaryLight.withOpacity(0.8),
+            AppColors.primaryLight.withValues(alpha: 0.8),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -166,7 +165,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primaryLight.withOpacity(0.3),
+            color: AppColors.primaryLight.withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -178,9 +177,10 @@ class _ReferralScreenState extends State<ReferralScreen> {
           const SizedBox(height: 16),
           Text(
             'Referans Kodunuz',
-            style: AppTextStyles.body(
-              isDark: false,
-            ).copyWith(color: Colors.white.withOpacity(0.9), fontSize: 16),
+            style: AppTextStyles.body(isDark: false).copyWith(
+              color: Colors.white.withValues(alpha: 0.9),
+              fontSize: 16,
+            ),
           ),
           const SizedBox(height: 12),
           if (_referralCode != null) ...[

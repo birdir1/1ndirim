@@ -34,7 +34,7 @@ class CampaignDetailScreen extends StatefulWidget {
   });
 
   /// OpportunityModel'den CampaignDetailScreen oluşturur
-  factory CampaignDetailScreen.fromOpportunity({required opportunity}) {
+  factory CampaignDetailScreen.fromOpportunity({required dynamic opportunity}) {
     return CampaignDetailScreen(
       title: opportunity.title,
       description: opportunity.subtitle,
@@ -734,7 +734,7 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
 
 ${widget.description}
 
-${shareUrl}
+$shareUrl
 
 1ndirim ile keşfet''';
 

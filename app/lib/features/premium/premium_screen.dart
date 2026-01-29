@@ -18,16 +18,12 @@ class PremiumScreen extends StatefulWidget {
 
 class _PremiumScreenState extends State<PremiumScreen> {
   final PremiumRepository _repository = PremiumRepository();
-  
+
   bool? _isPremium;
   PremiumSubscriptionModel? _subscription;
   List<PremiumPlanModel> _plans = [];
   List<PremiumFeatureModel> _features = [];
   bool _isLoading = false;
-  
-  NetworkResult<Map<String, dynamic>>? _statusResult;
-  NetworkResult<List<PremiumPlanModel>>? _plansResult;
-  NetworkResult<List<PremiumFeatureModel>>? _featuresResult;
 
   @override
   void initState() {
@@ -80,7 +76,10 @@ class _PremiumScreenState extends State<PremiumScreen> {
       _isLoading = true;
     });
 
-    final result = await _repository.subscribe(planType, durationDays: planType == 'yearly' ? 365 : 30);
+    final result = await _repository.subscribe(
+      planType,
+      durationDays: planType == 'yearly' ? 365 : 30,
+    );
 
     if (mounted) {
       setState(() {
@@ -98,7 +97,11 @@ class _PremiumScreenState extends State<PremiumScreen> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(result is NetworkError<Map<String, dynamic>> ? result.message : 'Bir hata oluştu'),
+            content: Text(
+              result is NetworkError<Map<String, dynamic>>
+                  ? result.message
+                  : 'Bir hata oluştu',
+            ),
             backgroundColor: AppColors.error,
           ),
         );
@@ -111,7 +114,9 @@ class _PremiumScreenState extends State<PremiumScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Aboneliği İptal Et'),
-        content: const Text('Premium aboneliğinizi iptal etmek istediğinize emin misiniz?'),
+        content: const Text(
+          'Premium aboneliğinizi iptal etmek istediğinize emin misiniz?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -149,7 +154,11 @@ class _PremiumScreenState extends State<PremiumScreen> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(result is NetworkError<Map<String, dynamic>> ? result.message : 'Bir hata oluştu'),
+            content: Text(
+              result is NetworkError<Map<String, dynamic>>
+                  ? result.message
+                  : 'Bir hata oluştu',
+            ),
             backgroundColor: AppColors.error,
           ),
         );
@@ -170,11 +179,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
         ),
         title: Row(
           children: [
-            Icon(
-              Icons.star,
-              color: AppColors.warning,
-              size: 24,
-            ),
+            Icon(Icons.star, color: AppColors.warning, size: 24),
             const SizedBox(width: 8),
             Text(
               'Premium Üyelik',
@@ -193,9 +198,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
       ),
       body: _isLoading && _isPremium == null
           ? const Center(
-              child: CircularProgressIndicator(
-                color: AppColors.primaryLight,
-              ),
+              child: CircularProgressIndicator(color: AppColors.primaryLight),
             )
           : RefreshIndicator(
               onRefresh: _loadData,
@@ -236,10 +239,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            AppColors.warning,
-            AppColors.warning.withValues(alpha: 0.8),
-          ],
+          colors: [AppColors.warning, AppColors.warning.withValues(alpha: 0.8)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -265,10 +265,9 @@ class _PremiumScreenState extends State<PremiumScreen> {
                   children: [
                     Text(
                       'Premium Üyesiniz',
-                      style: AppTextStyles.headline(isDark: false).copyWith(
-                        color: Colors.white,
-                        fontSize: 20,
-                      ),
+                      style: AppTextStyles.headline(
+                        isDark: false,
+                      ).copyWith(color: Colors.white, fontSize: 20),
                     ),
                     if (_subscription!.expiresAt != null)
                       Text(
@@ -307,9 +306,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
       children: [
         Text(
           'Premium Özellikler',
-          style: AppTextStyles.headline(isDark: false).copyWith(
-            fontSize: 20,
-          ),
+          style: AppTextStyles.headline(isDark: false).copyWith(fontSize: 20),
         ),
         const SizedBox(height: 16),
         ..._features.map((feature) {
@@ -348,17 +345,17 @@ class _PremiumScreenState extends State<PremiumScreen> {
                     children: [
                       Text(
                         feature.featureName,
-                        style: AppTextStyles.body(isDark: false).copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: AppTextStyles.body(
+                          isDark: false,
+                        ).copyWith(fontWeight: FontWeight.bold),
                       ),
                       if (feature.description != null) ...[
                         const SizedBox(height: 4),
                         Text(
                           feature.description!,
-                          style: AppTextStyles.caption(isDark: false).copyWith(
-                            color: AppColors.textSecondaryLight,
-                          ),
+                          style: AppTextStyles.caption(
+                            isDark: false,
+                          ).copyWith(color: AppColors.textSecondaryLight),
                         ),
                       ],
                     ],
@@ -378,15 +375,15 @@ class _PremiumScreenState extends State<PremiumScreen> {
       children: [
         Text(
           'Premium Planlar',
-          style: AppTextStyles.headline(isDark: false).copyWith(
-            fontSize: 20,
-          ),
+          style: AppTextStyles.headline(isDark: false).copyWith(fontSize: 20),
         ),
         const SizedBox(height: 16),
         ..._plans.map((plan) {
           final isYearly = plan.priceYearly != null;
           final price = isYearly ? plan.priceYearly : plan.priceMonthly;
-          final monthlyPrice = isYearly ? (plan.priceYearly! / 12) : plan.priceMonthly;
+          final monthlyPrice = isYearly
+              ? (plan.priceYearly! / 12)
+              : plan.priceMonthly;
 
           return Container(
             margin: const EdgeInsets.only(bottom: 16),
@@ -417,17 +414,17 @@ class _PremiumScreenState extends State<PremiumScreen> {
                         children: [
                           Text(
                             plan.planName,
-                            style: AppTextStyles.headline(isDark: false).copyWith(
-                              fontSize: 22,
-                            ),
+                            style: AppTextStyles.headline(
+                              isDark: false,
+                            ).copyWith(fontSize: 22),
                           ),
                           if (plan.description != null) ...[
                             const SizedBox(height: 4),
                             Text(
                               plan.description!,
-                              style: AppTextStyles.caption(isDark: false).copyWith(
-                                color: AppColors.textSecondaryLight,
-                              ),
+                              style: AppTextStyles.caption(
+                                isDark: false,
+                              ).copyWith(color: AppColors.textSecondaryLight),
                             ),
                           ],
                         ],
@@ -435,7 +432,10 @@ class _PremiumScreenState extends State<PremiumScreen> {
                     ),
                     if (isYearly)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.success.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
@@ -456,19 +456,18 @@ class _PremiumScreenState extends State<PremiumScreen> {
                   children: [
                     Text(
                       '₺${price!.toStringAsFixed(2)}',
-                      style: AppTextStyles.headline(isDark: false).copyWith(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: AppTextStyles.headline(
+                        isDark: false,
+                      ).copyWith(fontSize: 32, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(width: 8),
                     Padding(
                       padding: const EdgeInsets.only(bottom: 8),
                       child: Text(
                         isYearly ? '/yıl' : '/ay',
-                        style: AppTextStyles.body(isDark: false).copyWith(
-                          color: AppColors.textSecondaryLight,
-                        ),
+                        style: AppTextStyles.body(
+                          isDark: false,
+                        ).copyWith(color: AppColors.textSecondaryLight),
                       ),
                     ),
                     const Spacer(),
@@ -523,25 +522,19 @@ class _PremiumScreenState extends State<PremiumScreen> {
       ),
       child: Column(
         children: [
-          Icon(
-            Icons.star_outline,
-            size: 48,
-            color: AppColors.primaryLight,
-          ),
+          Icon(Icons.star_outline, size: 48, color: AppColors.primaryLight),
           const SizedBox(height: 16),
           Text(
             'Premium\'a Geçin',
-            style: AppTextStyles.headline(isDark: false).copyWith(
-              fontSize: 20,
-            ),
+            style: AppTextStyles.headline(isDark: false).copyWith(fontSize: 20),
           ),
           const SizedBox(height: 8),
           Text(
             'Tüm premium özelliklere erişin ve kampanyalardan daha fazla yararlanın',
             textAlign: TextAlign.center,
-            style: AppTextStyles.body(isDark: false).copyWith(
-              color: AppColors.textSecondaryLight,
-            ),
+            style: AppTextStyles.body(
+              isDark: false,
+            ).copyWith(color: AppColors.textSecondaryLight),
           ),
         ],
       ),

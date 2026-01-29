@@ -9,7 +9,6 @@ import '../../core/providers/selected_sources_provider.dart';
 import '../../data/models/opportunity_model.dart';
 import '../../data/repositories/opportunity_repository.dart';
 import '../sources/edit_sources_screen.dart';
-import 'widgets/opportunity_card.dart';
 import 'widgets/opportunity_card_v2.dart';
 import 'widgets/filter_chip_item.dart';
 import 'widgets/home_header.dart';
@@ -24,8 +23,6 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   String _selectedFilter = 'Tümü';
   NetworkResult<List<OpportunityModel>> _opportunitiesResult =
-      const NetworkLoading();
-  NetworkResult<List<OpportunityModel>> _expiringSoonResult =
       const NetworkLoading();
   List<OpportunityModel> _allOpportunities = [];
   List<OpportunityModel> _expiringSoonOpportunities = [];
@@ -65,10 +62,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
     final selectedSourceNames = sourcesProvider.getSelectedSourceNames();
 
-    setState(() {
-      _expiringSoonResult = const NetworkLoading();
-    });
-
     try {
       final result = await _opportunityRepository.getExpiringSoon(
         days: 7,
@@ -77,20 +70,16 @@ class _HomeScreenState extends State<HomeScreen> {
             : null,
       );
 
-      if (mounted) {
+      if (mounted && result is NetworkSuccess<List<OpportunityModel>>) {
         setState(() {
-          _expiringSoonResult = result;
-          if (result is NetworkSuccess<List<OpportunityModel>>) {
-            _expiringSoonOpportunities = result.data;
-          }
+          _expiringSoonOpportunities = result.data;
         });
       }
     } catch (e) {
+      // Hata durumunda sessizce devam et, ana kampanyalar yüklenmeye devam etsin
       if (mounted) {
         setState(() {
-          _expiringSoonResult = NetworkError.general(
-            'Yakında bitecek kampanyalar yüklenirken bir hata oluştu',
-          );
+          _expiringSoonOpportunities = [];
         });
       }
     }
@@ -568,12 +557,14 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             )
             .then((_) {
+              if (!mounted) return;
               // Ekrandan dönünce Provider'ı refresh et (tek gerçek kaynak)
               final sourcesProvider = Provider.of<SelectedSourcesProvider>(
                 context,
                 listen: false,
               );
               sourcesProvider.loadSelectedSources().then((_) {
+                if (!mounted) return;
                 // Provider güncellendi, kampanyaları yeniden yükle
                 _loadOpportunities();
               });

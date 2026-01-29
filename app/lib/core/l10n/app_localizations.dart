@@ -173,14 +173,12 @@ class AppLocalizations {
       'no_ratings': 'Henüz puanlama yok',
 
       // Bildirimler
-      'notifications': 'Bildirimler',
       'enable_notifications': 'Bildirimleri Etkinleştir',
       'campaign_notifications': 'Kampanya Bildirimleri',
       'price_drop_notifications': 'Fiyat Düşüş Bildirimleri',
       'new_campaign_notifications': 'Yeni Kampanya Bildirimleri',
 
       // Ayarlar
-      'settings': 'Ayarlar',
       'app_settings': 'Uygulama Ayarları',
       'account_settings': 'Hesap Ayarları',
       'privacy_settings': 'Gizlilik Ayarları',
@@ -354,14 +352,12 @@ class AppLocalizations {
       'no_ratings': 'No ratings yet',
 
       // Notifications
-      'notifications': 'Notifications',
       'enable_notifications': 'Enable Notifications',
       'campaign_notifications': 'Campaign Notifications',
       'price_drop_notifications': 'Price Drop Notifications',
       'new_campaign_notifications': 'New Campaign Notifications',
 
       // Settings
-      'settings': 'Settings',
       'app_settings': 'App Settings',
       'account_settings': 'Account Settings',
       'privacy_settings': 'Privacy Settings',
