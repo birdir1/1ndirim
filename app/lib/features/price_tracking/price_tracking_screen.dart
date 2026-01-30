@@ -3,14 +3,15 @@ import 'package:intl/intl.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/network_result.dart';
+import '../../core/utils/page_transitions.dart';
 
 import '../../data/models/price_tracking_model.dart';
 import '../../data/models/price_history_model.dart';
+import '../../data/models/opportunity_model.dart';
 import '../../data/repositories/price_tracking_repository.dart';
+import '../../data/repositories/opportunity_repository.dart';
 import '../../core/widgets/empty_state.dart';
-
-
-
+import '../home/campaign_detail_screen.dart';
 
 /// Fiyat Takibi Ekranı
 /// Kullanıcının takip ettiği kampanyaları ve fiyat geçmişlerini gösterir
@@ -24,8 +25,8 @@ class PriceTrackingScreen extends StatefulWidget {
 class _PriceTrackingScreenState extends State<PriceTrackingScreen> {
   final PriceTrackingRepository _repository = PriceTrackingRepository();
   NetworkResult<List<PriceTrackingModel>>? _trackingResult;
-  Map<String, List<PriceHistoryModel>> _priceHistories = {};
-  Map<String, bool> _loadingHistories = {};
+  final Map<String, List<PriceHistoryModel>> _priceHistories = {};
+  final Map<String, bool> _loadingHistories = {};
   bool _isLoading = false;
 
   @override
@@ -100,6 +101,30 @@ class _PriceTrackingScreenState extends State<PriceTrackingScreen> {
     }
   }
 
+  Future<void> _navigateToCampaignDetail(String campaignId) async {
+    // Kampanya detayını yükle
+    final opportunityRepo = OpportunityRepository.instance;
+    final result = await opportunityRepo.getOpportunityById(campaignId);
+
+    if (!mounted) return;
+
+    if (result is NetworkSuccess<OpportunityModel>) {
+      Navigator.of(context).push(
+        SlidePageRoute(
+          child: CampaignDetailScreen.fromOpportunity(opportunity: result.data),
+          direction: SlideDirection.left,
+        ),
+      );
+    } else if (result is NetworkError<OpportunityModel>) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Kampanya detayı yüklenemedi: ${result.message}'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -126,9 +151,7 @@ class _PriceTrackingScreenState extends State<PriceTrackingScreen> {
       ),
       body: _isLoading
           ? const Center(
-              child: CircularProgressIndicator(
-                color: AppColors.primaryLight,
-              ),
+              child: CircularProgressIndicator(color: AppColors.primaryLight),
             )
           : RefreshIndicator(
               onRefresh: _loadPriceTracking,
@@ -144,17 +167,13 @@ class _PriceTrackingScreenState extends State<PriceTrackingScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.error_outline,
-              size: 48,
-              color: AppColors.error,
-            ),
+            Icon(Icons.error_outline, size: 48, color: AppColors.error),
             const SizedBox(height: 16),
             Text(
               (_trackingResult as NetworkError).message,
-              style: AppTextStyles.body(isDark: false).copyWith(
-                color: AppColors.textSecondaryLight,
-              ),
+              style: AppTextStyles.body(
+                isDark: false,
+              ).copyWith(color: AppColors.textSecondaryLight),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
@@ -174,7 +193,8 @@ class _PriceTrackingScreenState extends State<PriceTrackingScreen> {
       return const SizedBox.shrink();
     }
 
-    final tracking = (_trackingResult as NetworkSuccess<List<PriceTrackingModel>>).data;
+    final tracking =
+        (_trackingResult as NetworkSuccess<List<PriceTrackingModel>>).data;
 
     if (tracking.isEmpty) {
       return AppEmptyState(
@@ -202,17 +222,19 @@ class _PriceTrackingScreenState extends State<PriceTrackingScreen> {
     double? priceChange;
     String? priceChangeText;
     Color? priceChangeColor;
-    
+
     if (history.length >= 2 && tracking.currentPrice != null) {
       final previousPrice = history[1].price;
       final currentPrice = tracking.currentPrice!;
       priceChange = currentPrice - previousPrice;
-      
+
       if (priceChange > 0) {
-        priceChangeText = '+${priceChange.toStringAsFixed(2)} ${tracking.priceCurrency}';
+        priceChangeText =
+            '+${priceChange.toStringAsFixed(2)} ${tracking.priceCurrency}';
         priceChangeColor = AppColors.error;
       } else if (priceChange < 0) {
-        priceChangeText = '${priceChange.toStringAsFixed(2)} ${tracking.priceCurrency}';
+        priceChangeText =
+            '${priceChange.toStringAsFixed(2)} ${tracking.priceCurrency}';
         priceChangeColor = AppColors.success;
       } else {
         priceChangeText = 'Değişmedi';
@@ -247,18 +269,18 @@ class _PriceTrackingScreenState extends State<PriceTrackingScreen> {
                     children: [
                       Text(
                         tracking.campaignTitle,
-                        style: AppTextStyles.body(isDark: false).copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: AppTextStyles.body(
+                          isDark: false,
+                        ).copyWith(fontWeight: FontWeight.bold),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 4),
                       Text(
                         tracking.sourceName,
-                        style: AppTextStyles.caption(isDark: false).copyWith(
-                          color: AppColors.textSecondaryLight,
-                        ),
+                        style: AppTextStyles.caption(
+                          isDark: false,
+                        ).copyWith(color: AppColors.textSecondaryLight),
                       ),
                     ],
                   ),
@@ -291,7 +313,8 @@ class _PriceTrackingScreenState extends State<PriceTrackingScreen> {
                   Expanded(
                     child: _buildPriceInfo(
                       label: 'Orijinal Fiyat',
-                      value: '${tracking.originalPrice!.toStringAsFixed(2)} ${tracking.priceCurrency}',
+                      value:
+                          '${tracking.originalPrice!.toStringAsFixed(2)} ${tracking.priceCurrency}',
                       color: AppColors.textSecondaryLight,
                     ),
                   ),
@@ -299,7 +322,8 @@ class _PriceTrackingScreenState extends State<PriceTrackingScreen> {
                   Expanded(
                     child: _buildPriceInfo(
                       label: 'İndirim',
-                      value: '%${tracking.discountPercentage!.toStringAsFixed(0)}',
+                      value:
+                          '%${tracking.discountPercentage!.toStringAsFixed(0)}',
                       color: AppColors.success,
                     ),
                   ),
@@ -312,7 +336,10 @@ class _PriceTrackingScreenState extends State<PriceTrackingScreen> {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: priceChangeColor!.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
@@ -320,7 +347,9 @@ class _PriceTrackingScreenState extends State<PriceTrackingScreen> {
                 child: Row(
                   children: [
                     Icon(
-                      priceChange! > 0 ? Icons.trending_up : Icons.trending_down,
+                      priceChange! > 0
+                          ? Icons.trending_up
+                          : Icons.trending_down,
                       size: 16,
                       color: priceChangeColor,
                     ),
@@ -343,17 +372,13 @@ class _PriceTrackingScreenState extends State<PriceTrackingScreen> {
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.flag,
-                    size: 16,
-                    color: AppColors.warning,
-                  ),
+                  Icon(Icons.flag, size: 16, color: AppColors.warning),
                   const SizedBox(width: 8),
                   Text(
                     'Hedef: ${tracking.targetPrice!.toStringAsFixed(2)} ${tracking.priceCurrency}',
-                    style: AppTextStyles.caption(isDark: false).copyWith(
-                      color: AppColors.warning,
-                    ),
+                    style: AppTextStyles.caption(
+                      isDark: false,
+                    ).copyWith(color: AppColors.warning),
                   ),
                 ],
               ),
@@ -381,9 +406,9 @@ class _PriceTrackingScreenState extends State<PriceTrackingScreen> {
               padding: const EdgeInsets.all(16),
               child: Text(
                 'Henüz fiyat geçmişi yok',
-                style: AppTextStyles.caption(isDark: false).copyWith(
-                  color: AppColors.textSecondaryLight,
-                ),
+                style: AppTextStyles.caption(
+                  isDark: false,
+                ).copyWith(color: AppColors.textSecondaryLight),
                 textAlign: TextAlign.center,
               ),
             )
@@ -407,27 +432,35 @@ class _PriceTrackingScreenState extends State<PriceTrackingScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  ...history.take(5).map((h) => Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              DateFormat('dd.MM.yyyy HH:mm', 'tr_TR').format(h.recordedAt),
-                              style: AppTextStyles.caption(isDark: false).copyWith(
-                                color: AppColors.textSecondaryLight,
+                  ...history
+                      .take(5)
+                      .map(
+                        (h) => Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                DateFormat(
+                                  'dd.MM.yyyy HH:mm',
+                                  'tr_TR',
+                                ).format(h.recordedAt),
+                                style: AppTextStyles.caption(
+                                  isDark: false,
+                                ).copyWith(color: AppColors.textSecondaryLight),
                               ),
-                            ),
-                            Text(
-                              '${h.price.toStringAsFixed(2)} ${h.currency}',
-                              style: AppTextStyles.caption(isDark: false).copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.textPrimaryLight,
+                              Text(
+                                '${h.price.toStringAsFixed(2)} ${h.currency}',
+                                style: AppTextStyles.caption(isDark: false)
+                                    .copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.textPrimaryLight,
+                                    ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      )),
+                      ),
                 ],
               ),
             ),
@@ -438,11 +471,7 @@ class _PriceTrackingScreenState extends State<PriceTrackingScreen> {
             child: SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {
-                  // Kampanya detayına git (basit bir navigasyon)
-                  Navigator.of(context).pop();
-                  // TODO: Campaign detail'e git
-                },
+                onPressed: () => _navigateToCampaignDetail(tracking.campaignId),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primaryLight,
                   padding: const EdgeInsets.symmetric(vertical: 12),
@@ -452,10 +481,9 @@ class _PriceTrackingScreenState extends State<PriceTrackingScreen> {
                 ),
                 child: Text(
                   'Kampanya Detayı',
-                  style: AppTextStyles.body(isDark: false).copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: AppTextStyles.body(
+                    isDark: false,
+                  ).copyWith(color: Colors.white, fontWeight: FontWeight.bold),
                 ),
               ),
             ),
@@ -474,17 +502,16 @@ class _PriceTrackingScreenState extends State<PriceTrackingScreen> {
       children: [
         Text(
           value,
-          style: AppTextStyles.body(isDark: false).copyWith(
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
+          style: AppTextStyles.body(
+            isDark: false,
+          ).copyWith(fontWeight: FontWeight.bold, color: color),
         ),
         const SizedBox(height: 4),
         Text(
           label,
-          style: AppTextStyles.caption(isDark: false).copyWith(
-            color: AppColors.textSecondaryLight,
-          ),
+          style: AppTextStyles.caption(
+            isDark: false,
+          ).copyWith(color: AppColors.textSecondaryLight),
         ),
       ],
     );

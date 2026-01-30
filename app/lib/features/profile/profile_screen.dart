@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/services/preferences_service.dart';
 import '../../core/utils/page_transitions.dart';
-import '../../core/providers/theme_provider.dart';
 import 'widgets/profile_header.dart';
 import 'widgets/profile_menu_item.dart';
 import 'widgets/sources_section.dart';
@@ -14,7 +12,7 @@ import '../how_it_works/how_it_works_screen.dart';
 import '../settings/kvkk_screen.dart';
 import '../settings/terms_of_use_screen.dart';
 import '../blog/blog_screen.dart';
-import '../premium/premium_screen.dart';
+import '../price_tracking/price_tracking_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -109,16 +107,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
-      appBar: AppBar(
-        backgroundColor: AppColors.backgroundLight,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimaryLight),
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-        ),
-      ),
       body: SafeArea(
         child: Column(
           children: [
@@ -148,24 +136,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     Column(
                       children: [
                         ProfileMenuItem(
-                          icon: Icons.article,
-                          title: 'Blog & Rehberler',
+                          icon: Icons.trending_down,
+                          title: 'Fiyat Takibi',
+                          subtitle: 'Kampanya fiyatlarını takip et',
                           onTap: () {
                             Navigator.of(context).push(
                               SlidePageRoute(
-                                child: const BlogScreen(),
+                                child: const PriceTrackingScreen(),
                                 direction: SlideDirection.right,
                               ),
                             );
                           },
                         ),
                         ProfileMenuItem(
-                          icon: Icons.star,
-                          title: 'Premium Üyelik',
+                          icon: Icons.article,
+                          title: 'Blog & Rehberler',
                           onTap: () {
                             Navigator.of(context).push(
                               SlidePageRoute(
-                                child: const PremiumScreen(),
+                                child: const BlogScreen(),
                                 direction: SlideDirection.right,
                               ),
                             );
