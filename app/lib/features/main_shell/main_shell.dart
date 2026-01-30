@@ -6,8 +6,8 @@ import '../../core/theme/app_text_styles.dart';
 import '../../widgets/app_bottom_navigation_bar.dart';
 import '../home/home_screen.dart';
 import '../favorites/favorites_screen.dart';
-import '../compare/compare_screen_tab.dart';
 import '../discovery/discovery_screen.dart';
+import '../profile/profile_screen.dart';
 
 /// Ana Shell Widget - Bottom Navigation ile tüm ana ekranları yönetir
 class MainShell extends StatefulWidget {
@@ -22,9 +22,9 @@ class _MainShellState extends State<MainShell> {
 
   final List<Widget> _screens = const [
     HomeScreen(),
-    FavoritesScreen(),
-    CompareScreenTab(),
     DiscoveryScreen(),
+    FavoritesScreen(),
+    ProfileScreen(),
   ];
 
   void _onTabTapped(int index) {

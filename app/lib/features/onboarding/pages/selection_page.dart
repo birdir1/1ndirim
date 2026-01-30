@@ -10,6 +10,7 @@ import '../widgets/source_selection_grid.dart';
 class SelectionPage extends StatefulWidget {
   final VoidCallback onNext;
   final VoidCallback onBack;
+  final VoidCallback? onSkip;
   final Function(List<String>) onSourcesChanged;
   final bool isDark;
 
@@ -17,6 +18,7 @@ class SelectionPage extends StatefulWidget {
     super.key,
     required this.onNext,
     required this.onBack,
+    this.onSkip,
     required this.onSourcesChanged,
     this.isDark = false,
   });
@@ -34,15 +36,17 @@ class _SelectionPageState extends State<SelectionPage> {
   void initState() {
     super.initState();
     _sources = SourceRepository.getAllSources()
-        .map((s) => SourceModel(
-              id: s.id,
-              name: s.name,
-              type: s.type,
-              icon: s.icon,
-              color: s.color,
-              segments: [],
-              isSelected: false,
-            ))
+        .map(
+          (s) => SourceModel(
+            id: s.id,
+            name: s.name,
+            type: s.type,
+            icon: s.icon,
+            color: s.color,
+            segments: [],
+            isSelected: false,
+          ),
+        )
         .toList();
   }
 
@@ -95,6 +99,22 @@ class _SelectionPageState extends State<SelectionPage> {
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         child: Column(
           children: [
+            // Skip button at top right
+            if (widget.onSkip != null)
+              Align(
+                alignment: Alignment.topRight,
+                child: TextButton(
+                  onPressed: widget.onSkip,
+                  child: Text(
+                    'Atla',
+                    style: AppTextStyles.body(isDark: widget.isDark).copyWith(
+                      color: AppColors.textSecondaryLight,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+
             // Arama çubuğu
             Container(
               height: 52,
@@ -114,9 +134,9 @@ class _SelectionPageState extends State<SelectionPage> {
                 style: AppTextStyles.body(isDark: widget.isDark),
                 decoration: InputDecoration(
                   hintText: 'Banka veya operatör ara',
-                  hintStyle: AppTextStyles.bodySecondary(isDark: widget.isDark).copyWith(
-                    color: AppColors.textSecondaryLight,
-                  ),
+                  hintStyle: AppTextStyles.bodySecondary(
+                    isDark: widget.isDark,
+                  ).copyWith(color: AppColors.textSecondaryLight),
                   prefixIcon: Icon(
                     Icons.search,
                     color: AppColors.textSecondary(widget.isDark),
@@ -149,10 +169,9 @@ class _SelectionPageState extends State<SelectionPage> {
                         padding: const EdgeInsets.only(left: 4, bottom: 12),
                         child: Text(
                           'Bankalar',
-                          style: AppTextStyles.sectionTitle(isDark: widget.isDark).copyWith(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                          ),
+                          style: AppTextStyles.sectionTitle(
+                            isDark: widget.isDark,
+                          ).copyWith(fontSize: 20, fontWeight: FontWeight.w700),
                         ),
                       ),
                       SourceSelectionGrid(
@@ -163,17 +182,16 @@ class _SelectionPageState extends State<SelectionPage> {
                       ),
                       const SizedBox(height: 24),
                     ],
-                    
+
                     // OPERATÖRLER Section
                     if (_operators.isNotEmpty) ...[
                       Padding(
                         padding: const EdgeInsets.only(left: 4, bottom: 12),
                         child: Text(
                           'Operatörler',
-                          style: AppTextStyles.sectionTitle(isDark: widget.isDark).copyWith(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                          ),
+                          style: AppTextStyles.sectionTitle(
+                            isDark: widget.isDark,
+                          ).copyWith(fontSize: 20, fontWeight: FontWeight.w700),
                         ),
                       ),
                       SourceSelectionGrid(
@@ -197,7 +215,9 @@ class _SelectionPageState extends State<SelectionPage> {
               child: ElevatedButton(
                 onPressed: _hasSelection ? widget.onNext : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: _hasSelection ? AppColors.primaryLight : AppColors.textSecondaryLight,
+                  backgroundColor: _hasSelection
+                      ? AppColors.primaryLight
+                      : AppColors.textSecondaryLight,
                   foregroundColor: Colors.white,
                   elevation: 0,
                   shape: RoundedRectangleBorder(
@@ -205,24 +225,22 @@ class _SelectionPageState extends State<SelectionPage> {
                   ),
                 ),
                 child: Text(
-                  'Devam >',
-                  style: AppTextStyles.button(color: Colors.white).copyWith(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  'Devam',
+                  style: AppTextStyles.button(
+                    color: Colors.white,
+                  ).copyWith(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
               ),
             ),
-            
+
             // Helper text (buton disabled olduğunda)
             if (!_hasSelection) ...[
               const SizedBox(height: 8),
               Text(
                 'En az 1 kaynak seçmelisin',
-                style: AppTextStyles.small(isDark: widget.isDark).copyWith(
-                  color: AppColors.textSecondaryLight,
-                  fontSize: 12,
-                ),
+                style: AppTextStyles.small(
+                  isDark: widget.isDark,
+                ).copyWith(color: AppColors.textSecondaryLight, fontSize: 12),
                 textAlign: TextAlign.center,
               ),
             ],

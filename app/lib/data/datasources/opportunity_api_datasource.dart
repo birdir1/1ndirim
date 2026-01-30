@@ -2,8 +2,6 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import '../../core/config/api_config.dart';
 import '../../core/theme/app_colors.dart';
-import '../../core/utils/error_handler.dart';
-import '../../core/services/crashlytics_service.dart';
 import '../models/opportunity_model.dart';
 
 /// API Data Source

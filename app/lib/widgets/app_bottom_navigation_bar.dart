@@ -46,21 +46,21 @@ class AppBottomNavigationBar extends StatelessWidget {
                 index: 0,
               ),
               _buildNavItem(
-                icon: Icons.favorite_border,
-                activeIcon: Icons.favorite,
-                label: 'Favoriler',
-                index: 1,
-              ),
-              _buildNavItem(
-                icon: Icons.compare_arrows,
-                activeIcon: Icons.compare_arrows,
-                label: 'Karşılaştır',
-                index: 2,
-              ),
-              _buildNavItem(
                 icon: Icons.explore_outlined,
                 activeIcon: Icons.explore,
                 label: 'Keşif',
+                index: 1,
+              ),
+              _buildNavItem(
+                icon: Icons.favorite_border,
+                activeIcon: Icons.favorite,
+                label: 'Favoriler',
+                index: 2,
+              ),
+              _buildNavItem(
+                icon: Icons.person_outline,
+                activeIcon: Icons.person,
+                label: 'Profil',
                 index: 3,
               ),
             ],

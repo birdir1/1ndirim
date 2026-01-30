@@ -104,12 +104,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         },
         children: [
           // Page 1: Value Proposition
-          ValuePropPage(onNext: _nextPage, isDark: widget.isDark),
+          ValuePropPage(
+            onNext: _nextPage,
+            onSkip: _completeOnboarding,
+            isDark: widget.isDark,
+          ),
 
           // Page 2: Selection
           SelectionPage(
             onNext: _nextPage, // _nextPage artık _completeOnboarding çağıracak
             onBack: _previousPage,
+            onSkip: _completeOnboarding,
             onSourcesChanged: _onSourcesChanged,
             isDark: widget.isDark,
           ),

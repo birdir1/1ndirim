@@ -10,6 +10,7 @@ class PreferencesService {
       'notification_new_opportunities';
   static const String _keyNotificationExpiring = 'notification_expiring';
   static const String _keyUserName = 'user_name';
+  static const String _keyUserAvatar = 'user_avatar';
 
   // Singleton instance
   static PreferencesService? _instance;
@@ -50,6 +51,29 @@ class PreferencesService {
     try {
       await _init();
       return _prefs!.getString(_keyUserName);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Kullanıcı avatarını kaydeder
+  Future<bool> setUserAvatar(String? avatar) async {
+    try {
+      await _init();
+      if (avatar == null || avatar.isEmpty) {
+        return await _prefs!.remove(_keyUserAvatar);
+      }
+      return await _prefs!.setString(_keyUserAvatar, avatar);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Kaydedilmiş kullanıcı avatarını getirir
+  Future<String?> getUserAvatar() async {
+    try {
+      await _init();
+      return _prefs!.getString(_keyUserAvatar);
     } catch (e) {
       return null;
     }

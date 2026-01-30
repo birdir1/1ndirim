@@ -7,11 +7,13 @@ import '../widgets/primary_button.dart';
 /// "Zaten senin olan fırsatlar."
 class ValuePropPage extends StatelessWidget {
   final VoidCallback onNext;
+  final VoidCallback? onSkip;
   final bool isDark;
 
   const ValuePropPage({
     super.key,
     required this.onNext,
+    this.onSkip,
     this.isDark = false,
   });
 
@@ -19,7 +21,7 @@ class ValuePropPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
     final isSmallScreen = screenHeight < 700; // iPhone SE gibi küçük ekranlar
-    
+
     return SafeArea(
       child: Container(
         padding: EdgeInsets.symmetric(
@@ -32,13 +34,31 @@ class ValuePropPage extends StatelessWidget {
             return Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+                // Skip button at top right
+                if (onSkip != null)
+                  Align(
+                    alignment: Alignment.topRight,
+                    child: TextButton(
+                      onPressed: onSkip,
+                      child: Text(
+                        'Atla',
+                        style: AppTextStyles.body(isDark: isDark).copyWith(
+                          color: AppColors.textSecondaryLight,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+
                 // Top section: Icons and Text
                 Flexible(
                   child: SingleChildScrollView(
                     physics: const NeverScrollableScrollPhysics(),
                     child: ConstrainedBox(
                       constraints: BoxConstraints(
-                        minHeight: constraints.maxHeight - 100, // Button için alan bırak
+                        minHeight:
+                            constraints.maxHeight -
+                            150, // Button ve skip için alan bırak
                       ),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -46,9 +66,10 @@ class ValuePropPage extends StatelessWidget {
                         children: [
                           // Icon Grid (2x2)
                           _buildIconGrid(isSmallScreen),
-                          
-                          SizedBox(height: isSmallScreen ? 8 : 12), // Azaltıldı: 10-14 → 8-12
-                          
+
+                          SizedBox(
+                            height: isSmallScreen ? 8 : 12,
+                          ), // Azaltıldı: 10-14 → 8-12
                           // Text Content
                           _buildContent(isSmallScreen),
                         ],
@@ -56,10 +77,10 @@ class ValuePropPage extends StatelessWidget {
                     ),
                   ),
                 ),
-                
+
                 // Bottom section: Button
                 PrimaryButton(
-                  label: 'Devam →',
+                  label: 'Devam',
                   onPressed: onNext,
                   isDark: isDark,
                 ),
@@ -74,8 +95,10 @@ class ValuePropPage extends StatelessWidget {
   Widget _buildIconGrid(bool isSmallScreen) {
     final iconSize = isSmallScreen ? 24.0 : 28.0;
     final spacing = isSmallScreen ? 8.0 : 10.0;
-    final gridSize = isSmallScreen ? 115.0 : 125.0; // Biraz küçültüldü: 120-130 → 115-125
-    
+    final gridSize = isSmallScreen
+        ? 115.0
+        : 125.0; // Biraz küçültüldü: 120-130 → 115-125
+
     return SizedBox(
       width: gridSize * 2 + spacing,
       height: gridSize * 2 + spacing,
@@ -124,9 +147,11 @@ class ValuePropPage extends StatelessWidget {
 
   Widget _buildContent(bool isSmallScreen) {
     final titleFontSize = isSmallScreen ? 20.0 : 22.0;
-    final descriptionFontSize = isSmallScreen ? 15.0 : 16.0; // Büyütüldü: 13-14 → 15-16
+    final descriptionFontSize = isSmallScreen
+        ? 15.0
+        : 16.0; // Büyütüldü: 13-14 → 15-16
     final titleSpacing = isSmallScreen ? 8.0 : 10.0; // Azaltıldı: 10-12 → 8-10
-    
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -142,7 +167,7 @@ class ValuePropPage extends StatelessWidget {
           textAlign: TextAlign.center,
         ),
         SizedBox(height: titleSpacing),
-        
+
         // Açıklama metni
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8),
