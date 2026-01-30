@@ -13,6 +13,8 @@ import 'core/l10n/app_localizations.dart';
 import 'core/services/preferences_service.dart';
 import 'core/services/auth_service.dart';
 import 'core/services/notification_service.dart';
+import 'core/services/crashlytics_service.dart';
+import 'core/services/analytics_service.dart';
 import 'core/providers/selected_sources_provider.dart';
 import 'core/utils/app_logger.dart';
 import 'features/splash/splash_screen.dart';
@@ -34,6 +36,12 @@ void main() async {
     await Firebase.initializeApp();
     AppLogger.firebaseInit(true);
 
+    // Crashlytics'i başlat (EN ÖNCELİKLİ)
+    await CrashlyticsService().initialize();
+
+    // Analytics'i başlat
+    await AnalyticsService().initialize();
+
     // Background message handler'ı ayarla
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
@@ -41,6 +49,13 @@ void main() async {
     await NotificationService().initialize();
   } catch (e) {
     AppLogger.firebaseInit(false, e);
+    // Crashlytics'e hata gönder
+    await CrashlyticsService().recordError(
+      e,
+      StackTrace.current,
+      reason: 'Firebase initialization failed',
+      fatal: true,
+    );
   }
 
   // Set status bar style for iOS and Android

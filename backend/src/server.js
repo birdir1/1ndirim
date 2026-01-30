@@ -3,6 +3,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const cron = require('node-cron');
+const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 const campaignsRouter = require('./routes/campaigns');
@@ -24,12 +25,39 @@ const { deactivateExpiredCampaigns } = require('./jobs/deactivateExpiredCampaign
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Rate Limiting - DDoS koruması
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 dakika
+  max: 100, // IP başına maksimum 100 istek
+  message: {
+    success: false,
+    error: 'Çok fazla istek gönderdiniz. Lütfen 15 dakika sonra tekrar deneyin.',
+  },
+  standardHeaders: true, // Rate limit bilgisini `RateLimit-*` header'larında döndür
+  legacyHeaders: false, // `X-RateLimit-*` header'larını devre dışı bırak
+});
+
+// Daha sıkı rate limit (auth endpoint'leri için)
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 dakika
+  max: 5, // IP başına maksimum 5 istek
+  message: {
+    success: false,
+    error: 'Çok fazla giriş denemesi. Lütfen 15 dakika sonra tekrar deneyin.',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 // Middleware
 app.use(helmet()); // Security headers
 app.use(cors()); // CORS enabled for mobile app
 app.use(morgan('combined')); // Logging
 app.use(express.json()); // JSON body parser
 app.use(express.urlencoded({ extended: true })); // URL encoded body parser
+
+// Global rate limiting (tüm API'ye)
+app.use('/api/', limiter);
 
 // Root endpoint (legal router'dan önce)
 app.get('/', (req, res) => {

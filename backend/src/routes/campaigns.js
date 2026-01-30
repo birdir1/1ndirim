@@ -5,6 +5,7 @@ const CampaignClick = require('../models/CampaignClick');
 const { validateCampaignQuality } = require('../middleware/campaignQualityFilter');
 const { assertBotPipelineUntouched, assertFetchPipelineIsolated } = require('../utils/safetyGuards');
 const AuditLogService = require('../services/auditLogService');
+const { validateCampaignId, validateSearch } = require('../middleware/validation');
 
 /**
  * GET /campaigns
