@@ -1,10 +1,8 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 /// Environment enum
-enum Environment {
-  development,
-  production,
-}
+enum Environment { development, production }
 
 /// API Configuration
 /// Environment-based configuration (dev/prod)
@@ -12,26 +10,23 @@ class ApiConfig {
   /// Current environment (compile-time constant)
   /// kDebugMode: true in debug, false in release/profile
   /// Production için: flutter build --release kullanıldığında kDebugMode = false
-  static const Environment _currentEnvironment =
-      kDebugMode ? Environment.development : Environment.production;
+  static const Environment _currentEnvironment = kDebugMode
+      ? Environment.development
+      : Environment.production;
 
-  /// Development API Base URL
-  /// Geçici olarak production URL kullanıyoruz (development için)
-  /// Local development için: http://192.168.0.2:3000/api
-  /// Mac IP adresi değişirse: ifconfig | grep "inet " | grep -v 127.0.0.1 | awk '{print $2}'
-  static const String _devBaseUrl = 'https://api.1indirim.birdir1.com/api';
-
-  /// Production API Base URL
-  /// Production domain: api.1indirim.birdir1.com
-  static const String _prodBaseUrl = 'https://api.1indirim.birdir1.com/api';
-
-  /// Base URL getter (environment-based)
+  /// Base URL from .env file (fallback to hardcoded if not found)
   static String get baseUrl {
+    final envUrl = dotenv.env['API_BASE_URL'];
+    if (envUrl != null && envUrl.isNotEmpty) {
+      return envUrl;
+    }
+
+    // Fallback to hardcoded URLs
     switch (_currentEnvironment) {
       case Environment.development:
-        return _devBaseUrl;
+        return 'https://api.1indirim.birdir1.com/api';
       case Environment.production:
-        return _prodBaseUrl;
+        return 'https://api.1indirim.birdir1.com/api';
     }
   }
 
@@ -39,7 +34,8 @@ class ApiConfig {
   static Environment get environment => _currentEnvironment;
 
   /// Is development mode?
-  static bool get isDevelopment => _currentEnvironment == Environment.development;
+  static bool get isDevelopment =>
+      _currentEnvironment == Environment.development;
 
   /// Is production mode?
   static bool get isProduction => _currentEnvironment == Environment.production;

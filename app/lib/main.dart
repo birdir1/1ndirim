@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:provider/provider.dart';
 import 'core/providers/compare_provider.dart';
 import 'core/providers/locale_provider.dart';
 import 'core/providers/premium_provider.dart';
+import 'core/providers/referral_provider.dart';
 import 'core/providers/theme_provider.dart';
 import 'core/theme/app_theme.dart';
 import 'core/l10n/app_localizations.dart';
@@ -31,6 +33,16 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Load .env file
+  try {
+    await dotenv.load(fileName: '.env');
+    AppLogger.info('✅ .env dosyası yüklendi');
+  } catch (e) {
+    AppLogger.warning(
+      '⚠️ .env dosyası yüklenemedi (fallback kullanılacak): $e',
+    );
+  }
+
   // Firebase'i initialize et (hata durumunda uygulama çalışmaya devam eder)
   try {
     await Firebase.initializeApp();
@@ -50,7 +62,7 @@ void main() async {
   } catch (e) {
     AppLogger.firebaseInit(false, e);
     // Crashlytics'e hata gönder
-    await CrashlyticsService().recordError(
+    await CrashlyticsService.recordError(
       e,
       StackTrace.current,
       reason: 'Firebase initialization failed',
@@ -93,6 +105,7 @@ class IndirimApp extends StatelessWidget {
           create: (_) => SelectedSourcesProvider()..loadSelectedSources(),
         ),
         ChangeNotifierProvider(create: (_) => CompareProvider()),
+        ChangeNotifierProvider(create: (_) => ReferralProvider()),
       ],
       child: Consumer2<LocaleProvider, ThemeProvider>(
         builder: (context, localeProvider, themeProvider, child) {

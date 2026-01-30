@@ -1,164 +1,96 @@
 const pool = require('../config/database');
-const GamificationService = require('./gamificationService');
 
-/**
- * Referans Sistemi Servisi
- */
 class ReferralService {
-  // Referans ödül puanları
-  static REWARDS = {
-    REFERRER_POINTS: 50, // Davet eden kullanıcıya
-    REFERRED_POINTS: 25, // Davet edilen kullanıcıya
-  };
-
   /**
-   * Kullanıcı için benzersiz referans kodu oluşturur veya mevcut kodu döner
+   * Kullanıcının referral kodunu getir veya oluştur
    */
   static async getOrCreateReferralCode(userId) {
     const client = await pool.connect();
-
+    
     try {
-      // Mevcut kodu kontrol et
-      const existingResult = await client.query(
-        'SELECT referral_code FROM user_referral_codes WHERE user_id = $1',
+      // PostgreSQL function kullan
+      const result = await client.query(
+        'SELECT get_or_create_referral_code($1) as code',
         [userId]
       );
-
-      if (existingResult.rows.length > 0) {
-        return existingResult.rows[0].referral_code;
-      }
-
-      // Yeni kod oluştur
-      const referralCode = await this._generateUniqueCode(client);
-
-      await client.query(
-        'INSERT INTO user_referral_codes (user_id, referral_code) VALUES ($1, $2)',
-        [userId, referralCode]
-      );
-
-      return referralCode;
-    } catch (error) {
-      console.error('❌ Referans kodu oluşturma hatası:', error);
-      throw error;
+      
+      return result.rows[0].code;
     } finally {
       client.release();
     }
   }
 
   /**
-   * Benzersiz referans kodu üretir
+   * Referral kodunu işle ve ödülleri ver
    */
-  static async _generateUniqueCode(client, attempts = 0) {
-    if (attempts > 10) {
-      throw new Error('Benzersiz kod oluşturulamadı');
-    }
-
-    // 8 karakterlik kod: 4 harf + 4 rakam
-    const letters = 'ABCDEFGHJKLMNPQRSTUVWXYZ'; // I, O harfleri çıkarıldı
-    const numbers = '23456789'; // 0, 1 rakamları çıkarıldı
-
-    let code = '';
-    for (let i = 0; i < 4; i++) {
-      code += letters.charAt(Math.floor(Math.random() * letters.length));
-    }
-    for (let i = 0; i < 4; i++) {
-      code += numbers.charAt(Math.floor(Math.random() * numbers.length));
-    }
-
-    // Benzersizlik kontrolü
-    const checkResult = await client.query(
-      'SELECT id FROM user_referral_codes WHERE referral_code = $1',
-      [code]
-    );
-
-    if (checkResult.rows.length > 0) {
-      return this._generateUniqueCode(client, attempts + 1);
-    }
-
-    return code;
-  }
-
-  /**
-   * Referans kodunu doğrular ve kayıt oluşturur
-   */
-  static async processReferral(referredUserId, referralCode) {
+  static async processReferral(userId, referralCode) {
     const client = await pool.connect();
-
+    
     try {
       await client.query('BEGIN');
 
-      // Referans kodunun sahibini bul
+      // 1. Referral code'un sahibini bul
       const codeResult = await client.query(
-        'SELECT user_id FROM user_referral_codes WHERE referral_code = $1',
-        [referralCode]
+        'SELECT user_id FROM referral_codes WHERE code = $1',
+        [referralCode.toUpperCase()]
       );
 
       if (codeResult.rows.length === 0) {
-        throw new Error('Geçersiz referans kodu');
+        throw new Error('Geçersiz referral kodu');
       }
 
-      const referrerUserId = codeResult.rows[0].user_id;
+      const referrerId = codeResult.rows[0].user_id;
 
-      // Kendi kodunu kullanamaz
-      if (referrerUserId === referredUserId) {
-        throw new Error('Kendi referans kodunuzu kullanamazsınız');
+      // 2. Kendini davet edemez
+      if (referrerId === userId) {
+        throw new Error('Kendi referral kodunu kullanamazsın');
       }
 
-      // Daha önce kayıt var mı kontrol et
+      // 3. Daha önce referral kullanmış mı kontrol et
       const existingResult = await client.query(
-        'SELECT id FROM referral_records WHERE referred_user_id = $1',
-        [referredUserId]
+        'SELECT id FROM user_referrals WHERE referred_id = $1',
+        [userId]
       );
 
       if (existingResult.rows.length > 0) {
-        throw new Error('Bu kullanıcı zaten bir referans kodu kullanmış');
+        throw new Error('Zaten bir referral kodu kullandın');
       }
 
-      // Referans kaydı oluştur
-      const insertResult = await client.query(
-        `INSERT INTO referral_records 
-         (referrer_user_id, referred_user_id, referral_code, status, reward_points)
-         VALUES ($1, $2, $3, 'completed', $4)
-         RETURNING id`,
-        [
-          referrerUserId,
-          referredUserId,
-          referralCode,
-          this.REWARDS.REFERRER_POINTS,
-        ]
-      );
+      // 4. Referral kaydı oluştur
+      const referralResult = await client.query(`
+        INSERT INTO user_referrals (referrer_id, referred_id, referral_code, status, completed_at)
+        VALUES ($1, $2, $3, 'completed', NOW())
+        RETURNING id
+      `, [referrerId, userId, referralCode.toUpperCase()]);
 
-      const recordId = insertResult.rows[0].id;
+      const referralId = referralResult.rows[0].id;
 
-      // Ödülleri ver
-      // Davet eden kullanıcıya puan
-      await GamificationService.addPoints(
-        referrerUserId,
-        this.REWARDS.REFERRER_POINTS,
-        'referral',
-        recordId,
-        'Arkadaşınızı davet ettiniz'
-      ).catch((err) => console.error('Referans ödülü hatası (referrer):', err));
+      // 5. Ödülleri oluştur (şimdilik sadece kayıt)
+      // Referrer (davet eden) için ödül
+      await client.query(`
+        INSERT INTO referral_rewards (user_id, referral_id, reward_type, reward_value, status)
+        VALUES ($1, $2, 'points', 100, 'pending')
+      `, [referrerId, referralId]);
 
-      // Davet edilen kullanıcıya puan
-      await GamificationService.addPoints(
-        referredUserId,
-        this.REWARDS.REFERRED_POINTS,
-        'referral',
-        recordId,
-        'Referans kodu ile kayıt oldunuz'
-      ).catch((err) => console.error('Referans ödülü hatası (referred):', err));
+      // Referee (davet edilen) için ödül
+      await client.query(`
+        INSERT INTO referral_rewards (user_id, referral_id, reward_type, reward_value, status)
+        VALUES ($1, $2, 'points', 50, 'pending')
+      `, [userId, referralId]);
 
       await client.query('COMMIT');
 
       return {
-        success: true,
-        referrerUserId,
-        rewardPoints: this.REWARDS.REFERRER_POINTS,
+        referralId,
+        referrerId,
+        message: 'Referral kodu başarıyla uygulandı',
+        rewards: {
+          referrer: { type: 'points', value: 100 },
+          referee: { type: 'points', value: 50 },
+        },
       };
     } catch (error) {
       await client.query('ROLLBACK');
-      console.error('❌ Referans işleme hatası:', error);
       throw error;
     } finally {
       client.release();
@@ -166,92 +98,98 @@ class ReferralService {
   }
 
   /**
-   * Kullanıcının referans istatistiklerini getirir
+   * Kullanıcının referral istatistiklerini getir
    */
   static async getReferralStats(userId) {
     const client = await pool.connect();
-
+    
     try {
-      // Referans kodu
-      const codeResult = await client.query(
-        'SELECT referral_code FROM user_referral_codes WHERE user_id = $1',
+      // Toplam referral sayısı
+      const totalResult = await client.query(
+        'SELECT COUNT(*) as count FROM user_referrals WHERE referrer_id = $1',
         [userId]
       );
 
-      const referralCode = codeResult.rows.length > 0
-        ? codeResult.rows[0].referral_code
-        : null;
-
-      // Toplam davet sayısı
-      const countResult = await client.query(
-        'SELECT COUNT(*) as total FROM referral_records WHERE referrer_user_id = $1',
-        [userId]
+      // Tamamlanan referral sayısı
+      const completedResult = await client.query(
+        'SELECT COUNT(*) as count FROM user_referrals WHERE referrer_id = $1 AND status = $2',
+        [userId, 'completed']
       );
 
-      const totalReferrals = parseInt(countResult.rows[0].total) || 0;
-
-      // Toplam kazanılan puan
-      const pointsResult = await client.query(
-        `SELECT SUM(reward_points) as total_points 
-         FROM referral_records 
-         WHERE referrer_user_id = $1 AND reward_claimed = true`,
-        [userId]
+      // Bekleyen referral sayısı
+      const pendingResult = await client.query(
+        'SELECT COUNT(*) as count FROM user_referrals WHERE referrer_id = $1 AND status = $2',
+        [userId, 'pending']
       );
 
-      const totalPoints = parseInt(pointsResult.rows[0].total_points) || 0;
-
-      // Son referanslar
-      const recentResult = await client.query(
-        `SELECT 
-          referred_user_id,
-          created_at,
-          reward_points
-         FROM referral_records
-         WHERE referrer_user_id = $1
-         ORDER BY created_at DESC
-         LIMIT 10`,
+      // Toplam ödüller
+      const rewardsResult = await client.query(
+        'SELECT SUM(reward_value) as total FROM referral_rewards WHERE user_id = $1',
         [userId]
       );
-
-      const recentReferrals = recentResult.rows.map((row) => ({
-        referredUserId: row.referred_user_id,
-        createdAt: row.created_at,
-        rewardPoints: parseInt(row.reward_points) || 0,
-      }));
 
       return {
-        referralCode,
-        totalReferrals,
-        totalPoints,
-        recentReferrals,
+        totalReferrals: parseInt(totalResult.rows[0].count) || 0,
+        completedReferrals: parseInt(completedResult.rows[0].count) || 0,
+        pendingReferrals: parseInt(pendingResult.rows[0].count) || 0,
+        totalRewards: parseInt(rewardsResult.rows[0].total) || 0,
       };
-    } catch (error) {
-      console.error('❌ Referans istatistikleri getirme hatası:', error);
-      throw error;
     } finally {
       client.release();
     }
   }
 
   /**
-   * Referans kodunu doğrular (kayıt olmadan önce kontrol için)
+   * Referral kodunu validate et
    */
-  static async validateReferralCode(referralCode) {
+  static async validateReferralCode(code) {
     const client = await pool.connect();
-
+    
     try {
       const result = await client.query(
-        'SELECT user_id FROM user_referral_codes WHERE referral_code = $1',
-        [referralCode]
+        'SELECT user_id FROM referral_codes WHERE code = $1',
+        [code.toUpperCase()]
       );
 
       return {
         valid: result.rows.length > 0,
-        exists: result.rows.length > 0,
+        code: code.toUpperCase(),
       };
-    } catch (error) {
-      console.error('❌ Referans kodu doğrulama hatası:', error);
-      return { valid: false, exists: false };
+    } finally {
+      client.release();
+    }
+  }
+
+  /**
+   * Kullanıcının referral geçmişini getir
+   */
+  static async getReferralHistory(userId) {
+    const client = await pool.connect();
+    
+    try {
+      const result = await client.query(`
+        SELECT 
+          ur.id,
+          ur.referred_id,
+          ur.status,
+          ur.created_at,
+          ur.completed_at,
+          COALESCE(SUM(rr.reward_value), 0) as total_reward
+        FROM user_referrals ur
+        LEFT JOIN referral_rewards rr ON ur.id = rr.referral_id AND rr.user_id = $1
+        WHERE ur.referrer_id = $1
+        GROUP BY ur.id, ur.referred_id, ur.status, ur.created_at, ur.completed_at
+        ORDER BY ur.created_at DESC
+      `, [userId]);
+
+      return result.rows.map(row => ({
+        id: row.id,
+        referredUserId: row.referred_id,
+        status: row.status,
+        createdAt: row.created_at,
+        completedAt: row.completed_at,
+        totalReward: parseInt(row.total_reward) || 0,
+      }));
     } finally {
       client.release();
     }

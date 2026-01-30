@@ -133,4 +133,18 @@ class OpportunityRepository {
       return NetworkError.general(errorMessage, error: e);
     }
   }
+
+  /// ID'ye göre kampanya getirir
+  Future<NetworkResult<OpportunityModel>> getOpportunityById(String id) async {
+    try {
+      final opportunity = await _apiDataSource.getCampaignById(id);
+      return NetworkSuccess(opportunity);
+    } catch (e) {
+      final errorMessage = e is Exception
+          ? e.toString().replaceFirst('Exception: ', '')
+          : 'Kampanya detayı yüklenirken bir hata oluştu';
+
+      return NetworkError.general(errorMessage, error: e);
+    }
+  }
 }

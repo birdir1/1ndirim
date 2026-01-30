@@ -47,3 +47,8 @@ app.*.map.json
 # Firebase configuration files (sensitive - do not commit)
 ios/Runner/GoogleService-Info.plist
 android/app/google-services.json
+
+# Environment variables (sensitive - do not commit)
+.env
+.env.local
+.env.*.local

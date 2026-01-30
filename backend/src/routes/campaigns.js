@@ -6,6 +6,8 @@ const { validateCampaignQuality } = require('../middleware/campaignQualityFilter
 const { assertBotPipelineUntouched, assertFetchPipelineIsolated } = require('../utils/safetyGuards');
 const AuditLogService = require('../services/auditLogService');
 const { validateCampaignId, validateSearch } = require('../middleware/validation');
+const { cacheMiddleware, invalidateCacheMiddleware } = require('../middleware/cache');
+const CacheService = require('../services/cacheService');
 
 /**
  * GET /campaigns
@@ -13,8 +15,10 @@ const { validateCampaignId, validateSearch } = require('../middleware/validation
  * Query params: 
  *   - ?sourceIds=uuid1,uuid2 (opsiyonel)
  *   - ?sourceNames=Akbank,Yapı Kredi (opsiyonel, Flutter için)
+ * 
+ * CACHED: 5 minutes
  */
-router.get('/', async (req, res) => {
+router.get('/', cacheMiddleware(CacheService.TTL.CAMPAIGNS_LIST), async (req, res) => {
   try {
     let sourceIds = null;
 

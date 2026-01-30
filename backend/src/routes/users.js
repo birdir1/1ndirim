@@ -3,25 +3,19 @@ const router = express.Router();
 const pool = require('../config/database');
 const { firebaseAuth } = require('../middleware/firebaseAuth');
 const GamificationService = require('../services/gamificationService');
+const { validateFCMToken } = require('../middleware/validation');
 
 /**
  * POST /api/users/fcm-token
  * Kullanıcının FCM token'ını kaydeder veya günceller
  * Body: { fcmToken: string, deviceInfo?: object }
  */
-router.post('/fcm-token', firebaseAuth, async (req, res) => {
+router.post('/fcm-token', firebaseAuth, validateFCMToken, async (req, res) => {
   const client = await pool.connect();
   
   try {
     const userId = req.user.uid;
     const { fcmToken, deviceInfo } = req.body;
-
-    if (!fcmToken || typeof fcmToken !== 'string' || fcmToken.trim().length === 0) {
-      return res.status(400).json({
-        success: false,
-        error: 'FCM token gerekli',
-      });
-    }
 
     // Token'ı kaydet veya güncelle (UPSERT)
     const result = await client.query(

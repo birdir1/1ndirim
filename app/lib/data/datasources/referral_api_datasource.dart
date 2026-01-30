@@ -1,34 +1,36 @@
 import 'package:dio/dio.dart';
 import '../../core/config/api_config.dart';
 import '../../core/services/auth_service.dart';
+import '../models/referral_code_model.dart';
 import '../models/referral_stats_model.dart';
 
-/// Referans API Data Source
+/// Referral API Data Source
 class ReferralApiDataSource {
   final Dio _dio;
   final AuthService _authService = AuthService.instance;
 
   ReferralApiDataSource({Dio? dio})
-      : _dio = dio ??
-            Dio(BaseOptions(
+    : _dio =
+          dio ??
+          Dio(
+            BaseOptions(
               baseUrl: ApiConfig.baseUrl,
               connectTimeout: ApiConfig.connectTimeout,
               receiveTimeout: ApiConfig.receiveTimeout,
-            ));
+            ),
+          );
 
   /// Auth header'ları alır
   Future<Map<String, String>> _getAuthHeaders() async {
     final token = await _authService.getIdToken();
     if (token == null) {
-      throw Exception('Giriş yapmanız gerekiyor');
+      throw Exception('Kullanıcı giriş yapmamış');
     }
-    return {
-      'Authorization': 'Bearer $token',
-    };
+    return {'Authorization': 'Bearer $token'};
   }
 
-  /// Kullanıcının referans kodunu getirir veya oluşturur
-  Future<String> getReferralCode() async {
+  /// Kullanıcının referral kodunu getirir
+  Future<ReferralCodeModel> getReferralCode() async {
     try {
       final headers = await _getAuthHeaders();
       final response = await _dio.get(
@@ -44,21 +46,26 @@ class ReferralApiDataSource {
         throw Exception('Geçersiz yanıt');
       }
 
-      return response.data['data']['referralCode'] as String;
+      return ReferralCodeModel.fromMap(response.data['data']);
     } on DioException catch (e) {
-      throw Exception('Referans kodu alınırken bir hata oluştu: ${e.message}');
+      if (e.response?.statusCode == 401) {
+        throw Exception('Oturum süresi dolmuş. Lütfen tekrar giriş yapın.');
+      }
+      throw Exception('Referral kodu alınırken bir hata oluştu: ${e.message}');
     } catch (e) {
-      throw Exception('Referans kodu alınırken bir hata oluştu: ${e.toString()}');
+      throw Exception(
+        'Referral kodu alınırken bir hata oluştu: ${e.toString()}',
+      );
     }
   }
 
-  /// Referans kodunu işler ve ödülleri verir
-  Future<Map<String, dynamic>> processReferral(String referralCode) async {
+  /// Referral kodunu uygular
+  Future<void> applyReferralCode(String code) async {
     try {
       final headers = await _getAuthHeaders();
       final response = await _dio.post(
         '/api/referrals/process',
-        data: {'referralCode': referralCode},
+        data: {'referralCode': code},
         options: Options(headers: headers),
       );
 
@@ -67,23 +74,27 @@ class ReferralApiDataSource {
       }
 
       if (response.data == null || response.data['success'] != true) {
-        throw Exception('Geçersiz yanıt');
+        throw Exception(response.data?['error'] ?? 'Geçersiz yanıt');
       }
-
-      return response.data['data'] as Map<String, dynamic>;
     } on DioException catch (e) {
-      if (e.response?.statusCode == 400) {
-        final errorMessage = e.response?.data['error'] as String?;
-        throw Exception(errorMessage ?? 'Geçersiz referans kodu');
+      if (e.response?.statusCode == 401) {
+        throw Exception('Oturum süresi dolmuş. Lütfen tekrar giriş yapın.');
       }
-      throw Exception('Referans işlenirken bir hata oluştu: ${e.message}');
+      if (e.response?.statusCode == 400) {
+        throw Exception(e.response?.data?['error'] ?? 'Geçersiz referral kodu');
+      }
+      throw Exception(
+        'Referral kodu uygulanırken bir hata oluştu: ${e.message}',
+      );
     } catch (e) {
-      throw Exception('Referans işlenirken bir hata oluştu: ${e.toString()}');
+      throw Exception(
+        'Referral kodu uygulanırken bir hata oluştu: ${e.toString()}',
+      );
     }
   }
 
-  /// Kullanıcının referans istatistiklerini getirir
-  Future<ReferralStatsModel> getReferralStats() async {
+  /// Kullanıcının referral istatistiklerini getirir
+  Future<ReferralStatsModel> getStats() async {
     try {
       final headers = await _getAuthHeaders();
       final response = await _dio.get(
@@ -101,20 +112,21 @@ class ReferralApiDataSource {
 
       return ReferralStatsModel.fromMap(response.data['data']);
     } on DioException catch (e) {
-      throw Exception('Referans istatistikleri alınırken bir hata oluştu: ${e.message}');
+      if (e.response?.statusCode == 401) {
+        throw Exception('Oturum süresi dolmuş. Lütfen tekrar giriş yapın.');
+      }
+      throw Exception('İstatistikler alınırken bir hata oluştu: ${e.message}');
     } catch (e) {
-      throw Exception('Referans istatistikleri alınırken bir hata oluştu: ${e.toString()}');
+      throw Exception(
+        'İstatistikler alınırken bir hata oluştu: ${e.toString()}',
+      );
     }
   }
 
-  /// Referans kodunun geçerli olup olmadığını kontrol eder
-  Future<bool> validateReferralCode(String code) async {
+  /// Referral kodunu validate eder
+  Future<bool> validateCode(String code) async {
     try {
-      final headers = await _getAuthHeaders();
-      final response = await _dio.get(
-        '/api/referrals/validate/$code',
-        options: Options(headers: headers),
-      );
+      final response = await _dio.get('/api/referrals/validate/$code');
 
       if (response.statusCode != 200) {
         return false;
@@ -124,7 +136,7 @@ class ReferralApiDataSource {
         return false;
       }
 
-      return response.data['data']['valid'] as bool? ?? false;
+      return response.data['data']['valid'] == true;
     } catch (e) {
       return false;
     }

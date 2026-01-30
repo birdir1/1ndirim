@@ -3,6 +3,7 @@ const router = express.Router();
 const UserFavorite = require('../models/UserFavorite');
 const Campaign = require('../models/Campaign');
 const { firebaseAuth, optionalFirebaseAuth } = require('../middleware/firebaseAuth');
+const { validateFavoriteAdd } = require('../middleware/validation');
 
 /**
  * GET /favorites
@@ -62,7 +63,7 @@ router.get('/', firebaseAuth, async (req, res) => {
  * POST /favorites/:campaignId
  * Kampanyayı favorilere ekler
  */
-router.post('/:campaignId', firebaseAuth, async (req, res) => {
+router.post('/:campaignId', firebaseAuth, validateFavoriteAdd, async (req, res) => {
   try {
     const userId = req.user.uid;
     const { campaignId } = req.params;
@@ -125,7 +126,7 @@ router.post('/:campaignId', firebaseAuth, async (req, res) => {
  * DELETE /favorites/:campaignId
  * Kampanyayı favorilerden çıkarır
  */
-router.delete('/:campaignId', firebaseAuth, async (req, res) => {
+router.delete('/:campaignId', firebaseAuth, validateFavoriteAdd, async (req, res) => {
   try {
     const userId = req.user.uid;
     const { campaignId } = req.params;
@@ -157,7 +158,7 @@ router.delete('/:campaignId', firebaseAuth, async (req, res) => {
  * GET /favorites/check/:campaignId
  * Kampanyanın favori olup olmadığını kontrol eder
  */
-router.get('/check/:campaignId', firebaseAuth, async (req, res) => {
+router.get('/check/:campaignId', firebaseAuth, validateFavoriteAdd, async (req, res) => {
   try {
     const userId = req.user.uid;
     const { campaignId } = req.params;

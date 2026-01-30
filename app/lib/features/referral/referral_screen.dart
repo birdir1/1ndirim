@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:intl/intl.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
-import '../../core/utils/network_result.dart';
-import '../../data/repositories/referral_repository.dart';
-import '../../data/models/referral_stats_model.dart';
+import '../../core/providers/referral_provider.dart';
 
 /// Referans Programı Ekranı
 class ReferralScreen extends StatefulWidget {
@@ -17,47 +15,21 @@ class ReferralScreen extends StatefulWidget {
 }
 
 class _ReferralScreenState extends State<ReferralScreen> {
-  final ReferralRepository _repository = ReferralRepository();
-  ReferralStatsModel? _stats;
-  String? _referralCode;
-  bool _isLoading = false;
-
   @override
   void initState() {
     super.initState();
-    _loadData();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadData();
+    });
   }
 
   Future<void> _loadData() async {
-    if (_isLoading) return;
-
-    setState(() {
-      _isLoading = true;
-    });
-
-    final codeResult = await _repository.getReferralCode();
-    final statsResult = await _repository.getReferralStats();
-
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-
-        if (codeResult is NetworkSuccess<String>) {
-          _referralCode = codeResult.data;
-        }
-
-        if (statsResult is NetworkSuccess<ReferralStatsModel>) {
-          _stats = statsResult.data;
-          _referralCode ??= _stats?.referralCode;
-        }
-      });
-    }
+    final provider = context.read<ReferralProvider>();
+    await Future.wait([provider.loadReferralCode(), provider.loadStats()]);
   }
 
-  Future<void> _copyReferralCode() async {
-    if (_referralCode == null) return;
-
-    await Clipboard.setData(ClipboardData(text: _referralCode!));
+  Future<void> _copyReferralCode(String code) async {
+    await Clipboard.setData(ClipboardData(text: code));
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -69,12 +41,10 @@ class _ReferralScreenState extends State<ReferralScreen> {
     }
   }
 
-  Future<void> _shareReferralCode() async {
-    if (_referralCode == null) return;
-
+  Future<void> _shareReferralCode(String code) async {
     try {
       await Share.share(
-        '1ndirim uygulamasını denemek için referans kodumu kullan: $_referralCode\n\nKampanyalardan haberdar olmak ve tasarruf etmek için 1ndirim\'i indir!',
+        '1ndirim uygulamasını denemek için referans kodumu kullan: $code\n\nKampanyalardan haberdar olmak ve tasarruf etmek için 1ndirim\'i indir!',
       );
     } catch (e) {
       if (mounted) {
@@ -100,7 +70,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
-          'Referans Programı',
+          'Arkadaşını Davet Et',
           style: AppTextStyles.headline(isDark: false),
         ),
         centerTitle: false,
@@ -112,44 +82,50 @@ class _ReferralScreenState extends State<ReferralScreen> {
           ),
         ],
       ),
-      body: _isLoading && _stats == null
-          ? const Center(
+      body: Consumer<ReferralProvider>(
+        builder: (context, provider, _) {
+          if (provider.isLoading && provider.referralCode == null) {
+            return const Center(
               child: CircularProgressIndicator(color: AppColors.primaryLight),
-            )
-          : RefreshIndicator(
-              onRefresh: _loadData,
-              color: AppColors.primaryLight,
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Referans Kodu Kartı
-                    _buildReferralCodeCard(),
+            );
+          }
 
-                    const SizedBox(height: 24),
+          return RefreshIndicator(
+            onRefresh: _loadData,
+            color: AppColors.primaryLight,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Referans Kodu Kartı
+                  _buildReferralCodeCard(provider),
 
-                    // İstatistikler
-                    if (_stats != null) _buildStatsSection(),
+                  const SizedBox(height: 24),
 
-                    const SizedBox(height: 24),
+                  // İstatistikler
+                  if (provider.stats != null) _buildStatsSection(provider),
 
-                    // Son Referanslar
-                    if (_stats != null && _stats!.recentReferrals.isNotEmpty)
-                      _buildRecentReferralsSection(),
+                  const SizedBox(height: 24),
 
-                    const SizedBox(height: 24),
+                  // Nasıl Çalışır?
+                  _buildHowItWorksSection(),
 
-                    // Nasıl Çalışır?
-                    _buildHowItWorksSection(),
-                  ],
-                ),
+                  const SizedBox(height: 24),
+
+                  // Ödüller
+                  _buildRewardsSection(),
+                ],
               ),
             ),
+          );
+        },
+      ),
     );
   }
 
-  Widget _buildReferralCodeCard() {
+  Widget _buildReferralCodeCard(ReferralProvider provider) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -175,14 +151,14 @@ class _ReferralScreenState extends State<ReferralScreen> {
           const Icon(Icons.card_giftcard, size: 48, color: Colors.white),
           const SizedBox(height: 16),
           Text(
-            'Referans Kodunuz',
+            'Senin Referans Kodun',
             style: AppTextStyles.body(isDark: false).copyWith(
               color: Colors.white.withValues(alpha: 0.9),
               fontSize: 16,
             ),
           ),
           const SizedBox(height: 12),
-          if (_referralCode != null) ...[
+          if (provider.referralCode != null) ...[
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
               decoration: BoxDecoration(
@@ -190,11 +166,11 @@ class _ReferralScreenState extends State<ReferralScreen> {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
-                _referralCode!,
+                provider.referralCode!,
                 style: AppTextStyles.headline(isDark: false).copyWith(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
-                  letterSpacing: 2,
+                  letterSpacing: 4,
                   color: AppColors.primaryLight,
                 ),
               ),
@@ -204,7 +180,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
               children: [
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: _copyReferralCode,
+                    onPressed: () => _copyReferralCode(provider.referralCode!),
                     icon: const Icon(Icons.copy, size: 20),
                     label: const Text('Kopyala'),
                     style: ElevatedButton.styleFrom(
@@ -220,7 +196,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: _shareReferralCode,
+                    onPressed: () => _shareReferralCode(provider.referralCode!),
                     icon: const Icon(Icons.share, size: 20),
                     label: const Text('Paylaş'),
                     style: ElevatedButton.styleFrom(
@@ -244,8 +220,8 @@ class _ReferralScreenState extends State<ReferralScreen> {
     );
   }
 
-  Widget _buildStatsSection() {
-    if (_stats == null) return const SizedBox.shrink();
+  Widget _buildStatsSection(ReferralProvider provider) {
+    final stats = provider.stats!;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -260,7 +236,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
             Expanded(
               child: _buildStatCard(
                 'Toplam Davet',
-                '${_stats!.totalReferrals}',
+                '${stats.totalReferrals}',
                 Icons.people,
                 AppColors.primaryLight,
               ),
@@ -268,10 +244,32 @@ class _ReferralScreenState extends State<ReferralScreen> {
             const SizedBox(width: 12),
             Expanded(
               child: _buildStatCard(
-                'Kazanılan Puan',
-                '${_stats!.totalPoints}',
-                Icons.stars,
+                'Tamamlanan',
+                '${stats.completedReferrals}',
+                Icons.check_circle,
+                AppColors.success,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: _buildStatCard(
+                'Bekleyen',
+                '${stats.pendingReferrals}',
+                Icons.pending,
                 AppColors.warning,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildStatCard(
+                'Toplam Puan',
+                '${stats.totalRewards}',
+                Icons.stars,
+                AppColors.accent,
               ),
             ),
           ],
@@ -329,97 +327,6 @@ class _ReferralScreenState extends State<ReferralScreen> {
     );
   }
 
-  Widget _buildRecentReferralsSection() {
-    if (_stats == null || _stats!.recentReferrals.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Son Referanslar',
-          style: AppTextStyles.headline(isDark: false).copyWith(fontSize: 20),
-        ),
-        const SizedBox(height: 16),
-        ..._stats!.recentReferrals.map((referral) {
-          return Container(
-            margin: const EdgeInsets.only(bottom: 12),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.cardBackground,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.shadowDark.withValues(alpha: 0.05),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryLight.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(
-                    Icons.person,
-                    color: AppColors.primaryLight,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Davet edilen kullanıcı',
-                        style: AppTextStyles.body(
-                          isDark: false,
-                        ).copyWith(fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        DateFormat(
-                          'dd MMM yyyy, HH:mm',
-                          'tr_TR',
-                        ).format(referral.createdAt),
-                        style: AppTextStyles.caption(
-                          isDark: false,
-                        ).copyWith(color: AppColors.textSecondaryLight),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.success.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    '+${referral.rewardPoints} puan',
-                    style: AppTextStyles.caption(isDark: false).copyWith(
-                      color: AppColors.success,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        }),
-      ],
-    );
-  }
-
   Widget _buildHowItWorksSection() {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -458,7 +365,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
           _buildHowItWorksItem(
             '3',
             'Ödül kazanın',
-            'Her davet için 50 puan kazanın! Arkadaşınız da 25 puan kazanır.',
+            'Her davet için 100 puan kazanın! Arkadaşınız da 50 puan kazanır.',
           ),
         ],
       ),
@@ -505,6 +412,108 @@ class _ReferralScreenState extends State<ReferralScreen> {
               ),
             ],
           ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRewardsSection() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppColors.accent.withValues(alpha: 0.1),
+            AppColors.warning.withValues(alpha: 0.1),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppColors.accent.withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.emoji_events, color: AppColors.accent, size: 24),
+              const SizedBox(width: 8),
+              Text(
+                'Ödüller',
+                style: AppTextStyles.headline(
+                  isDark: false,
+                ).copyWith(fontSize: 18),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _buildRewardItem(
+            Icons.person_add,
+            'Davet Eden (Sen)',
+            '+100 puan',
+            AppColors.primaryLight,
+          ),
+          const SizedBox(height: 12),
+          _buildRewardItem(
+            Icons.person,
+            'Davet Edilen (Arkadaşın)',
+            '+50 puan',
+            AppColors.success,
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.info.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.lightbulb_outline, color: AppColors.info, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Puanlar şu an sadece takip ediliyor. Yakında kullanılabilir hale gelecek!',
+                    style: AppTextStyles.caption(
+                      isDark: false,
+                    ).copyWith(color: AppColors.info),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRewardItem(
+    IconData icon,
+    String title,
+    String reward,
+    Color color,
+  ) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, color: color, size: 20),
+        ),
+        const SizedBox(width: 12),
+        Expanded(child: Text(title, style: AppTextStyles.body(isDark: false))),
+        Text(
+          reward,
+          style: AppTextStyles.body(
+            isDark: false,
+          ).copyWith(fontWeight: FontWeight.bold, color: color),
         ),
       ],
     );

@@ -37,23 +37,24 @@ class CrashlyticsService {
       };
 
       _isInitialized = true;
-      AppLogger.success('✅ Crashlytics başlatıldı');
+      AppLogger.info('✅ Crashlytics başlatıldı');
     } catch (e) {
       AppLogger.error('❌ Crashlytics başlatılamadı: $e');
     }
   }
 
   /// Hata logla
-  Future<void> recordError(
+  static Future<void> recordError(
     dynamic exception,
     StackTrace? stack, {
     String? reason,
     bool fatal = false,
   }) async {
-    if (!_isInitialized || _crashlytics == null) return;
+    final instance = CrashlyticsService();
+    if (!instance._isInitialized || instance._crashlytics == null) return;
 
     try {
-      await _crashlytics!.recordError(
+      await instance._crashlytics!.recordError(
         exception,
         stack,
         reason: reason,
@@ -66,22 +67,24 @@ class CrashlyticsService {
   }
 
   /// Custom log mesajı
-  Future<void> log(String message) async {
-    if (!_isInitialized || _crashlytics == null) return;
+  static Future<void> log(String message) async {
+    final instance = CrashlyticsService();
+    if (!instance._isInitialized || instance._crashlytics == null) return;
 
     try {
-      await _crashlytics!.log(message);
+      await instance._crashlytics!.log(message);
     } catch (e) {
       AppLogger.error('❌ Crashlytics log hatası: $e');
     }
   }
 
   /// Kullanıcı ID'si set et
-  Future<void> setUserId(String userId) async {
-    if (!_isInitialized || _crashlytics == null) return;
+  static Future<void> setUserId(String userId) async {
+    final instance = CrashlyticsService();
+    if (!instance._isInitialized || instance._crashlytics == null) return;
 
     try {
-      await _crashlytics!.setUserIdentifier(userId);
+      await instance._crashlytics!.setUserIdentifier(userId);
       AppLogger.info('👤 Crashlytics User ID: $userId');
     } catch (e) {
       AppLogger.error('❌ Crashlytics setUserId hatası: $e');
@@ -89,11 +92,12 @@ class CrashlyticsService {
   }
 
   /// Custom key-value pair ekle
-  Future<void> setCustomKey(String key, dynamic value) async {
-    if (!_isInitialized || _crashlytics == null) return;
+  static Future<void> setCustomKey(String key, dynamic value) async {
+    final instance = CrashlyticsService();
+    if (!instance._isInitialized || instance._crashlytics == null) return;
 
     try {
-      await _crashlytics!.setCustomKey(key, value);
+      await instance._crashlytics!.setCustomKey(key, value);
     } catch (e) {
       AppLogger.error('❌ Crashlytics setCustomKey hatası: $e');
     }

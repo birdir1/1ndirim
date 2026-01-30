@@ -1,76 +1,52 @@
-import '../../core/utils/network_result.dart';
-import '../models/referral_stats_model.dart';
 import '../datasources/referral_api_datasource.dart';
+import '../models/referral_code_model.dart';
+import '../models/referral_stats_model.dart';
 
-/// Referans Repository
+/// Referral Repository
 class ReferralRepository {
-  static final ReferralRepository _instance = ReferralRepository._internal();
-  factory ReferralRepository() => _instance;
-  ReferralRepository._internal();
+  final ReferralApiDataSource _datasource;
 
-  final ReferralApiDataSource _apiDataSource = ReferralApiDataSource();
+  ReferralRepository({ReferralApiDataSource? datasource})
+    : _datasource = datasource ?? ReferralApiDataSource();
 
-  /// Kullanıcının referans kodunu getirir veya oluşturur
-  Future<NetworkResult<String>> getReferralCode() async {
+  /// Singleton instance
+  static final ReferralRepository _instance = ReferralRepository();
+  static ReferralRepository get instance => _instance;
+
+  /// Kullanıcının referral kodunu getirir
+  Future<String> getReferralCode() async {
     try {
-      final code = await _apiDataSource.getReferralCode();
-      return NetworkSuccess(code);
+      final result = await _datasource.getReferralCode();
+      return result.code;
     } catch (e) {
-      final errorMessage = e is Exception
-          ? e.toString().replaceFirst('Exception: ', '')
-          : 'Referans kodu alınırken bir hata oluştu';
-
-      return NetworkError.general(
-        errorMessage,
-        error: e,
-      );
+      rethrow;
     }
   }
 
-  /// Referans kodunu işler ve ödülleri verir
-  Future<NetworkResult<Map<String, dynamic>>> processReferral(String referralCode) async {
+  /// Referral kodunu uygular
+  Future<void> applyReferralCode(String code) async {
     try {
-      final result = await _apiDataSource.processReferral(referralCode);
-      return NetworkSuccess(result);
+      await _datasource.applyReferralCode(code);
     } catch (e) {
-      final errorMessage = e is Exception
-          ? e.toString().replaceFirst('Exception: ', '')
-          : 'Referans işlenirken bir hata oluştu';
-
-      return NetworkError.general(
-        errorMessage,
-        error: e,
-      );
+      rethrow;
     }
   }
 
-  /// Kullanıcının referans istatistiklerini getirir
-  Future<NetworkResult<ReferralStatsModel>> getReferralStats() async {
+  /// Kullanıcının referral istatistiklerini getirir
+  Future<ReferralStatsModel> getStats() async {
     try {
-      final stats = await _apiDataSource.getReferralStats();
-      return NetworkSuccess(stats);
+      return await _datasource.getStats();
     } catch (e) {
-      final errorMessage = e is Exception
-          ? e.toString().replaceFirst('Exception: ', '')
-          : 'Referans istatistikleri alınırken bir hata oluştu';
-
-      return NetworkError.general(
-        errorMessage,
-        error: e,
-      );
+      rethrow;
     }
   }
 
-  /// Referans kodunun geçerli olup olmadığını kontrol eder
-  Future<NetworkResult<bool>> validateReferralCode(String code) async {
+  /// Referral kodunu validate eder
+  Future<bool> validateCode(String code) async {
     try {
-      final isValid = await _apiDataSource.validateReferralCode(code);
-      return NetworkSuccess(isValid);
+      return await _datasource.validateCode(code);
     } catch (e) {
-      return NetworkError.general(
-        'Referans kodu doğrulanamadı',
-        error: e,
-      );
+      return false;
     }
   }
 }

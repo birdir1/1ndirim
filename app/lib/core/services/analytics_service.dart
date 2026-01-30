@@ -30,7 +30,7 @@ class AnalyticsService {
       await _analytics!.setAnalyticsCollectionEnabled(true);
 
       _isInitialized = true;
-      AppLogger.success('✅ Analytics başlatıldı');
+      AppLogger.info('✅ Analytics başlatıldı');
     } catch (e) {
       AppLogger.error('❌ Analytics başlatılamadı: $e');
     }
@@ -54,7 +54,7 @@ class AnalyticsService {
   /// Custom event logla
   Future<void> logEvent({
     required String name,
-    Map<String, dynamic>? parameters,
+    Map<String, Object>? parameters,
   }) async {
     if (!_isInitialized || _analytics == null) return;
 

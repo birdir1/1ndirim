@@ -3,12 +3,13 @@ const router = express.Router();
 const pool = require('../config/database');
 const { firebaseAuth, optionalFirebaseAuth } = require('../middleware/firebaseAuth');
 const GamificationService = require('../services/gamificationService');
+const { validateRating, validateCampaignId } = require('../middleware/validation');
 
 /**
  * GET /api/ratings/:campaignId
  * Bir kampanyanın puanlama istatistiklerini getirir
  */
-router.get('/:campaignId', optionalFirebaseAuth, async (req, res) => {
+router.get('/:campaignId', optionalFirebaseAuth, validateCampaignId, async (req, res) => {
   const client = await pool.connect();
   
   try {
@@ -88,21 +89,13 @@ router.get('/:campaignId', optionalFirebaseAuth, async (req, res) => {
  * Bir kampanyaya puan verir veya günceller
  * Body: { rating: number } (1-5 arası)
  */
-router.post('/:campaignId', firebaseAuth, async (req, res) => {
+router.post('/:campaignId', firebaseAuth, validateCampaignId, validateRating, async (req, res) => {
   const client = await pool.connect();
   
   try {
     const { campaignId } = req.params;
     const { rating } = req.body;
     const userId = req.user.uid;
-
-    // Validasyon
-    if (!rating || typeof rating !== 'number' || rating < 1 || rating > 5) {
-      return res.status(400).json({
-        success: false,
-        error: 'Puan 1-5 arasında olmalıdır',
-      });
-    }
 
     // Kampanyanın var olup olmadığını kontrol et
     const campaignCheck = await client.query(
@@ -169,7 +162,7 @@ router.post('/:campaignId', firebaseAuth, async (req, res) => {
  * DELETE /api/ratings/:campaignId
  * Bir kampanyaya verilen puanı siler
  */
-router.delete('/:campaignId', firebaseAuth, async (req, res) => {
+router.delete('/:campaignId', firebaseAuth, validateCampaignId, async (req, res) => {
   const client = await pool.connect();
   
   try {

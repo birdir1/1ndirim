@@ -3,13 +3,14 @@ const router = express.Router();
 const pool = require('../config/database');
 const { firebaseAuth, optionalFirebaseAuth } = require('../middleware/firebaseAuth');
 const GamificationService = require('../services/gamificationService');
+const { validateComment, validateCampaignId } = require('../middleware/validation');
 
 /**
  * GET /api/comments/:campaignId
  * Bir kampanyanın yorumlarını getirir
  * Query params: ?limit=20&offset=0
  */
-router.get('/:campaignId', optionalFirebaseAuth, async (req, res) => {
+router.get('/:campaignId', optionalFirebaseAuth, validateCampaignId, async (req, res) => {
   const client = await pool.connect();
   
   try {
@@ -89,28 +90,13 @@ router.get('/:campaignId', optionalFirebaseAuth, async (req, res) => {
  * Bir kampanyaya yorum ekler
  * Body: { commentText: string }
  */
-router.post('/:campaignId', firebaseAuth, async (req, res) => {
+router.post('/:campaignId', firebaseAuth, validateCampaignId, validateComment, async (req, res) => {
   const client = await pool.connect();
   
   try {
     const { campaignId } = req.params;
     const { commentText } = req.body;
     const userId = req.user.uid;
-
-    // Validasyon
-    if (!commentText || typeof commentText !== 'string' || commentText.trim().length === 0) {
-      return res.status(400).json({
-        success: false,
-        error: 'Yorum metni gerekli',
-      });
-    }
-
-    if (commentText.trim().length > 1000) {
-      return res.status(400).json({
-        success: false,
-        error: 'Yorum en fazla 1000 karakter olabilir',
-      });
-    }
 
     // Kampanyanın var olup olmadığını kontrol et
     const campaignCheck = await client.query(
