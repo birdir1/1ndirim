@@ -488,6 +488,81 @@ class Campaign {
   }
 
   /**
+   * Kategori bazlı kampanyaları getirir (Keşfet sayfası için)
+   * @param {string} category - Kategori adı (entertainment, gaming, fashion, travel, food, finance)
+   * @param {number} limit - Maksimum kampanya sayısı (varsayılan: 20)
+   * @returns {Promise<Array>}
+   */
+  static async findByCategory(category, limit = 20) {
+    const query = `
+      SELECT 
+        c.*,
+        s.name as source_name,
+        s.type as source_type,
+        s.logo_url as source_logo_url,
+        s.latitude as source_latitude,
+        s.longitude as source_longitude,
+        s.city as source_city
+      FROM campaigns c
+      INNER JOIN sources s ON c.source_id = s.id
+      WHERE c.is_active = true
+        AND c.expires_at > NOW()
+        AND (c.is_hidden = false OR c.is_hidden IS NULL)
+        AND c.category = $1
+      ORDER BY c.is_pinned DESC, c.pinned_at DESC NULLS LAST, c.created_at DESC
+      LIMIT $2
+    `;
+
+    const result = await pool.query(query, [category, limit]);
+    return result.rows;
+  }
+
+  /**
+   * Kategori bazlı kampanyaları getirir (fallback stratejisi ile)
+   * Eğer aktif kampanya yoksa, son bilinen kampanyaları döndürür
+   * @param {string} category - Kategori adı
+   * @param {number} limit - Maksimum kampanya sayısı (varsayılan: 20)
+   * @returns {Promise<Object>} - { campaigns: Array, isEmpty: boolean }
+   */
+  static async findByCategoryWithFallback(category, limit = 20) {
+    // Try to get active campaigns
+    const activeCampaigns = await this.findByCategory(category, limit);
+
+    if (activeCampaigns.length > 0) {
+      return {
+        campaigns: activeCampaigns,
+        isEmpty: false,
+      };
+    }
+
+    // Fallback: Get last known campaigns (even if expired)
+    const query = `
+      SELECT 
+        c.*,
+        s.name as source_name,
+        s.type as source_type,
+        s.logo_url as source_logo_url,
+        s.latitude as source_latitude,
+        s.longitude as source_longitude,
+        s.city as source_city,
+        true as is_expired
+      FROM campaigns c
+      INNER JOIN sources s ON c.source_id = s.id
+      WHERE c.category = $1
+        AND (c.is_hidden = false OR c.is_hidden IS NULL)
+      ORDER BY c.created_at DESC
+      LIMIT $2
+    `;
+
+    const result = await pool.query(query, [category, Math.min(limit, 5)]);
+    
+    return {
+      campaigns: result.rows,
+      isEmpty: true,
+    };
+  }
+
+  /**
    * Yeni kampanya oluşturur
    * @param {Object} campaignData
    * @returns {Promise<Object>}
@@ -513,6 +588,13 @@ class Campaign {
       showInLightFeed, // FAZ 7.3: boolean
       showInCategoryFeed, // FAZ 7.2: boolean
       valueLevel, // FAZ 7.5: 'high' | 'low'
+      // NEW: Category fields
+      category,
+      subCategory,
+      discountPercentage,
+      isPersonalized,
+      scrapedAt,
+      dataHash,
     } = campaignData;
 
     // JSONB alanlar: explicit stringify
@@ -527,7 +609,8 @@ class Campaign {
       'source_id', 'title', 'description', 'detail_text', 'icon_name',
       'icon_color', 'icon_bg_color', 'tags', 'original_url', 'affiliate_url', 'expires_at',
       'how_to_use', 'validity_channels', 'status', 'is_active',
-      'campaign_type', 'show_in_light_feed', 'show_in_category_feed', 'value_level' // FAZ 7.3, FAZ 7.2, FAZ 7.5
+      'campaign_type', 'show_in_light_feed', 'show_in_category_feed', 'value_level', // FAZ 7.3, FAZ 7.2, FAZ 7.5
+      'category', 'sub_category', 'discount_percentage', 'is_personalized', 'scraped_at', 'data_hash' // NEW
       // created_at ve updated_at DEFAULT NOW() ile otomatik set ediliyor
     ];
     
@@ -551,6 +634,12 @@ class Campaign {
       showInLightFeed || false, // FAZ 7.3: default false
       showInCategoryFeed || false, // FAZ 7.2: default false
       valueLevel || 'high', // FAZ 7.5: default 'high'
+      category || null, // NEW
+      subCategory || null, // NEW
+      discountPercentage || null, // NEW
+      isPersonalized || false, // NEW
+      scrapedAt || new Date(), // NEW
+      dataHash || null, // NEW
     ];
 
     if (hasStartsAt) {
