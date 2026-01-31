@@ -38,6 +38,11 @@ const EnparaScraper = require('./scrapers/enpara-scraper');
 const CeptetebScraper = require('./scrapers/cepteteb-scraper');
 const NKolayScraper = require('./scrapers/nkolay-scraper');
 const PTTcellScraper = require('./scrapers/pttcell-scraper');
+// PHASE 1: Wallet scrapers
+const PaparaScraper = require('./scrapers/papara-scraper');
+const PaycellScraper = require('./scrapers/paycell-scraper');
+const BKMExpressScraper = require('./scrapers/bkmexpress-scraper');
+const ToslaScraper = require('./scrapers/tosla-scraper');
 // FAZ 7: Fetch-based scrapers (SPA kaynaklar için)
 const TebFetchScraper = require('./scrapers/fetch/teb-fetch-scraper');
 const { startScheduler } = require('./scheduler');
@@ -73,6 +78,7 @@ async function runScrapers() {
   // FAZ 6: Tüm mevcut scraper'lar aktif
   // FAZ 6.2: Ziraat Bankası eklendi
   // FAZ 6.3: Halkbank eklendi (pasif - backlog), VakıfBank eklendi
+  // PHASE 1: Finance sources (banks + wallets) - 12 total
   const scrapers = [
     new AkbankScraper(),
     new TurkcellScraper(),
@@ -82,8 +88,8 @@ async function runScrapers() {
     new VodafoneScraper(),
     new TurktelekomScraper(),
     new ZiraatScraper(),
-    // new HalkbankScraper(), // FAZ 6.3: Pasif - zor kaynak, backlog'a alındı
-    // new VakifbankScraper(), // FAZ 6.3: Pasif - zor kaynak, backlog'a alındı
+    new HalkbankScraper(), // PHASE 1: Re-enabled with Phase 1 pattern
+    new VakifbankScraper(), // PHASE 1: Re-enabled with Phase 1 pattern
     new DenizbankScraper(), // FAZ 6.4: DenizBank eklendi
     new QNBScraper(), // FAZ 6.5.1: QNB Finansbank eklendi
     // new TebScraper(), // FAZ 6.5.2: Pasif - SPA yapı, backlog'a alındı
@@ -98,6 +104,11 @@ async function runScrapers() {
     new CeptetebScraper(), // FAZ 6.6.2: CEPTETEB eklendi
     new NKolayScraper(), // FAZ 6.6.3: N Kolay eklendi
     new PTTcellScraper(), // FAZ 7.5: Low value mode aktif
+    // PHASE 1: Wallet scrapers (finance category)
+    new PaparaScraper(), // PHASE 1: Digital wallet with sub-category detection
+    new PaycellScraper(), // PHASE 1: Digital wallet with sub-category detection
+    new BKMExpressScraper(), // PHASE 1: Digital wallet with sub-category detection
+    new ToslaScraper(), // PHASE 1: Digital wallet with sub-category detection
   ];
 
   console.log(`\n🤖 Bot başlatıldı: ${scrapers.length} scraper çalıştırılacak\n`);
