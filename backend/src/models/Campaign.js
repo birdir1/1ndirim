@@ -28,10 +28,7 @@ class Campaign {
         c.*,
         s.name as source_name,
         s.type as source_type,
-        s.logo_url as source_logo_url,
-        s.latitude as source_latitude,
-        s.longitude as source_longitude,
-        s.city as source_city
+        s.logo_url as source_logo_url
       FROM campaigns c
       INNER JOIN sources s ON c.source_id = s.id
     `;
@@ -92,10 +89,7 @@ class Campaign {
         c.*,
         s.name as source_name,
         s.type as source_type,
-        s.logo_url as source_logo_url,
-        s.latitude as source_latitude,
-        s.longitude as source_longitude,
-        s.city as source_city
+        s.logo_url as source_logo_url
       FROM campaigns c
       INNER JOIN sources s ON c.source_id = s.id
       WHERE c.is_active = true
@@ -128,9 +122,9 @@ class Campaign {
         s.name as source_name,
         s.type as source_type,
         s.logo_url as source_logo_url,
-        s.latitude as source_latitude,
-        s.longitude as source_longitude,
-        s.city as source_city
+        
+        
+        
       FROM campaigns c
       INNER JOIN sources s ON c.source_id = s.id
       WHERE c.is_active = true
@@ -183,9 +177,9 @@ class Campaign {
         s.name as source_name,
         s.type as source_type,
         s.logo_url as source_logo_url,
-        s.latitude as source_latitude,
-        s.longitude as source_longitude,
-        s.city as source_city
+        
+        
+        
       FROM campaigns c
       INNER JOIN sources s ON c.source_id = s.id
       WHERE c.is_active = true
@@ -240,9 +234,9 @@ class Campaign {
         s.name as source_name,
         s.type as source_type,
         s.logo_url as source_logo_url,
-        s.latitude as source_latitude,
-        s.longitude as source_longitude,
-        s.city as source_city
+        
+        
+        
       FROM campaigns c
       INNER JOIN sources s ON c.source_id = s.id
       WHERE c.is_active = true
@@ -298,9 +292,9 @@ class Campaign {
         s.name as source_name,
         s.type as source_type,
         s.logo_url as source_logo_url,
-        s.latitude as source_latitude,
-        s.longitude as source_longitude,
-        s.city as source_city
+        
+        
+        
       FROM campaigns c
       INNER JOIN sources s ON c.source_id = s.id
       WHERE c.is_active = true
@@ -395,9 +389,9 @@ class Campaign {
         s.name as source_name,
         s.type as source_type,
         s.logo_url as source_logo_url,
-        s.latitude as source_latitude,
-        s.longitude as source_longitude,
-        s.city as source_city
+        
+        
+        
       FROM campaigns c
       INNER JOIN sources s ON c.source_id = s.id
       WHERE c.is_active = true
@@ -436,9 +430,9 @@ class Campaign {
         s.name as source_name,
         s.type as source_type,
         s.logo_url as source_logo_url,
-        s.latitude as source_latitude,
-        s.longitude as source_longitude,
-        s.city as source_city
+        
+        
+        
       FROM campaigns c
       INNER JOIN sources s ON c.source_id = s.id
       WHERE c.is_active = true
@@ -475,9 +469,9 @@ class Campaign {
         s.name as source_name,
         s.type as source_type,
         s.logo_url as source_logo_url,
-        s.latitude as source_latitude,
-        s.longitude as source_longitude,
-        s.city as source_city
+        
+        
+        
       FROM campaigns c
       INNER JOIN sources s ON c.source_id = s.id
       WHERE c.id = $1
@@ -500,9 +494,9 @@ class Campaign {
         s.name as source_name,
         s.type as source_type,
         s.logo_url as source_logo_url,
-        s.latitude as source_latitude,
-        s.longitude as source_longitude,
-        s.city as source_city
+        
+        
+        
       FROM campaigns c
       INNER JOIN sources s ON c.source_id = s.id
       WHERE c.is_active = true
@@ -542,9 +536,9 @@ class Campaign {
         s.name as source_name,
         s.type as source_type,
         s.logo_url as source_logo_url,
-        s.latitude as source_latitude,
-        s.longitude as source_longitude,
-        s.city as source_city,
+        
+        
+        ,
         true as is_expired
       FROM campaigns c
       INNER JOIN sources s ON c.source_id = s.id
