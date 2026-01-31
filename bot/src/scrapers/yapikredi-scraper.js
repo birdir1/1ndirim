@@ -1,6 +1,10 @@
 /**
  * Yapı Kredi Campaign Scraper
  * Yapı Kredi'nin public kampanya sayfasını okur
+ * 
+ * PHASE 1: High-yield bank scraper
+ * - Category: finance
+ * - Sub-category detection: food, travel, fuel, entertainment, shopping
  */
 
 const BaseScraper = require('./base-scraper');
@@ -10,21 +14,16 @@ class YapikrediScraper extends BaseScraper {
     super('Yapı Kredi', 'https://www.yapikredi.com.tr/kampanyalar');
   }
 
-  /**
-   * Yapı Kredi kampanyalarını scrape eder
-   */
   async scrape() {
     const campaigns = [];
 
     try {
-      // Yapı Kredi kampanya sayfasını yükle
       await this.page.goto(this.sourceUrl, {
         waitUntil: 'networkidle2',
         timeout: 30000,
       });
       await this.page.waitForTimeout(3000);
 
-      // Kampanya linklerini bul
       const campaignLinks = await this.page.evaluate(() => {
         const links = Array.from(document.querySelectorAll('a[href*="/kampanyalar/"]'));
         return links
@@ -36,15 +35,14 @@ class YapikrediScraper extends BaseScraper {
           .filter(link => link.href && link.text.length > 5)
           .filter((link, index, self) => 
             index === self.findIndex(l => l.href === link.href)
-          ); // Duplicate'leri kaldır
+          );
       });
 
       if (campaignLinks.length === 0) {
-        console.warn(`⚠️ ${this.sourceName}: Kampanya linki bulunamadı`);
+        console.warn(`⚠️  ${this.sourceName}: Kampanya linki bulunamadı`);
         return campaigns;
       }
 
-      // İlk 15 linki kullan
       for (const link of campaignLinks.slice(0, 15)) {
         try {
           const campaign = await this.parseCampaignFromLink(link.href, link.text);
@@ -63,19 +61,14 @@ class YapikrediScraper extends BaseScraper {
     }
   }
 
-  /**
-   * Kampanya detay sayfasından bilgi çıkarır
-   */
   async parseCampaignFromLink(url, title) {
     try {
-      // Detay sayfasına git
       await this.page.goto(url, {
         waitUntil: 'networkidle2',
         timeout: 15000,
       });
       await this.page.waitForTimeout(2000);
 
-      // Sayfa içeriğini al
       const content = await this.page.evaluate(() => {
         const main = document.querySelector('main, [role="main"], .main-content, .content') || document.body;
         const h1 = document.querySelector('h1');
@@ -88,26 +81,20 @@ class YapikrediScraper extends BaseScraper {
         };
       });
 
-      // Tarih bilgisi bul (text-based)
       let endDate = new Date();
-      endDate.setDate(endDate.getDate() + 30); // Varsayılan: 30 gün sonra
+      endDate.setDate(endDate.getDate() + 30);
 
       const dateMatch = content.fullText.match(/(\d{1,2})[./](\d{1,2})[./](\d{4})|(\d{4})[./-](\d{1,2})[./-](\d{1,2})/);
       if (dateMatch) {
         if (dateMatch[4]) {
-          // YYYY-MM-DD formatı
           endDate = new Date(`${dateMatch[4]}-${dateMatch[5]}-${dateMatch[6]}`);
         } else {
-          // DD.MM.YYYY formatı
           endDate = new Date(`${dateMatch[3]}-${dateMatch[2]}-${dateMatch[1]}`);
         }
       }
 
-      // İndirim/cashback miktarı bul
-      const valueMatch = content.fullText.match(/(\d+)\s*%|(\d+[.,]\d+|\d+)\s*tl/i);
-      const hasValue = valueMatch || content.title.match(/%|tl|indirim|cashback|faiz/i);
+      const subCategory = this.detectSubCategory(content.title, content.description, content.fullText);
 
-      // Normalize edilmiş kampanya objesi
       return {
         sourceName: this.sourceName,
         title: content.title || title || 'Yapı Kredi Kampanyası',
@@ -119,29 +106,40 @@ class YapikrediScraper extends BaseScraper {
         startDate: new Date().toISOString().split('T')[0],
         endDate: endDate.toISOString().split('T')[0],
         howToUse: [],
-        category: hasValue ? 'discount' : 'other',
-        tags: ['Yapı Kredi'],
+        category: 'finance',
+        subCategory,
+        tags: ['Yapı Kredi', subCategory].filter((t, i, a) => a.indexOf(t) === i),
         channel: 'online',
       };
     } catch (error) {
       console.error(`❌ ${this.sourceName}: Detay sayfası parse hatası (${url}):`, error.message);
-      // Hata durumunda minimal kampanya döndür
-      return {
-        sourceName: this.sourceName,
-        title: title || 'Yapı Kredi Kampanyası',
-        description: title || '',
-        detailText: '',
-        campaignUrl: url,
-        originalUrl: url,
-        affiliateUrl: null,
-        startDate: new Date().toISOString().split('T')[0],
-        endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        howToUse: [],
-        category: 'other',
-        tags: ['Yapı Kredi'],
-        channel: 'online',
-      };
+      return null;
     }
+  }
+
+  detectSubCategory(title, description, fullText) {
+    const text = `${title} ${description} ${fullText}`.toLowerCase();
+
+    if (text.match(/yemek|restoran|kafe|cafe|lokanta|pizza|burger|fast food|yemeksepeti|getir/i)) {
+      return 'food';
+    }
+    if (text.match(/uçak|otel|tatil|seyahat|thy|pegasus|booking|hotel|flight|travel/i)) {
+      return 'travel';
+    }
+    if (text.match(/akaryakıt|benzin|motorin|lpg|shell|opet|petrol ofisi|bp|total/i)) {
+      return 'fuel';
+    }
+    if (text.match(/sinema|tiyatro|konser|müze|eğlence|netflix|spotify|cinema|theater/i)) {
+      return 'entertainment';
+    }
+    if (text.match(/alışveriş|market|süpermarket|migros|carrefour|shopping|mall|avm/i)) {
+      return 'shopping';
+    }
+    if (text.match(/taksi|uber|bitaksi|toplu taşıma|metro|otobüs|transport/i)) {
+      return 'transport';
+    }
+
+    return 'general';
   }
 }
 
