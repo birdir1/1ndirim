@@ -36,16 +36,18 @@ function isHighQualityCampaign(campaign) {
   // 2. Resmi link kontrolü (campaignUrl veya originalUrl)
   const url = campaign.originalUrl || campaign.campaignUrl;
   if (!url || !_isOfficialUrl(url)) {
-    console.log(`⚠️  Quality filter: URL check failed for "${campaign.title}" - URL: ${url}`);
-    return false;
+    // Phase 1: URL kontrolünü gevşet - finans kampanyaları için
+    const category = campaign.category || '';
+    if (category !== 'finance') {
+      return false;
+    }
   }
 
   // 3. Phase 1 finans kampanyaları için özel kural
   // Finans kategorisindeki kampanyalar genelde TL değeri içermez (kart başvurusu, hesap açma, vs.)
   const category = campaign.category || '';
   if (category === 'finance') {
-    // Finans kampanyaları için sadece başlık ve URL kontrolü yeterli
-    console.log(`✅ Quality filter: Finance campaign accepted - "${campaign.title}"`);
+    // Finans kampanyaları için sadece başlık kontrolü yeterli
     return true;
   }
 
