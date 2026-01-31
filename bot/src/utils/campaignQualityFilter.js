@@ -10,67 +10,8 @@
  * @returns {boolean} - true = kaliteli kampanya, false = düşük değerli
  */
 function isHighQualityCampaign(campaign) {
-  // PHASE 1 TEMPORARY: Quality filter devre dışı - tüm kampanyalar kabul ediliyor
-  // Finans kampanyaları için özel kurallar uygulanacak
-  const category = campaign.category || '';
-  if (category === 'finance') {
-    // Finans kampanyaları için sadece temel kontroller
-    const titleLower = (campaign.title || '').toLowerCase();
-    
-    // Sadece açıkça spam olan kampanyaları filtrele
-    const spamKeywords = ['test', 'deneme', 'pr kampanya'];
-    for (const keyword of spamKeywords) {
-      if (titleLower.includes(keyword)) {
-        return false;
-      }
-    }
-    
-    return true; // Tüm finans kampanyalarını kabul et
-  }
-  
-  // Diğer kategoriler için eski kurallar
-  // 1. Başlık kontrolü - düşük değerli kelimeler
-  const lowValueKeywords = [
-    'kahve hediye',
-    'çay hediye',
-    'küçük hediye',
-    'minik hediye',
-    'sürpriz',
-    'pr kampanya',
-    'tanıtım',
-    'deneme',
-    'test',
-  ];
-
-  const titleLower = (campaign.title || '').toLowerCase();
-  const descriptionLower = (campaign.description || '').toLowerCase();
-
-  // Düşük değerli keyword kontrolü
-  for (const keyword of lowValueKeywords) {
-    if (titleLower.includes(keyword) || descriptionLower.includes(keyword)) {
-      return false;
-    }
-  }
-
-  // 2. Resmi link kontrolü (campaignUrl veya originalUrl)
-  const url = campaign.originalUrl || campaign.campaignUrl;
-  if (!url || !_isOfficialUrl(url)) {
-    return false;
-  }
-
-  // 4. Diğer kategoriler için değer kontrolü
-  const hasValue = _hasRealValue(campaign);
-  if (!hasValue) {
-    return false;
-  }
-
-  // 5. Minimum değer eşiği (finans dışı kampanyalar için)
-  const valueAmount = _extractValueAmount(campaign);
-  if (valueAmount < 50) {
-    // 50 TL'den az değerli kampanyalar elenir
-    return false;
-  }
-
+  // PHASE 1 TEMPORARY: Quality filter TAMAMEN devre dışı
+  // Tüm kampanyalar kabul ediliyor
   return true;
 }
 
