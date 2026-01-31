@@ -19,6 +19,11 @@ const NetflixScraper = require('./netflix-scraper');
 const SteamScraper = require('./steam-scraper');
 const EpicGamesScraper = require('./epicgames-scraper');
 
+// Import new template-based scrapers
+const GarantiScraper = require('./garanti-scraper');
+const YemeksepetiScraper = require('./yemeksepeti-scraper');
+const ObiletScraper = require('./obilet-scraper');
+
 /**
  * Scraper Registry
  * Maps scraper class names to actual classes
@@ -33,6 +38,11 @@ const SCRAPER_CLASSES = {
   NetflixScraper,
   SteamScraper,
   EpicGamesScraper,
+  
+  // New template-based scrapers
+  GarantiScraper,
+  YemeksepetiScraper,
+  ObiletScraper,
   
   // Generic template (fallback)
   GenericSPAScraper,

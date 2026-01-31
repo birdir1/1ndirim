@@ -186,7 +186,7 @@ const CATEGORY_REGISTRY = {
     minCampaigns: 10,
     priority: 'high',
     sources: [
-      { name: 'Yemeksepeti', url: 'https://www.yemeksepeti.com/', type: 'spa', scraperClass: 'YemeksepetiScraper', enabled: true },
+      { name: 'Yemeksepeti', url: 'https://www.yemeksepeti.com/kampanyalar', type: 'spa', scraperClass: 'YemeksepetiScraper', enabled: true },
       { name: 'Getir Yemek', url: 'https://www.getir.com/yemek/', type: 'spa', scraperClass: 'GetirYemekScraper', enabled: true },
       { name: 'Trendyol Yemek', url: 'https://www.trendyolyemek.com/', type: 'spa', scraperClass: 'TrendyolYemekScraper', enabled: true },
       { name: 'Migros Yemek', url: 'https://www.migros.com.tr/', type: 'spa', scraperClass: 'MigrosYemekScraper', enabled: true },
