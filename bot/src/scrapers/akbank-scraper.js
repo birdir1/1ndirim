@@ -31,11 +31,49 @@ class AkbankScraper extends BaseScraper {
       await this.page.waitForTimeout(3000);
 
       // Tiered selectors for campaign links
-      const campaignLinks = await this.tryTieredLinks({
-        primary: ['[data-testid*="kampanya"] a', '[data-testid*="campaign"] a', '[aria-label*="kampanya"]'],
-        secondary: ['a.dropdown__item[href*="/kampanyalar/"]'],
-        fallback: ['a[href*="/kampanyalar/"]', '.campaign-card a', 'article a'],
-      });
+      let campaignLinks = [];
+      
+      // Try primary selectors
+      const primarySelectors = ['[data-testid*="kampanya"] a', '[data-testid*="campaign"] a', '[aria-label*="kampanya"]'];
+      for (const selector of primarySelectors) {
+        const links = await this.page.$$eval(selector, els => els.map(el => el.href).filter(href => href && href.includes('/kampanyalar/')));
+        if (links.length > 0) {
+          campaignLinks = links;
+          break;
+        }
+      }
+      
+      // Try secondary selectors if primary failed
+      if (campaignLinks.length === 0) {
+        const secondarySelectors = ['a.dropdown__item[href*="/kampanyalar/"]'];
+        for (const selector of secondarySelectors) {
+          try {
+            const links = await this.page.$$eval(selector, els => els.map(el => el.href));
+            if (links.length > 0) {
+              campaignLinks = links;
+              break;
+            }
+          } catch (e) {
+            // Selector not found, continue
+          }
+        }
+      }
+      
+      // Try fallback selectors
+      if (campaignLinks.length === 0) {
+        const fallbackSelectors = ['a[href*="/kampanyalar/"]', '.campaign-card a', 'article a'];
+        for (const selector of fallbackSelectors) {
+          try {
+            const links = await this.page.$$eval(selector, els => els.map(el => el.href).filter(href => href && href.includes('/kampanyalar/')));
+            if (links.length > 0) {
+              campaignLinks = links;
+              break;
+            }
+          } catch (e) {
+            // Selector not found, continue
+          }
+        }
+      }
 
       if (campaignLinks.length === 0) {
         console.warn(`⚠️  ${this.sourceName}: Kampanya linki bulunamadı`);
