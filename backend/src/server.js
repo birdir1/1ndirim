@@ -9,6 +9,7 @@ require('dotenv').config();
 const campaignsRouter = require('./routes/campaigns');
 const campaignsDiscoverRouter = require('./routes/campaigns-discover');
 const sourcesRouter = require('./routes/sources');
+const dashboardRouter = require('./routes/dashboard'); // Dashboard Stats
 const healthRouter = require('./routes/health');
 const adminRouter = require('./routes/admin'); // FAZ 10: Admin & Control Layer
 const legalRouter = require('./routes/legal'); // Privacy Policy & Terms of Use
@@ -69,6 +70,7 @@ app.get('/', (req, res) => {
       endpoints: {
         campaigns: '/api/campaigns',
         sources: '/api/sources',
+        dashboard: '/api/dashboard', // Dashboard Stats
         health: '/api/health',
         admin: '/api/admin', // FAZ 10: Admin & Control Layer
         favorites: '/api/favorites', // User Favorites
@@ -88,6 +90,7 @@ app.get('/', (req, res) => {
 app.use('/api/campaigns', campaignsDiscoverRouter); // Discover routes (must be before campaigns)
 app.use('/api/campaigns', campaignsRouter);
 app.use('/api/sources', sourcesRouter);
+app.use('/api/dashboard', dashboardRouter); // Dashboard Stats
 app.use('/api/health', healthRouter);
 app.use('/api/admin', adminRouter); // FAZ 10: Admin & Control Layer
 app.use('/api/favorites', favoritesRouter); // User Favorites
