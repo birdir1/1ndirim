@@ -773,7 +773,7 @@ router.post('/', validateCampaignQuality, async (req, res) => {
     }
 
     // Validasyon: category allowlist (opsiyonel)
-    const allowedCategories = ['discount', 'cashback', 'points', 'gift', 'other'];
+    const allowedCategories = ['discount', 'cashback', 'points', 'gift', 'other', 'finance', 'travel', 'food', 'entertainment', 'shopping', 'transport'];
     if (category && !allowedCategories.includes(category)) {
       return res.status(400).json({
         success: false,
