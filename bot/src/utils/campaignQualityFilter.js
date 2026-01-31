@@ -10,6 +10,25 @@
  * @returns {boolean} - true = kaliteli kampanya, false = düşük değerli
  */
 function isHighQualityCampaign(campaign) {
+  // PHASE 1 TEMPORARY: Quality filter devre dışı - tüm kampanyalar kabul ediliyor
+  // Finans kampanyaları için özel kurallar uygulanacak
+  const category = campaign.category || '';
+  if (category === 'finance') {
+    // Finans kampanyaları için sadece temel kontroller
+    const titleLower = (campaign.title || '').toLowerCase();
+    
+    // Sadece açıkça spam olan kampanyaları filtrele
+    const spamKeywords = ['test', 'deneme', 'pr kampanya'];
+    for (const keyword of spamKeywords) {
+      if (titleLower.includes(keyword)) {
+        return false;
+      }
+    }
+    
+    return true; // Tüm finans kampanyalarını kabul et
+  }
+  
+  // Diğer kategoriler için eski kurallar
   // 1. Başlık kontrolü - düşük değerli kelimeler
   const lowValueKeywords = [
     'kahve hediye',
@@ -36,19 +55,7 @@ function isHighQualityCampaign(campaign) {
   // 2. Resmi link kontrolü (campaignUrl veya originalUrl)
   const url = campaign.originalUrl || campaign.campaignUrl;
   if (!url || !_isOfficialUrl(url)) {
-    // Phase 1: URL kontrolünü gevşet - finans kampanyaları için
-    const category = campaign.category || '';
-    if (category !== 'finance') {
-      return false;
-    }
-  }
-
-  // 3. Phase 1 finans kampanyaları için özel kural
-  // Finans kategorisindeki kampanyalar genelde TL değeri içermez (kart başvurusu, hesap açma, vs.)
-  const category = campaign.category || '';
-  if (category === 'finance') {
-    // Finans kampanyaları için sadece başlık kontrolü yeterli
-    return true;
+    return false;
   }
 
   // 4. Diğer kategoriler için değer kontrolü
