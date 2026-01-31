@@ -211,6 +211,9 @@ class PaparaScraper extends BaseScraper {
         }
       }
 
+      // PHASE 1: Sub-category detection
+      const subCategory = this.detectSubCategory(content.title, content.description, content.fullText);
+
       return {
         sourceName: this.sourceName,
         title: content.title || 'Papara Kampanyası',
@@ -222,14 +225,54 @@ class PaparaScraper extends BaseScraper {
         startDate: new Date().toISOString().split('T')[0],
         endDate: endDate.toISOString().split('T')[0],
         howToUse: [],
-        category: 'finance', // Papara is finance category
-        tags: ['Papara', 'Dijital Cüzdan'],
+        category: 'finance', // PHASE 1: Always finance for wallets
+        subCategory, // PHASE 1: Detected sub-category
+        tags: ['Papara', subCategory].filter((t, i, a) => a.indexOf(t) === i),
         channel: 'online',
       };
     } catch (error) {
       console.error(`❌ ${this.sourceName}: Detay sayfası parse hatası (${url}):`, error.message);
       return null;
     }
+  }
+
+  /**
+   * PHASE 1: Detect sub-category from campaign content
+   */
+  detectSubCategory(title, description, fullText) {
+    const text = `${title} ${description} ${fullText}`.toLowerCase();
+
+    // Food & Dining
+    if (text.match(/yemek|restoran|kafe|cafe|lokanta|pizza|burger|fast food|yemeksepeti|getir/i)) {
+      return 'food';
+    }
+
+    // Travel
+    if (text.match(/uçak|otel|tatil|seyahat|thy|pegasus|booking|hotel|flight|travel/i)) {
+      return 'travel';
+    }
+
+    // Fuel
+    if (text.match(/akaryakıt|benzin|motorin|lpg|shell|opet|petrol ofisi|bp|total/i)) {
+      return 'fuel';
+    }
+
+    // Entertainment
+    if (text.match(/sinema|tiyatro|konser|müze|eğlence|netflix|spotify|cinema|theater/i)) {
+      return 'entertainment';
+    }
+
+    // Shopping
+    if (text.match(/alışveriş|market|süpermarket|migros|carrefour|shopping|mall|avm/i)) {
+      return 'shopping';
+    }
+
+    // Transport
+    if (text.match(/taksi|uber|bitaksi|toplu taşıma|metro|otobüs|transport/i)) {
+      return 'transport';
+    }
+
+    return 'general'; // Default sub-category
   }
 
   /**
