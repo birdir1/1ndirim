@@ -1,6 +1,12 @@
 /**
  * Turkcell Campaign Scraper
  * Turkcell'in public kampanya sayfasını okur
+ * 
+ * UPDATED: Phase 3.4
+ * - Tiered selectors for robustness
+ * - Infinite scroll handling
+ * - Better category detection
+ * - Improved error handling
  */
 
 const BaseScraper = require('./base-scraper');
@@ -12,7 +18,6 @@ class TurkcellScraper extends BaseScraper {
 
   /**
    * Turkcell kampanyalarını scrape eder
-   * Kategori sayfalarındaki kampanyaları bulur
    */
   async scrape() {
     const campaigns = [];
@@ -23,62 +28,38 @@ class TurkcellScraper extends BaseScraper {
         waitUntil: 'networkidle2',
         timeout: 30000,
       });
+      
+      // SPA loading için bekle
       await this.page.waitForTimeout(3000);
 
-      // Kategori kartlarındaki linkleri bul
-      const categoryLinks = await this.page.evaluate(() => {
-        const links = Array.from(document.querySelectorAll('a[href*="/kampanyalar/"][class*="route-card"], a[href*="/kampanyalar/"][class*="card"]'));
-        return links
-          .map(a => ({
-            href: a.href,
-            text: a.textContent.trim() || a.querySelector('h2, h3')?.textContent.trim() || '',
-          }))
-          .filter(link => link.href && !link.href.includes('#') && link.text.length > 5)
-          .filter((link, index, self) => 
-            index === self.findIndex(l => l.href === link.href)
-          ); // Duplicate'leri kaldır
+      // Infinite scroll (kampanyaları yüklemek için)
+      await this.autoScroll();
+
+      // Kampanya linklerini bul (tiered selectors)
+      const campaignLinks = await this.tryTieredLinks({
+        primary: 'a[href*="/kampanyalar/"]',
+        secondary: 'a[href*="/kampanya/"]',
+        fallback: ['.campaign-card a', '.kampanya-card a', 'article a', '.card a'],
       });
 
-      if (categoryLinks.length === 0) {
-        // Fallback: Tüm kampanya linklerini bul
-        const allLinks = await this.page.evaluate(() => {
-          const links = Array.from(document.querySelectorAll('a[href*="/kampanyalar/"]'));
-          return links
-            .filter(a => !a.href.includes('#') && a.textContent.trim().length > 5)
-            .map(a => ({
-              href: a.href,
-              text: a.textContent.trim(),
-            }))
-            .filter((link, index, self) => 
-              index === self.findIndex(l => l.href === link.href)
-            );
-        });
+      if (campaignLinks.length === 0) {
+        console.warn(`⚠️  ${this.sourceName}: Kampanya linki bulunamadı`);
+        return campaigns;
+      }
 
-        if (allLinks.length === 0) {
-          console.warn(`⚠️ ${this.sourceName}: Kampanya linki bulunamadı`);
-          return campaigns;
-        }
+      console.log(`🔍 ${this.sourceName}: ${campaignLinks.length} kampanya linki bulundu`);
 
-        // İlk 10 linki kullan
-        for (const link of allLinks.slice(0, 10)) {
-          try {
-            const campaign = await this.parseCampaignFromLink(link.href, link.text);
-            if (campaign) {
-              campaigns.push(campaign);
-            }
-          } catch (error) {
-            console.error(`❌ ${this.sourceName}: Link parse hatası (${link.href}):`, error.message);
+      // İlk 15 linki kullan (hedef: 10-15 kampanya)
+      const uniqueLinks = [...new Set(campaignLinks)].slice(0, 15);
+
+      for (const link of uniqueLinks) {
+        try {
+          const campaign = await this.parseCampaignFromLink(link);
+          if (campaign) {
+            campaigns.push(campaign);
           }
-        }
-      } else {
-        // Kategori sayfalarına git ve kampanyaları bul
-        for (const categoryLink of categoryLinks.slice(0, 3)) {
-          try {
-            const categoryCampaigns = await this.parseCategoryPage(categoryLink.href);
-            campaigns.push(...categoryCampaigns);
-          } catch (error) {
-            console.error(`❌ ${this.sourceName}: Kategori sayfası hatası (${categoryLink.href}):`, error.message);
-          }
+        } catch (error) {
+          console.error(`❌ ${this.sourceName}: Link parse hatası (${link}):`, error.message);
         }
       }
 
@@ -90,190 +71,138 @@ class TurkcellScraper extends BaseScraper {
   }
 
   /**
-   * Kategori sayfasındaki kampanyaları parse eder
+   * Infinite scroll (SPA için)
    */
-  async parseCategoryPage(url) {
-    const campaigns = [];
-    
+  async autoScroll() {
     try {
-      await this.page.goto(url, {
-        waitUntil: 'networkidle2',
-        timeout: 15000,
-      });
-      await this.page.waitForTimeout(3000);
+      await this.page.evaluate(async () => {
+        await new Promise((resolve) => {
+          let totalHeight = 0;
+          const distance = 100;
+          const maxScrolls = 20; // Max 20 scroll
+          let scrolls = 0;
 
-      // Kampanya linklerini bul
-      const campaignLinks = await this.page.evaluate(() => {
-        const links = Array.from(document.querySelectorAll('a[href*="/kampanyalar/"], a[href*="/kampanya/"]'));
-        return links
-          .filter(a => !a.href.includes('#') && a.textContent.trim().length > 5)
-          .map(a => ({
-            href: a.href,
-            text: a.textContent.trim(),
-            parentText: a.parentElement?.textContent.trim().substring(0, 200) || '',
-          }))
-          .filter((link, index, self) => 
-            index === self.findIndex(l => l.href === link.href)
-          )
-          .slice(0, 10); // Her kategoriden max 10 kampanya
+          const timer = setInterval(() => {
+            const scrollHeight = document.body.scrollHeight;
+            window.scrollBy(0, distance);
+            totalHeight += distance;
+            scrolls++;
+
+            if (totalHeight >= scrollHeight || scrolls >= maxScrolls) {
+              clearInterval(timer);
+              resolve();
+            }
+          }, 100);
+        });
       });
 
-      // Her kampanya linkini parse et
-      for (const link of campaignLinks) {
-        try {
-          const campaign = await this.parseCampaignFromLink(link.href, link.text);
-          if (campaign) {
-            campaigns.push(campaign);
-          }
-        } catch (error) {
-          console.error(`❌ ${this.sourceName}: Kampanya parse hatası (${link.href}):`, error.message);
-        }
-      }
+      // Scroll sonrası içerik yüklenmesi için bekle
+      await this.page.waitForTimeout(2000);
     } catch (error) {
-      console.error(`❌ ${this.sourceName}: Kategori sayfası yükleme hatası:`, error.message);
+      console.warn(`⚠️  ${this.sourceName}: Auto scroll hatası:`, error.message);
     }
-
-    return campaigns;
   }
 
   /**
    * Kampanya detay sayfasından bilgi çıkarır
    */
-  async parseCampaignFromLink(url, title) {
+  async parseCampaignFromLink(url) {
     try {
+      // Detay sayfasına git
       await this.page.goto(url, {
         waitUntil: 'networkidle2',
         timeout: 15000,
       });
       await this.page.waitForTimeout(2000);
 
+      // Sayfa içeriğini al (tiered selectors)
       const content = await this.page.evaluate(() => {
+        // Title (tiered)
+        const titleEl = document.querySelector('h1') || 
+                       document.querySelector('h2') || 
+                       document.querySelector('.title') ||
+                       document.querySelector('.campaign-title');
+        const title = titleEl?.textContent.trim() || '';
+
+        // Description (tiered)
+        const descEl = document.querySelector('.description') ||
+                      document.querySelector('.campaign-description') ||
+                      document.querySelector('p');
+        const description = descEl?.textContent.trim() || '';
+
+        // Full text (for date/value extraction)
         const main = document.querySelector('main, [role="main"], .main-content, .content') || document.body;
-        const h1 = document.querySelector('h1');
-        const h2 = document.querySelector('h2');
-        const paragraphs = Array.from(document.querySelectorAll('p')).map(p => p.textContent.trim()).filter(t => t.length > 20);
+        const fullText = main.textContent.trim();
+
+        // All paragraphs
+        const paragraphs = Array.from(document.querySelectorAll('p'))
+          .map(p => p.textContent.trim())
+          .filter(t => t.length > 20);
+
         return {
-          title: (h1 || h2)?.textContent.trim() || '',
-          description: paragraphs[0] || paragraphs[1] || (h1 || h2)?.textContent.trim() || '',
-          fullText: main.textContent.trim().substring(0, 2000),
+          title,
+          description: description || paragraphs[0] || title,
+          fullText: fullText.substring(0, 2000),
+          paragraphs,
         };
       });
 
       // Tarih bilgisi bul
       let endDate = new Date();
-      endDate.setDate(endDate.getDate() + 30);
+      endDate.setDate(endDate.getDate() + 30); // Varsayılan: 30 gün sonra
 
       const dateMatch = content.fullText.match(/(\d{1,2})[./](\d{1,2})[./](\d{4})|(\d{4})[./-](\d{1,2})[./-](\d{1,2})/);
       if (dateMatch) {
         if (dateMatch[4]) {
+          // YYYY-MM-DD formatı
           endDate = new Date(`${dateMatch[4]}-${dateMatch[5]}-${dateMatch[6]}`);
         } else {
+          // DD.MM.YYYY formatı
           endDate = new Date(`${dateMatch[3]}-${dateMatch[2]}-${dateMatch[1]}`);
         }
       }
 
-      // Değer bul
-      const valueMatch = content.fullText.match(/(\d+)\s*%|(\d+[.,]\d+|\d+)\s*tl/i);
-      const hasValue = valueMatch || content.title.match(/%|tl|indirim|cashback|faiz/i);
+      // Category detection (rule-based)
+      const text = `${content.title} ${content.description}`.toLowerCase();
+      let category = 'telecom'; // Default for Turkcell
 
+      if (text.match(/netflix|youtube|prime|exxen|gain|tivibu|tv\+|blutv|mubi|disney|hbo/)) {
+        category = 'entertainment';
+      } else if (text.match(/steam|epic|nvidia|playstation|xbox|game pass|oyun|game/)) {
+        category = 'gaming';
+      } else if (text.match(/spotify|apple music|youtube music|deezer|fizy|müzik|music/)) {
+        category = 'music';
+      } else if (text.match(/internet|hat|telefon|mobil|data|gb|paket/)) {
+        category = 'telecom';
+      }
+
+      // Sub-category detection
+      let subCategory = 'Turkcell';
+      if (text.match(/netflix/)) subCategory = 'Netflix';
+      else if (text.match(/youtube/)) subCategory = 'YouTube';
+      else if (text.match(/spotify/)) subCategory = 'Spotify';
+      else if (text.match(/game pass/)) subCategory = 'Game Pass';
+
+      // Normalize edilmiş kampanya objesi
       return {
         sourceName: this.sourceName,
-        title: content.title || title || 'Turkcell Kampanyası',
-        description: content.description || content.title || title,
+        title: content.title || 'Turkcell Kampanyası',
+        description: content.description || content.title,
         detailText: content.fullText.substring(0, 500),
         campaignUrl: url,
-        originalUrl: url, // Quality filter için
-        affiliateUrl: null, // YENİ (opsiyonel, şimdilik null, manuel affiliate URL'ler kabul edilebilir)
+        originalUrl: url,
+        affiliateUrl: null,
         startDate: new Date().toISOString().split('T')[0],
         endDate: endDate.toISOString().split('T')[0],
         howToUse: [],
-        category: hasValue ? 'discount' : 'other',
-        tags: ['Turkcell'],
+        category, // NEW: Category detection
+        tags: ['Turkcell', subCategory].filter((t, i, a) => a.indexOf(t) === i),
         channel: 'online',
       };
     } catch (error) {
       console.error(`❌ ${this.sourceName}: Detay sayfası parse hatası (${url}):`, error.message);
-      return {
-        sourceName: this.sourceName,
-        title: title || 'Turkcell Kampanyası',
-        description: title || '',
-        detailText: '',
-        campaignUrl: url,
-        originalUrl: url,
-        affiliateUrl: null, // YENİ (opsiyonel, şimdilik null)
-        startDate: new Date().toISOString().split('T')[0],
-        endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        howToUse: [],
-        category: 'other',
-        tags: ['Turkcell'],
-        channel: 'online',
-      };
+      return null; // Hata durumunda null döndür (skip)
     }
-  }
-
-  /**
-   * Tek bir kampanya elementini parse eder
-   */
-  async parseCampaignElement(element) {
-    // Başlık
-    const titleElement = await element.$('.campaign-title, h3, h4, .title, [data-title]');
-    const title = titleElement
-      ? await this.page.evaluate((el) => el.textContent.trim(), titleElement)
-      : null;
-
-    if (!title) {
-      return null;
-    }
-
-    // Açıklama
-    const descriptionElement = await element.$('.campaign-description, .description, p, .summary');
-    const description = descriptionElement
-      ? await this.page.evaluate((el) => el.textContent.trim(), descriptionElement)
-      : '';
-
-    // Link
-    const linkElement = await element.$('a[href]');
-    const link = linkElement
-      ? await this.page.evaluate((el) => {
-          const href = el.getAttribute('href');
-          return href.startsWith('http') ? href : `https://www.turkcell.com.tr${href}`;
-        }, linkElement)
-      : this.sourceUrl;
-
-    // Tarih bilgisi (varsa)
-    const dateElement = await element.$('.campaign-date, .date, .end-date, [data-date]');
-    const dateText = dateElement
-      ? await this.page.evaluate((el) => el.textContent.trim(), dateElement)
-      : '';
-
-    // End date parse et
-    let endDate = new Date();
-    endDate.setDate(endDate.getDate() + 30); // Varsayılan: 30 gün sonra
-
-    if (dateText) {
-      const dateMatch = dateText.match(/(\d{1,2})[./](\d{1,2})[./](\d{4})/);
-      if (dateMatch) {
-        const [, day, month, year] = dateMatch;
-        endDate = new Date(`${year}-${month}-${day}`);
-      }
-    }
-
-    // Normalize edilmiş kampanya objesi
-    return {
-      sourceName: this.sourceName,
-      title: title.trim(),
-      description: description.trim() || title.trim(),
-      detailText: description.trim() || '',
-      campaignUrl: link,
-      originalUrl: link,
-      affiliateUrl: null, // YENİ (opsiyonel, şimdilik null)
-      startDate: new Date().toISOString().split('T')[0],
-      endDate: endDate.toISOString().split('T')[0],
-      howToUse: [],
-      category: 'discount',
-      tags: ['Turkcell'],
-      channel: 'online',
-    };
   }
 }
 

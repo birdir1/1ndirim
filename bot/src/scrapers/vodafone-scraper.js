@@ -1,6 +1,12 @@
 /**
  * Vodafone Campaign Scraper
  * Vodafone'un public kampanya sayfasını okur
+ * 
+ * UPDATED: Phase 3.3
+ * - Tiered selectors for robustness
+ * - Infinite scroll handling
+ * - Better category detection
+ * - Improved error handling
  */
 
 const BaseScraper = require('./base-scraper');
@@ -22,37 +28,38 @@ class VodafoneScraper extends BaseScraper {
         waitUntil: 'networkidle2',
         timeout: 30000,
       });
+      
+      // SPA loading için bekle
       await this.page.waitForTimeout(3000);
 
-      // Kampanya linklerini bul
-      const campaignLinks = await this.page.evaluate(() => {
-        const links = Array.from(document.querySelectorAll('a[href*="/kampanyalar/"], a[href*="/kampanya/"]'));
-        return links
-          .filter(a => !a.href.includes('#') && a.textContent.trim().length > 5)
-          .map(a => ({
-            href: a.href,
-            text: a.textContent.trim() || a.querySelector('h2, h3, h4, .title, .campaign-title')?.textContent.trim() || '',
-          }))
-          .filter(link => link.href && link.text.length > 5)
-          .filter((link, index, self) => 
-            index === self.findIndex(l => l.href === link.href)
-          ); // Duplicate'leri kaldır
+      // Infinite scroll (kampanyaları yüklemek için)
+      await this.autoScroll();
+
+      // Kampanya linklerini bul (tiered selectors)
+      const campaignLinks = await this.tryTieredLinks({
+        primary: 'a[href*="/kampanyalar/"]',
+        secondary: 'a[href*="/kampanya/"]',
+        fallback: ['.campaign-card a', '.kampanya-card a', 'article a', '.card a'],
       });
 
       if (campaignLinks.length === 0) {
-        console.warn(`⚠️ ${this.sourceName}: Kampanya linki bulunamadı`);
+        console.warn(`⚠️  ${this.sourceName}: Kampanya linki bulunamadı`);
         return campaigns;
       }
 
-      // İlk 15 linki kullan
-      for (const link of campaignLinks.slice(0, 15)) {
+      console.log(`🔍 ${this.sourceName}: ${campaignLinks.length} kampanya linki bulundu`);
+
+      // İlk 15 linki kullan (hedef: 10-15 kampanya)
+      const uniqueLinks = [...new Set(campaignLinks)].slice(0, 15);
+
+      for (const link of uniqueLinks) {
         try {
-          const campaign = await this.parseCampaignFromLink(link.href, link.text);
+          const campaign = await this.parseCampaignFromLink(link);
           if (campaign) {
             campaigns.push(campaign);
           }
         } catch (error) {
-          console.error(`❌ ${this.sourceName}: Link parse hatası (${link.href}):`, error.message);
+          console.error(`❌ ${this.sourceName}: Link parse hatası (${link}):`, error.message);
         }
       }
 
@@ -64,9 +71,42 @@ class VodafoneScraper extends BaseScraper {
   }
 
   /**
+   * Infinite scroll (SPA için)
+   */
+  async autoScroll() {
+    try {
+      await this.page.evaluate(async () => {
+        await new Promise((resolve) => {
+          let totalHeight = 0;
+          const distance = 100;
+          const maxScrolls = 20; // Max 20 scroll
+          let scrolls = 0;
+
+          const timer = setInterval(() => {
+            const scrollHeight = document.body.scrollHeight;
+            window.scrollBy(0, distance);
+            totalHeight += distance;
+            scrolls++;
+
+            if (totalHeight >= scrollHeight || scrolls >= maxScrolls) {
+              clearInterval(timer);
+              resolve();
+            }
+          }, 100);
+        });
+      });
+
+      // Scroll sonrası içerik yüklenmesi için bekle
+      await this.page.waitForTimeout(2000);
+    } catch (error) {
+      console.warn(`⚠️  ${this.sourceName}: Auto scroll hatası:`, error.message);
+    }
+  }
+
+  /**
    * Kampanya detay sayfasından bilgi çıkarır
    */
-  async parseCampaignFromLink(url, title) {
+  async parseCampaignFromLink(url) {
     try {
       // Detay sayfasına git
       await this.page.goto(url, {
@@ -75,20 +115,39 @@ class VodafoneScraper extends BaseScraper {
       });
       await this.page.waitForTimeout(2000);
 
-      // Sayfa içeriğini al
+      // Sayfa içeriğini al (tiered selectors)
       const content = await this.page.evaluate(() => {
+        // Title (tiered)
+        const titleEl = document.querySelector('h1') || 
+                       document.querySelector('h2') || 
+                       document.querySelector('.title') ||
+                       document.querySelector('.campaign-title');
+        const title = titleEl?.textContent.trim() || '';
+
+        // Description (tiered)
+        const descEl = document.querySelector('.description') ||
+                      document.querySelector('.campaign-description') ||
+                      document.querySelector('p');
+        const description = descEl?.textContent.trim() || '';
+
+        // Full text (for date/value extraction)
         const main = document.querySelector('main, [role="main"], .main-content, .content') || document.body;
-        const h1 = document.querySelector('h1');
-        const h2 = document.querySelector('h2');
-        const paragraphs = Array.from(document.querySelectorAll('p')).map(p => p.textContent.trim()).filter(t => t.length > 20);
+        const fullText = main.textContent.trim();
+
+        // All paragraphs
+        const paragraphs = Array.from(document.querySelectorAll('p'))
+          .map(p => p.textContent.trim())
+          .filter(t => t.length > 20);
+
         return {
-          title: (h1 || h2)?.textContent.trim() || '',
-          description: paragraphs[0] || paragraphs[1] || (h1 || h2)?.textContent.trim() || '',
-          fullText: main.textContent.trim().substring(0, 2000),
+          title,
+          description: description || paragraphs[0] || title,
+          fullText: fullText.substring(0, 2000),
+          paragraphs,
         };
       });
 
-      // Tarih bilgisi bul (text-based)
+      // Tarih bilgisi bul
       let endDate = new Date();
       endDate.setDate(endDate.getDate() + 30); // Varsayılan: 30 gün sonra
 
@@ -103,15 +162,32 @@ class VodafoneScraper extends BaseScraper {
         }
       }
 
-      // İndirim/cashback miktarı bul
-      const valueMatch = content.fullText.match(/(\d+)\s*%|(\d+[.,]\d+|\d+)\s*tl/i);
-      const hasValue = valueMatch || content.title.match(/%|tl|indirim|cashback|faiz/i);
+      // Category detection (rule-based)
+      const text = `${content.title} ${content.description}`.toLowerCase();
+      let category = 'telecom'; // Default for Vodafone
+
+      if (text.match(/netflix|youtube|prime|exxen|gain|tivibu|tv\+|blutv|mubi|disney|hbo/)) {
+        category = 'entertainment';
+      } else if (text.match(/steam|epic|nvidia|playstation|xbox|game pass|oyun|game/)) {
+        category = 'gaming';
+      } else if (text.match(/spotify|apple music|youtube music|deezer|fizy|müzik|music/)) {
+        category = 'music';
+      } else if (text.match(/internet|hat|telefon|mobil|data|gb|paket/)) {
+        category = 'telecom';
+      }
+
+      // Sub-category detection
+      let subCategory = 'Vodafone';
+      if (text.match(/netflix/)) subCategory = 'Netflix';
+      else if (text.match(/youtube/)) subCategory = 'YouTube';
+      else if (text.match(/spotify/)) subCategory = 'Spotify';
+      else if (text.match(/game pass/)) subCategory = 'Game Pass';
 
       // Normalize edilmiş kampanya objesi
       return {
         sourceName: this.sourceName,
-        title: content.title || title || 'Vodafone Kampanyası',
-        description: content.description || content.title || title,
+        title: content.title || 'Vodafone Kampanyası',
+        description: content.description || content.title,
         detailText: content.fullText.substring(0, 500),
         campaignUrl: url,
         originalUrl: url,
@@ -119,28 +195,13 @@ class VodafoneScraper extends BaseScraper {
         startDate: new Date().toISOString().split('T')[0],
         endDate: endDate.toISOString().split('T')[0],
         howToUse: [],
-        category: hasValue ? 'discount' : 'other',
-        tags: ['Vodafone'],
+        category, // NEW: Category detection
+        tags: ['Vodafone', subCategory].filter((t, i, a) => a.indexOf(t) === i),
         channel: 'online',
       };
     } catch (error) {
       console.error(`❌ ${this.sourceName}: Detay sayfası parse hatası (${url}):`, error.message);
-      // Hata durumunda minimal kampanya döndür
-      return {
-        sourceName: this.sourceName,
-        title: title || 'Vodafone Kampanyası',
-        description: title || '',
-        detailText: '',
-        campaignUrl: url,
-        originalUrl: url,
-        affiliateUrl: null,
-        startDate: new Date().toISOString().split('T')[0],
-        endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        howToUse: [],
-        category: 'other',
-        tags: ['Vodafone'],
-        channel: 'online',
-      };
+      return null; // Hata durumunda null döndür (skip)
     }
   }
 }
