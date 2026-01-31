@@ -1,6 +1,11 @@
 /**
  * Akbank Campaign Scraper
  * Akbank'ın public kampanya sayfasını okur
+ * 
+ * UPDATED: Phase 3.6
+ * - Improved category detection (finance)
+ * - Better error handling (return null on error)
+ * - Tiered selectors already implemented
  */
 
 const BaseScraper = require('./base-scraper');
@@ -18,37 +23,38 @@ class AkbankScraper extends BaseScraper {
     const campaigns = [];
 
     try {
-      // Akbank kampanya sayfasını yükle (selector beklemeden)
+      // Akbank kampanya sayfasını yükle
       await this.page.goto(this.sourceUrl, {
         waitUntil: 'networkidle2',
         timeout: 30000,
       });
       await this.page.waitForTimeout(3000);
 
-      // FAZ 11.2: Tiered selectors — primary: semantic/testid, secondary: stable class, fallback: generic
-      const tiered = await this.tryTieredLinks({
+      // Tiered selectors for campaign links
+      const campaignLinks = await this.tryTieredLinks({
         primary: ['[data-testid*="kampanya"] a', '[data-testid*="campaign"] a', '[aria-label*="kampanya"]'],
         secondary: ['a.dropdown__item[href*="/kampanyalar/"]'],
-        fallback: ['a[href*="/kampanyalar/"]'],
+        fallback: ['a[href*="/kampanyalar/"]', '.campaign-card a', 'article a'],
       });
-      const campaignLinks = tiered ? tiered.links.filter((l) => !l.href.includes('#') && l.text.length > 1) : [];
 
       if (campaignLinks.length === 0) {
-        console.warn(`⚠️ ${this.sourceName}: Kampanya linki bulunamadı`);
+        console.warn(`⚠️  ${this.sourceName}: Kampanya linki bulunamadı`);
         return campaigns;
       }
 
-      const linksToUse = campaignLinks.slice(0, 15);
-      const tierUsed = tiered ? tiered.tier : null;
-      for (const link of linksToUse) {
+      console.log(`🔍 ${this.sourceName}: ${campaignLinks.length} kampanya linki bulundu`);
+
+      // İlk 15 linki kullan (hedef: 10-15 kampanya)
+      const uniqueLinks = [...new Set(campaignLinks)].slice(0, 15);
+
+      for (const link of uniqueLinks) {
         try {
-          const campaign = await this.parseCampaignFromLink(link.href, link.text);
+          const campaign = await this.parseCampaignFromLink(link);
           if (campaign) {
-            if (tierUsed) campaign.selectorTier = tierUsed;
             campaigns.push(campaign);
           }
         } catch (error) {
-          console.error(`❌ ${this.sourceName}: Link parse hatası (${link.href}):`, error.message);
+          console.error(`❌ ${this.sourceName}: Link parse hatası (${link}):`, error.message);
         }
       }
 
@@ -62,7 +68,7 @@ class AkbankScraper extends BaseScraper {
   /**
    * Kampanya detay sayfasından bilgi çıkarır
    */
-  async parseCampaignFromLink(url, title) {
+  async parseCampaignFromLink(url) {
     try {
       // Detay sayfasına git
       await this.page.goto(url, {
@@ -71,20 +77,39 @@ class AkbankScraper extends BaseScraper {
       });
       await this.page.waitForTimeout(2000);
 
-      // Sayfa içeriğini al
+      // Sayfa içeriğini al (tiered selectors)
       const content = await this.page.evaluate(() => {
+        // Title (tiered)
+        const titleEl = document.querySelector('h1') || 
+                       document.querySelector('h2') || 
+                       document.querySelector('.title') ||
+                       document.querySelector('.campaign-title');
+        const title = titleEl?.textContent.trim() || '';
+
+        // Description (tiered)
+        const descEl = document.querySelector('.description') ||
+                      document.querySelector('.campaign-description') ||
+                      document.querySelector('p');
+        const description = descEl?.textContent.trim() || '';
+
+        // Full text (for date/value extraction)
         const main = document.querySelector('main, [role="main"], .main-content, .content') || document.body;
-        const h1 = document.querySelector('h1');
-        const h2 = document.querySelector('h2');
-        const paragraphs = Array.from(document.querySelectorAll('p')).map(p => p.textContent.trim()).filter(t => t.length > 20);
+        const fullText = main.textContent.trim();
+
+        // All paragraphs
+        const paragraphs = Array.from(document.querySelectorAll('p'))
+          .map(p => p.textContent.trim())
+          .filter(t => t.length > 20);
+
         return {
-          title: (h1 || h2)?.textContent.trim() || '',
-          description: paragraphs[0] || paragraphs[1] || (h1 || h2)?.textContent.trim() || '',
-          fullText: main.textContent.trim().substring(0, 2000),
+          title,
+          description: description || paragraphs[0] || title,
+          fullText: fullText.substring(0, 2000),
+          paragraphs,
         };
       });
 
-      // Tarih bilgisi bul (text-based)
+      // Tarih bilgisi bul
       let endDate = new Date();
       endDate.setDate(endDate.getDate() + 30); // Varsayılan: 30 gün sonra
 
@@ -99,110 +124,45 @@ class AkbankScraper extends BaseScraper {
         }
       }
 
-      // İndirim/cashback miktarı bul
-      const valueMatch = content.fullText.match(/(\d+)\s*%|(\d+[.,]\d+|\d+)\s*tl/i);
-      const hasValue = valueMatch || content.title.match(/%|tl|indirim|cashback|faiz/i);
+      // Category detection (finance for banks)
+      const text = `${content.title} ${content.description}`.toLowerCase();
+      let category = 'finance'; // Default for Akbank
+
+      // Check for specific sub-categories
+      if (text.match(/kredi kartı|kart|mastercard|visa/)) {
+        category = 'finance';
+      } else if (text.match(/kredi|konut|taşıt|ihtiyaç/)) {
+        category = 'finance';
+      } else if (text.match(/mevduat|faiz|vadeli/)) {
+        category = 'finance';
+      }
+
+      // Sub-category detection
+      let subCategory = 'Akbank';
+      if (text.match(/kredi kartı|kart/)) subCategory = 'Kredi Kartı';
+      else if (text.match(/kredi/)) subCategory = 'Kredi';
+      else if (text.match(/mevduat/)) subCategory = 'Mevduat';
 
       // Normalize edilmiş kampanya objesi
       return {
         sourceName: this.sourceName,
-        title: content.title || title || 'Akbank Kampanyası',
-        description: content.description || content.title || title,
+        title: content.title || 'Akbank Kampanyası',
+        description: content.description || content.title,
         detailText: content.fullText.substring(0, 500),
         campaignUrl: url,
-        originalUrl: url, // Quality filter için
-        affiliateUrl: null, // YENİ (opsiyonel, şimdilik null, manuel affiliate URL'ler kabul edilebilir)
+        originalUrl: url,
+        affiliateUrl: null,
         startDate: new Date().toISOString().split('T')[0],
         endDate: endDate.toISOString().split('T')[0],
         howToUse: [],
-        category: hasValue ? 'discount' : 'other',
-        tags: ['Akbank'],
+        category, // NEW: Category detection (finance)
+        tags: ['Akbank', subCategory].filter((t, i, a) => a.indexOf(t) === i),
         channel: 'online',
       };
     } catch (error) {
       console.error(`❌ ${this.sourceName}: Detay sayfası parse hatası (${url}):`, error.message);
-      // Hata durumunda minimal kampanya döndür
-      return {
-        sourceName: this.sourceName,
-        title: title || 'Akbank Kampanyası',
-        description: title || '',
-        detailText: '',
-        campaignUrl: url,
-        originalUrl: url,
-        affiliateUrl: null, // YENİ (opsiyonel, şimdilik null)
-        startDate: new Date().toISOString().split('T')[0],
-        endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        howToUse: [],
-        category: 'other',
-        tags: ['Akbank'],
-        channel: 'online',
-      };
+      return null; // Hata durumunda null döndür (skip)
     }
-  }
-
-  /**
-   * Tek bir kampanya elementini parse eder
-   */
-  async parseCampaignElement(element) {
-    // Başlık
-    const titleElement = await element.$('.campaign-title, h3, h4, [data-title]');
-    const title = titleElement
-      ? await this.page.evaluate((el) => el.textContent.trim(), titleElement)
-      : null;
-
-    if (!title) {
-      return null;
-    }
-
-    // Açıklama
-    const descriptionElement = await element.$('.campaign-description, .description, p');
-    const description = descriptionElement
-      ? await this.page.evaluate((el) => el.textContent.trim(), descriptionElement)
-      : '';
-
-    // Link
-    const linkElement = await element.$('a[href]');
-    const link = linkElement
-      ? await this.page.evaluate((el) => {
-          const href = el.getAttribute('href');
-          return href.startsWith('http') ? href : `https://www.akbank.com${href}`;
-        }, linkElement)
-      : this.sourceUrl;
-
-    // Tarih bilgisi (varsa)
-    const dateElement = await element.$('.campaign-date, .date, [data-date]');
-    const dateText = dateElement
-      ? await this.page.evaluate((el) => el.textContent.trim(), dateElement)
-      : '';
-
-    // End date parse et (basit regex)
-    let endDate = new Date();
-    endDate.setDate(endDate.getDate() + 30); // Varsayılan: 30 gün sonra
-
-    if (dateText) {
-      const dateMatch = dateText.match(/(\d{1,2})[./](\d{1,2})[./](\d{4})/);
-      if (dateMatch) {
-        const [, day, month, year] = dateMatch;
-        endDate = new Date(`${year}-${month}-${day}`);
-      }
-    }
-
-    // Normalize edilmiş kampanya objesi
-    return {
-      sourceName: this.sourceName,
-      title: title.trim(),
-      description: description.trim() || title.trim(),
-      detailText: description.trim() || '',
-      campaignUrl: link,
-      originalUrl: link,
-      affiliateUrl: null, // YENİ (opsiyonel, şimdilik null)
-      startDate: new Date().toISOString().split('T')[0],
-      endDate: endDate.toISOString().split('T')[0],
-      howToUse: [],
-      category: 'discount',
-      tags: ['Akbank'],
-      channel: 'online',
-    };
   }
 }
 
