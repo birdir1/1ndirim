@@ -21,8 +21,6 @@ function isHighQualityCampaign(campaign) {
     'tanıtım',
     'deneme',
     'test',
-    'özel fırsat', // Belirsiz
-    'kampanya', // Genel
   ];
 
   const titleLower = (campaign.title || '').toLowerCase();
@@ -35,22 +33,30 @@ function isHighQualityCampaign(campaign) {
     }
   }
 
-  // 2. Değer kontrolü - indirim, cashback, puan miktarı
+  // 2. Resmi link kontrolü (campaignUrl veya originalUrl)
+  const url = campaign.originalUrl || campaign.campaignUrl;
+  if (!url || !_isOfficialUrl(url)) {
+    return false;
+  }
+
+  // 3. Phase 1 finans kampanyaları için özel kural
+  // Finans kategorisindeki kampanyalar genelde TL değeri içermez (kart başvurusu, hesap açma, vs.)
+  const category = campaign.category || '';
+  if (category === 'finance') {
+    // Finans kampanyaları için sadece başlık ve URL kontrolü yeterli
+    return true;
+  }
+
+  // 4. Diğer kategoriler için değer kontrolü
   const hasValue = _hasRealValue(campaign);
   if (!hasValue) {
     return false;
   }
 
-  // 3. Minimum değer eşiği
+  // 5. Minimum değer eşiği (finans dışı kampanyalar için)
   const valueAmount = _extractValueAmount(campaign);
   if (valueAmount < 50) {
     // 50 TL'den az değerli kampanyalar elenir
-    return false;
-  }
-
-  // 4. Resmi link kontrolü (campaignUrl veya originalUrl)
-  const url = campaign.originalUrl || campaign.campaignUrl;
-  if (!url || !_isOfficialUrl(url)) {
     return false;
   }
 
