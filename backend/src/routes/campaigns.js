@@ -8,6 +8,9 @@ const AuditLogService = require('../services/auditLogService');
 const { validateCampaignId, validateSearch } = require('../middleware/validation');
 const { cacheMiddleware, invalidateCacheMiddleware } = require('../middleware/cache');
 const CacheService = require('../services/cacheService');
+const DataNormalizer = require('../services/DataNormalizer');
+const AIService = require('../services/AIService');
+const DuplicateDetector = require('../services/DuplicateDetector');
 
 /**
  * GET /campaigns

@@ -7,6 +7,7 @@ const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 const campaignsRouter = require('./routes/campaigns');
+const campaignsDiscoverRouter = require('./routes/campaigns-discover');
 const sourcesRouter = require('./routes/sources');
 const healthRouter = require('./routes/health');
 const adminRouter = require('./routes/admin'); // FAZ 10: Admin & Control Layer
@@ -84,6 +85,7 @@ app.get('/', (req, res) => {
 });
 
 // Routes
+app.use('/api/campaigns', campaignsDiscoverRouter); // Discover routes (must be before campaigns)
 app.use('/api/campaigns', campaignsRouter);
 app.use('/api/sources', sourcesRouter);
 app.use('/api/health', healthRouter);
