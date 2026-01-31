@@ -73,12 +73,13 @@ router.get('/stats', async (req, res) => {
     `);
     const endingSoon = parseInt(endingSoonResult.rows[0].count);
 
-    // 6. By category
+    // 6. By source type (using sources.type as category)
     const byCategoryResult = await pool.query(`
-      SELECT category, COUNT(*) as count 
-      FROM campaigns 
-      WHERE is_active = true AND expires_at > NOW()
-      GROUP BY category
+      SELECT s.type as category, COUNT(c.id) as count 
+      FROM campaigns c
+      INNER JOIN sources s ON c.source_id = s.id
+      WHERE c.is_active = true AND c.expires_at > NOW()
+      GROUP BY s.type
       ORDER BY count DESC
     `);
     const byCategory = {};
