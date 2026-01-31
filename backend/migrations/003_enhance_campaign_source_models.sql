@@ -10,19 +10,23 @@
 ALTER TABLE sources 
 ADD COLUMN IF NOT EXISTS source_type VARCHAR(20) DEFAULT 'brand' CHECK (source_type IN ('brand', 'aggregator', 'affiliate'));
 
--- 2. Add priority_score to campaigns table (0-100)
+-- 2. Add campaign_count to sources table (auto-calculated)
+ALTER TABLE sources 
+ADD COLUMN IF NOT EXISTS campaign_count INTEGER DEFAULT 0;
+
+-- 3. Add priority_score to campaigns table (0-100)
 ALTER TABLE campaigns 
 ADD COLUMN IF NOT EXISTS priority_score INTEGER DEFAULT 50 CHECK (priority_score >= 0 AND priority_score <= 100);
 
--- 3. Add discount_type to campaigns table
+-- 4. Add discount_type to campaigns table
 ALTER TABLE campaigns 
 ADD COLUMN IF NOT EXISTS discount_type VARCHAR(20) CHECK (discount_type IN ('percentage', 'fixed', 'cashback', 'coupon', 'free', 'gift'));
 
--- 4. Add discount_value to campaigns table (nullable, for percentage or fixed amount)
+-- 5. Add discount_value to campaigns table (nullable, for percentage or fixed amount)
 ALTER TABLE campaigns 
 ADD COLUMN IF NOT EXISTS discount_value DECIMAL(10, 2);
 
--- 5. Update existing sources to set source_type based on name
+-- 6. Update existing sources to set source_type based on name
 -- Aggregators
 UPDATE sources 
 SET source_type = 'aggregator' 
