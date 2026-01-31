@@ -60,6 +60,7 @@ Build a **category-driven, scalable campaign aggregation system** that reliably 
 **Current Status:**
 - 11/57 sources (19%)
 - ~100 campaigns (20% of target)
+  - *(Anchor + visible campaigns only, personalized campaigns partially indexed)*
 - 3/9 categories partially covered
 
 ---
@@ -243,12 +244,36 @@ if (!hasClearBenefit(campaign)) {
 
 ### Phase 1 – High Yield Sources (10 hours)
 
-**Target Sources:**
-- Banks: İş Bankası, Yapı Kredi, QNB (use template)
-- Wallets: Tosla, Enpara (use template)
-- Food Delivery: Getir Yemek, Trendyol Yemek, Migros Yemek (use template)
-- Travel Aggregators: UcuzaBilet, Biletall, NeredenNereye (use template)
-- Airlines: THY, Pegasus, AJet (use template)
+**Target Sources (Prioritized by Campaign Density):**
+
+**Banks** (campaign-heavy, personalized):
+- İş Bankası (use template)
+- Yapı Kredi (use template)
+- QNB (use template)
+- *Why: Banks have 10-20 campaigns each, personalized sections*
+
+**Wallets** (cashback dense):
+- Tosla (use template)
+- Enpara (use template)
+- *Why: High-frequency cashback campaigns, user-specific offers*
+
+**Food Delivery** (city-based multipliers):
+- Getir Yemek (use template)
+- Trendyol Yemek (use template)
+- Migros Yemek (use template)
+- *Why: Multiple campaigns per city, restaurant-specific deals*
+
+**Travel Aggregators** (date-based expansion):
+- UcuzaBilet (use template)
+- Biletall (use template)
+- NeredenNereye (use template)
+- *Why: Seasonal campaigns, route-specific discounts*
+
+**Airlines**:
+- THY (use template)
+- Pegasus (use template)
+- AJet (use template)
+- *Why: Destination-based campaigns, loyalty programs*
 
 **🎯 Result: 200+ campaigns**
 
@@ -344,6 +369,12 @@ Everything must remain:
 - ✅ Template-based
 - ✅ Config-driven
 - ✅ Category-first
+
+### Core Philosophy
+
+**The system does not scale by adding people or code, it scales by adding configuration.**
+
+This is the fundamental difference between a maintainable system and a maintenance nightmare.
 
 **Execution only. No redesign.**
 

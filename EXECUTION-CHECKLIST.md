@@ -148,6 +148,7 @@ for (const category of getAllCategories()) {
 ### ❌ "Ürün hazır" değil
 - 7/57 sources (12%)
 - ~80 campaigns (16% of target)
+  - *(Anchor + visible campaigns only, personalized campaigns partially indexed)*
 - 2/9 categories covered
 
 ### ✅ "Bu ürün ölmez"
@@ -155,6 +156,9 @@ for (const category of getAllCategories()) {
 - Templates: Reusable ✅
 - Factory: Dynamic ✅
 - Registry: 57 sources configured ✅
+
+### Core Philosophy
+**The system does not scale by adding people or code, it scales by adding configuration.**
 
 ### Bu Mimariyle:
 - ✅ 500 kampanya olur
@@ -168,39 +172,39 @@ for (const category of getAllCategories()) {
 ### Phase 1: High-Priority Sources (10 hours)
 **Target: 20 sources, 200+ campaigns**
 
-1. **Operators (3 existing + add to registry)** ✅ DONE
-   - Türk Telekom ✅
-   - Vodafone ✅
-   - Turkcell ✅
-
-2. **Banks (5 sources)** - 2 hours
+**1. Banks** (campaign-heavy, personalized) - 2 hours
    - Akbank ✅
    - Garanti (use template)
    - İş Bankası (use template)
    - Yapı Kredi (use template)
    - QNB (use template)
+   - *Why: 10-20 campaigns each, personalized sections*
 
-3. **Digital Wallets (3 sources)** - 1 hour
+**2. Digital Wallets** (cashback dense) - 1 hour
    - Papara ✅
    - Tosla (use template)
    - Enpara (use template)
+   - *Why: High-frequency cashback, user-specific offers*
 
-4. **Food Delivery (4 sources)** - 2 hours
+**3. Food Delivery** (city-based multipliers) - 2 hours
    - Yemeksepeti (use template)
    - Getir Yemek (use template)
    - Trendyol Yemek (use template)
    - Migros Yemek (use template)
+   - *Why: Multiple campaigns per city, restaurant deals*
 
-5. **Travel - Air (3 sources)** - 2 hours
+**4. Travel - Air** - 2 hours
    - THY (use template)
    - Pegasus (use template)
    - AJet (use template)
+   - *Why: Destination-based campaigns, loyalty programs*
 
-6. **Travel - Bus (4 sources)** - 2 hours
+**5. Travel - Bus** (date-based expansion) - 2 hours
    - Obilet (use template)
    - UcuzaBilet (use template)
    - Biletall (use template)
    - NeredenNereye (use template)
+   - *Why: Seasonal campaigns, route-specific discounts*
 
 **Checkpoint: 22 sources, 200+ campaigns**
 
