@@ -10,6 +10,9 @@ import '../../data/models/opportunity_model.dart';
 import '../../data/repositories/favorite_repository.dart';
 import '../home/campaign_detail_screen.dart';
 import '../auth/login_screen.dart';
+import '../discovery/discovery_screen.dart';
+import '../home/home_screen.dart';
+import '../../core/utils/page_transitions.dart';
 
 /// Favoriler Sayfası
 /// Kullanıcının favori kampanyalarını gösterir
@@ -168,13 +171,13 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
             ),
             const SizedBox(height: 24),
             Text(
-              'Giriş Yapın',
+              'Kaydetmek için giriş yap',
               style: AppTextStyles.title(isDark: false),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
             Text(
-              'Favorilerinizi görmek için giriş yapmanız gerekiyor',
+              'Kampanyaları favoriye eklemek için giriş yap. Giriş yapmadan keşfetmeye devam edebilirsin.',
               style: AppTextStyles.body(
                 isDark: false,
               ).copyWith(color: AppColors.textSecondaryLight),
@@ -199,6 +202,35 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                 ),
               ),
               child: const Text('Giriş Yap'),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: () {
+                Navigator.of(context).push(
+                  SlidePageRoute(
+                    child: const DiscoveryScreen(),
+                    direction: SlideDirection.right,
+                  ),
+                );
+              },
+              icon: const Icon(Icons.explore, color: AppColors.primaryLight),
+              label: Text(
+                'Keşfet’e göz at',
+                style: AppTextStyles.button(color: AppColors.primaryLight),
+              ),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.primaryLight,
+                side: BorderSide(
+                  color: AppColors.primaryLight.withValues(alpha: 0.6),
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 14,
+                ),
+              ),
             ),
           ],
         ),

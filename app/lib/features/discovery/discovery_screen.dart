@@ -359,17 +359,30 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
           ),
           const SizedBox(height: 20),
           Text(
-            'Az ama öz',
+            'Şu an bu kategoride kampanya yok',
             style: AppTextStyles.title(isDark: false).copyWith(fontSize: 18),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
           Text(
-            'Bu kategoride az ama gerçekten değerli fırsatlar var. Yakında daha fazlası eklenecek.',
+            'Diğer kategorilere göz atabilir veya yenilemeyi deneyebilirsin.',
             style: AppTextStyles.body(
               isDark: false,
             ).copyWith(color: AppColors.textSecondaryLight, fontSize: 14),
             textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            onPressed: _loadDiscoveryCampaigns,
+            icon: const Icon(Icons.refresh),
+            label: const Text('Yenile'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primaryLight,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
           ),
         ],
       ),
