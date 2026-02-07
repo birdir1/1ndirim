@@ -121,6 +121,7 @@ class AdminSourceService {
       status = null,
       type = null,
       isActive = null,
+      q = null,
     } = filters;
     
     let query = 'SELECT * FROM sources WHERE 1=1';
@@ -142,6 +143,12 @@ class AdminSourceService {
     if (isActive !== null) {
       query += ` AND is_active = $${paramIndex}`;
       params.push(isActive);
+      paramIndex++;
+    }
+
+    if (q && String(q).trim().length > 0) {
+      query += ` AND (name ILIKE $${paramIndex} OR website_url ILIKE $${paramIndex})`;
+      params.push(`%${String(q).trim()}%`);
       paramIndex++;
     }
     

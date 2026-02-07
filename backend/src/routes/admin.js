@@ -498,6 +498,7 @@ router.get('/sources', requireViewerOrAbove(), async (req, res) => {
       status: req.query.status || null,
       type: req.query.type || null,
       isActive: req.query.isActive !== undefined ? req.query.isActive === 'true' : null,
+      q: req.query.q || null,
     };
     
     const sources = await AdminSourceService.getAllSources(filters);
