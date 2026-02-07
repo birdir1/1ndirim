@@ -89,17 +89,15 @@ class SteamScraper extends BaseScraper {
         }
       }
 
-      // If no campaigns found, create anchor campaigns
       if (campaigns.length === 0) {
-        console.log(`⚠️  ${this.sourceName}: Canlı kampanya bulunamadı, anchor kampanyalar oluşturuluyor`);
-        campaigns.push(...this.createAnchorCampaigns());
+        console.log(`⚠️  ${this.sourceName}: Canlı kampanya bulunamadı`);
       }
 
       console.log(`✅ ${this.sourceName}: ${campaigns.length} kampanya bulundu`);
       return campaigns;
     } catch (error) {
-      console.error(`❌ ${this.sourceName}: Scraping hatası, anchor kampanyalar oluşturuluyor:`, error.message);
-      return this.createAnchorCampaigns();
+      console.error(`❌ ${this.sourceName}: Scraping hatası:`, error.message);
+      return [];
     }
   }
 
@@ -107,53 +105,8 @@ class SteamScraper extends BaseScraper {
    * Create anchor campaigns for Steam
    */
   createAnchorCampaigns() {
-    return [
-      {
-        sourceName: this.sourceName,
-        title: 'Steam Haftalık İndirimler',
-        description: 'Steam\'de her hafta yüzlerce oyun indirime giriyor. En popüler oyunları kaçırmayın!',
-        detailText: 'Steam platformunda her hafta düzenlenen özel indirim kampanyaları. AAA oyunlardan indie yapımlara kadar geniş oyun yelpazesi.',
-        campaignUrl: 'https://store.steampowered.com/specials',
-        originalUrl: 'https://store.steampowered.com/specials',
-        affiliateUrl: null,
-        startDate: new Date().toISOString().split('T')[0],
-        endDate: this.getEndDate(7),
-        howToUse: ['Steam\'i ziyaret edin', 'İndirimli oyunlara göz atın', 'Sepete ekleyip satın alın'],
-        category: 'gaming',
-        tags: ['Steam', 'Oyun', 'İndirim', 'PC Gaming'],
-        channel: 'online',
-      },
-      {
-        sourceName: this.sourceName,
-        title: 'Steam Ücretsiz Hafta Sonu',
-        description: 'Seçili oyunları hafta sonu boyunca ücretsiz oynayın!',
-        detailText: 'Steam\'de belirli oyunlar hafta sonu boyunca tamamen ücretsiz. Oyunu test edin, beğenirseniz indirimli fiyattan satın alın.',
-        campaignUrl: 'https://store.steampowered.com/specials',
-        originalUrl: 'https://store.steampowered.com/specials',
-        affiliateUrl: null,
-        startDate: new Date().toISOString().split('T')[0],
-        endDate: this.getEndDate(3),
-        howToUse: ['Steam\'i açın', 'Ücretsiz hafta sonu oyunlarını bulun', 'İndirip oynayın'],
-        category: 'gaming',
-        tags: ['Steam', 'Ücretsiz', 'Free Weekend', 'PC Gaming'],
-        channel: 'online',
-      },
-      {
-        sourceName: this.sourceName,
-        title: 'Steam Mevsimsel İndirimler',
-        description: 'Yaz, kış ve özel günlerde dev indirimler! %90\'a varan fırsatlar.',
-        detailText: 'Steam\'in meşhur mevsimsel indirim kampanyaları. Binlerce oyun %90\'a varan indirimlerle.',
-        campaignUrl: 'https://store.steampowered.com/specials',
-        originalUrl: 'https://store.steampowered.com/specials',
-        affiliateUrl: null,
-        startDate: new Date().toISOString().split('T')[0],
-        endDate: this.getEndDate(14),
-        howToUse: ['Steam\'i ziyaret edin', 'İstek listenizi kontrol edin', 'İndirimli oyunları satın alın'],
-        category: 'gaming',
-        tags: ['Steam', 'Mevsimsel İndirim', 'Büyük İndirim', 'PC Gaming'],
-        channel: 'online',
-      },
-    ];
+    // Anchor/placeholder kampanyalar devre dışı.
+    return [];
   }
 
   /**

@@ -91,17 +91,15 @@ class EpicGamesScraper extends BaseScraper {
         }
       }
 
-      // If no campaigns found, create anchor campaigns
       if (campaigns.length === 0) {
-        console.log(`⚠️  ${this.sourceName}: Canlı kampanya bulunamadı, anchor kampanyalar oluşturuluyor`);
-        campaigns.push(...this.createAnchorCampaigns());
+        console.log(`⚠️  ${this.sourceName}: Canlı kampanya bulunamadı`);
       }
 
       console.log(`✅ ${this.sourceName}: ${campaigns.length} kampanya bulundu`);
       return campaigns;
     } catch (error) {
-      console.error(`❌ ${this.sourceName}: Scraping hatası, anchor kampanyalar oluşturuluyor:`, error.message);
-      return this.createAnchorCampaigns();
+      console.error(`❌ ${this.sourceName}: Scraping hatası:`, error.message);
+      return [];
     }
   }
 
@@ -109,38 +107,8 @@ class EpicGamesScraper extends BaseScraper {
    * Create anchor campaigns for Epic Games
    */
   createAnchorCampaigns() {
-    return [
-      {
-        sourceName: this.sourceName,
-        title: 'Epic Games Haftalık Ücretsiz Oyun',
-        description: 'Her hafta yeni bir oyun ücretsiz! Kütüphanenize ekleyin ve sonsuza kadar sizin olsun.',
-        detailText: 'Epic Games Store her hafta perşembe günü yeni bir oyunu ücretsiz olarak sunuyor. Oyunu hesabınıza eklediğinizde kalıcı olarak sizin oluyor.',
-        campaignUrl: 'https://store.epicgames.com/tr/free-games',
-        originalUrl: 'https://store.epicgames.com/tr/free-games',
-        affiliateUrl: null,
-        startDate: new Date().toISOString().split('T')[0],
-        endDate: this.getEndDate(7),
-        howToUse: ['Epic Games Store\'u ziyaret edin', 'Ücretsiz oyunu bulun', 'Kütüphanenize ekleyin'],
-        category: 'gaming',
-        tags: ['Epic Games', 'Ücretsiz Oyun', 'Haftalık', 'PC Gaming'],
-        channel: 'online',
-      },
-      {
-        sourceName: this.sourceName,
-        title: 'Epic Games Mega İndirimler',
-        description: 'Seçili oyunlarda %75\'e varan indirimler ve ekstra kupon fırsatları!',
-        detailText: 'Epic Games Store\'da düzenlenen mega indirim kampanyaları. Binlerce oyun indirimde, ekstra kuponlarla daha da ucuz.',
-        campaignUrl: 'https://store.epicgames.com/tr/',
-        originalUrl: 'https://store.epicgames.com/tr/',
-        affiliateUrl: null,
-        startDate: new Date().toISOString().split('T')[0],
-        endDate: this.getEndDate(14),
-        howToUse: ['Epic Games Store\'u açın', 'İndirimli oyunlara göz atın', 'Kupon kullanarak satın alın'],
-        category: 'gaming',
-        tags: ['Epic Games', 'İndirim', 'Kupon', 'PC Gaming'],
-        channel: 'online',
-      },
-    ];
+    // Anchor/placeholder kampanyalar devre dışı.
+    return [];
   }
 
   /**

@@ -10,9 +10,70 @@
  * @returns {boolean} - true = kaliteli kampanya, false = düşük değerli
  */
 function isHighQualityCampaign(campaign) {
-  // PHASE 1 TEMPORARY: Quality filter TAMAMEN devre dışı
-  // Tüm kampanyalar kabul ediliyor
+  if (!campaign || typeof campaign !== 'object') return false;
+
+  // Drop anchors/manuals from normal ingestion.
+  if (campaign.campaignType === 'anchor' || campaign.isAnchor === true || campaign.manual === true) return false;
+
+  const sourceName = (campaign.sourceName || '').toString().trim();
+  const title = (campaign.title || '').toString().replace(/\s+/g, ' ').trim();
+  const originalUrl = (campaign.originalUrl || campaign.campaignUrl || '').toString().trim();
+  const description = (campaign.description || '').toString().replace(/\s+/g, ' ').trim();
+  const detailText = (campaign.detailText || '').toString().replace(/\s+/g, ' ').trim();
+
+  if (title.length < 5) return false;
+  if (!_isValidHttpUrl(originalUrl)) return false;
+
+  const blob = `${title}\n${description}\n${detailText}`.toLowerCase();
+  if (_looksLikeCookieOrConsent(blob)) return false;
+
+  const hasBody = description.length >= 20 || detailText.length >= 20;
+  if (!hasBody) {
+    const allowShort = new Set(['TEB']);
+    if (!allowShort.has(sourceName)) return false;
+  }
+
+  if (sourceName !== 'TEB') {
+    if (!_hasRealValue({ title, description })) return false;
+  }
+
   return true;
+}
+
+/**
+ * Returns a reason code when campaign is rejected by quality gate.
+ * Returns null when campaign passes.
+ * This is used for per-source run reporting (keep it coarse to avoid large refactors).
+ * @param {Object} campaign
+ * @returns {string|null}
+ */
+function getQualityRejectionReason(campaign) {
+  if (!campaign || typeof campaign !== 'object') return 'invalid_object';
+  if (campaign.campaignType === 'anchor' || campaign.isAnchor === true || campaign.manual === true) return 'anchor_manual';
+
+  const sourceName = (campaign.sourceName || '').toString().trim();
+  const title = (campaign.title || '').toString().replace(/\s+/g, ' ').trim();
+  const originalUrl = (campaign.originalUrl || campaign.campaignUrl || '').toString().trim();
+  const description = (campaign.description || '').toString().replace(/\s+/g, ' ').trim();
+  const detailText = (campaign.detailText || '').toString().replace(/\s+/g, ' ').trim();
+
+  if (title.length < 5) return 'title_short';
+  if (!_isValidHttpUrl(originalUrl)) return 'url_invalid';
+
+  const blob = `${title}\n${description}\n${detailText}`.toLowerCase();
+  if (_looksLikeCookieOrConsent(blob)) return 'cookie_or_consent';
+
+  const hasBody = description.length >= 20 || detailText.length >= 20;
+  if (!hasBody) {
+    const allowShort = new Set(['TEB']);
+    if (!allowShort.has(sourceName)) return 'body_too_short';
+  }
+
+  if (sourceName !== 'TEB') {
+    if (!_hasRealValue({ title, description })) return 'no_value_signal';
+  }
+
+  return null;
 }
 
 /**
@@ -26,9 +87,9 @@ function _hasRealValue(campaign) {
   const text = `${title} ${description}`;
 
   // İndirim yüzdesi
-  const discountMatch = text.match(/(\d+)%/);
+  const discountMatch = text.match(/(\d+)\s*%|%\s*(\d+)/);
   if (discountMatch) {
-    const discount = parseInt(discountMatch[1]);
+    const discount = parseInt(discountMatch[1] || discountMatch[2]);
     if (discount >= 10) {
       // %10 ve üzeri indirimler geçerli
       return true;
@@ -78,9 +139,9 @@ function _extractValueAmount(campaign) {
   const text = `${title} ${description}`;
 
   // İndirim yüzdesinden tahmini değer (örnek: %50 indirim = 50 TL değer)
-  const discountMatch = text.match(/(\d+)%/);
+  const discountMatch = text.match(/(\d+)\s*%|%\s*(\d+)/);
   if (discountMatch) {
-    return parseInt(discountMatch[1]);
+    return parseInt(discountMatch[1] || discountMatch[2]);
   }
 
   // TL cinsinden değer - nokta/virgül formatını da destekle
@@ -92,6 +153,30 @@ function _extractValueAmount(campaign) {
   }
 
   return 0;
+}
+
+function _isValidHttpUrl(url) {
+  try {
+    const u = new URL(url);
+    return u.protocol === 'http:' || u.protocol === 'https:';
+  } catch (_) {
+    return false;
+  }
+}
+
+function _looksLikeCookieOrConsent(textLower) {
+  if (!textLower) return false;
+  const hasCookieWord = textLower.includes('çerez') || textLower.includes('cerez') || textLower.includes('cookie') || textLower.includes('consent');
+  if (!hasCookieWord) return false;
+  const hasAction = textLower.includes('kabul') || textLower.includes('reddet') || textLower.includes('onay') || textLower.includes('gizlilik') || textLower.includes('privacy') || textLower.includes('kvkk');
+  if (!hasAction) return false;
+  const hasValueSignal =
+    /(\d+)\s*%/.test(textLower) ||
+    /%(\d+)/.test(textLower) ||
+    /(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d+)?|\d+)\s*(tl|₺)/i.test(textLower) ||
+    textLower.includes('cashback') ||
+    textLower.includes('indirim');
+  return !hasValueSignal;
 }
 
 /**
@@ -155,6 +240,7 @@ function filterHighQualityCampaigns(campaigns) {
 module.exports = {
   isHighQualityCampaign,
   filterHighQualityCampaigns,
+  getQualityRejectionReason,
   _hasRealValue,
   _extractValueAmount,
   _isOfficialUrl,

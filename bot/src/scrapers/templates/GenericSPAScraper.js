@@ -63,7 +63,7 @@ class GenericSPAScraper extends BaseScraper {
 
       if (campaignLinks.length === 0) {
         console.warn(`⚠️  ${this.sourceName}: Kampanya linki bulunamadı`);
-        return this.createFallbackCampaigns();
+        return [];
       }
 
       console.log(`🔍 ${this.sourceName}: ${campaignLinks.length} kampanya linki bulundu`);
@@ -82,10 +82,10 @@ class GenericSPAScraper extends BaseScraper {
       }
 
       console.log(`✅ ${this.sourceName}: ${campaigns.length} kampanya bulundu`);
-      return campaigns.length > 0 ? campaigns : this.createFallbackCampaigns();
+      return campaigns.length > 0 ? campaigns : [];
     } catch (error) {
       console.error(`❌ ${this.sourceName}: Scraping hatası:`, error.message);
-      return this.createFallbackCampaigns();
+      return [];
     }
   }
 
@@ -208,21 +208,8 @@ class GenericSPAScraper extends BaseScraper {
    * Create fallback campaigns (can be overridden)
    */
   createFallbackCampaigns() {
-    return [{
-      sourceName: this.sourceName,
-      title: `${this.sourceName} Kampanyaları`,
-      description: `${this.sourceName}'da güncel kampanyalar için siteyi ziyaret edin.`,
-      detailText: `${this.sourceName} üzerinde çeşitli kampanyalar bulunmaktadır. Detaylar için siteyi ziyaret edin.`,
-      campaignUrl: this.sourceUrl,
-      originalUrl: this.sourceUrl,
-      affiliateUrl: null,
-      startDate: new Date().toISOString().split('T')[0],
-      endDate: this.getEndDate(30),
-      howToUse: [`${this.sourceName} sitesini ziyaret edin`, 'Kampanyaları inceleyin', 'Alışveriş yapın'],
-      category: this.category,
-      tags: [this.sourceName],
-      channel: 'online',
-    }];
+    // Placeholder campaigns are disabled to avoid fake data injection.
+    return [];
   }
 
   /**

@@ -11,6 +11,7 @@ require('dotenv').config();
 
 const BACKEND_API_URL = process.env.BACKEND_API_URL || 'http://localhost:3000/api';
 const DEAD_LETTER_DIR = path.join(__dirname, '../../dead-letters');
+const INTERNAL_BOT_TOKEN = process.env.INTERNAL_BOT_TOKEN;
 
 // Dead-letter dizinini oluştur
 if (!fs.existsSync(DEAD_LETTER_DIR)) {
@@ -19,11 +20,24 @@ if (!fs.existsSync(DEAD_LETTER_DIR)) {
 
 class ApiClient {
   constructor() {
+    this.tokenMissing = !INTERNAL_BOT_TOKEN;
+    if (this.tokenMissing) {
+      // Fail fast (log only). Do not crash the bot process.
+      console.error('BOT TOKEN MISSING');
+    }
     this.client = axios.create({
       baseURL: BACKEND_API_URL,
       timeout: 10000,
       headers: {
         'Content-Type': 'application/json',
+        'x-internal-bot': '1',
+        ...(INTERNAL_BOT_TOKEN
+          ? {
+              'x-bot-token': INTERNAL_BOT_TOKEN,
+              // legacy header kept for compatibility
+              'x-internal-bot-token': INTERNAL_BOT_TOKEN,
+            }
+          : {}),
       },
     });
   }
@@ -35,11 +49,24 @@ class ApiClient {
    * @returns {Promise<Object>} - Backend yanıtı
    */
   async createCampaign(campaign, maxRetries = 3) {
+    if (this.tokenMissing) {
+      return {
+        success: false,
+        error: 'BOT TOKEN MISSING',
+        message: 'INTERNAL_BOT_TOKEN env var is required for backend writes.',
+        tokenMissing: true,
+      };
+    }
+
     let lastError = null;
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
+        console.log(
+          `➡️  POST /campaigns headers: x-bot-token=${INTERNAL_BOT_TOKEN ? 'present' : 'absent'} attempt=${attempt}/${maxRetries}`
+        );
         const response = await this.client.post('/campaigns', campaign);
+        console.log(`⬅️  POST /campaigns status=${response && response.status}`);
         return {
           success: true,
           data: response.data,
@@ -146,6 +173,9 @@ class ApiClient {
    * @returns {Promise<Object<string,string>>} - name -> source_status map
    */
   async getSourceStatusList() {
+    if (this.tokenMissing) {
+      return {};
+    }
     try {
       const response = await this.client.get('/sources/status');
       if (!response.data || !response.data.success || !Array.isArray(response.data.data)) {
@@ -170,17 +200,31 @@ class ApiClient {
    * @returns {Promise<Array>} - Sonuçlar
    */
   async createCampaigns(campaigns) {
+    if (this.tokenMissing) {
+      return (Array.isArray(campaigns) ? campaigns : []).map((c) => ({
+        campaign: c && c.title,
+        success: false,
+        error: 'BOT TOKEN MISSING',
+        message: 'INTERNAL_BOT_TOKEN env var is required for backend writes.',
+        tokenMissing: true,
+      }));
+    }
+
     const results = [];
-
-    for (const campaign of campaigns) {
-      const result = await this.createCampaign(campaign, 3);
-      results.push({
-        campaign: campaign.title,
-        ...result,
+    const batchSize = parseInt(process.env.BOT_BATCH_SIZE || '10', 10);
+    const batchDelayMs = parseInt(process.env.BOT_BATCH_DELAY_MS || '500', 10);
+    for (let i = 0; i < campaigns.length; i += batchSize) {
+      const batch = campaigns.slice(i, i + batchSize);
+      const batchResults = await Promise.all(batch.map((campaign) => this.createCampaign(campaign, 3)));
+      batchResults.forEach((result, idx) => {
+        results.push({
+          campaign: batch[idx].title,
+          ...result,
+        });
       });
-
-      // Rate limiting: Her kampanya arasında kısa delay
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      if (i + batchSize < campaigns.length) {
+        await new Promise((resolve) => setTimeout(resolve, batchDelayMs));
+      }
     }
 
     return results;

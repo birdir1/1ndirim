@@ -88,22 +88,9 @@ class ScraperFactory {
       sourceName,
       sourceUrl,
       async scrape() {
-        // Return anchor campaign
-        return [{
-          sourceName,
-          title: `${sourceName} Kampanyaları`,
-          description: `${sourceName}'da güncel kampanyalar için siteyi ziyaret edin.`,
-          detailText: `${sourceName} üzerinde çeşitli kampanyalar bulunmaktadır.`,
-          campaignUrl: sourceUrl,
-          originalUrl: sourceUrl,
-          affiliateUrl: null,
-          startDate: new Date().toISOString().split('T')[0],
-          endDate: this.getEndDate(30),
-          howToUse: [`${sourceName} sitesini ziyaret edin`],
-          category: categoryId,
-          tags: [sourceName],
-          channel: 'online',
-        }];
+        // Anchor/placeholder kampanyalar fake veri ürettiği için ingestion'a gönderilmez.
+        // Manuel/anchor kampanyalar admin panel üzerinden yönetilmeli.
+        return [];
       },
       getEndDate(days) {
         const date = new Date();

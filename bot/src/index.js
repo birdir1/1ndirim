@@ -5,13 +5,15 @@
 
 require('dotenv').config();
 const crypto = require('crypto');
-const { filterHighQualityCampaigns } = require('../src/utils/campaignQualityFilter');
+const { getQualityRejectionReason } = require('../src/utils/campaignQualityFilter');
 const { botPreFilter } = require('./utils/botPreFilter');
 const { classifyError, FAILURE_TYPES } = require('./utils/failureClassifier');
 const { enrichWithConfidence } = require('./utils/confidenceCalculator');
 const { computeAllFromRunSummary } = require('./utils/sourceTrustScore');
 const { pushRunSts, getSuggestions, isLearningDisabled, recordLearningSuccess, recordLearningException } = require('./utils/trustHistory');
 const { generateAdminSuggestions } = require('./utils/adminSuggestionEngine');
+const { normalizeCampaigns } = require('./utils/centralNormalizer');
+const { withFsRunLock } = require('./utils/runLock');
 const ApiClient = require('./services/apiClient');
 const { createBrowserManager } = require('./services/browserManager');
 const AkbankScraper = require('./scrapers/akbank-scraper');
@@ -58,6 +60,44 @@ function runLog(ctx, msg) {
 
 function newRunId() {
   return typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : crypto.randomBytes(16).toString('hex');
+}
+
+function applyIngestionGate(rawCampaigns, sourceName) {
+  const rawTotal = Array.isArray(rawCampaigns) ? rawCampaigns.length : 0;
+  const scrapedAt = new Date().toISOString();
+  const { items: normalized, dropped: droppedRequired } = normalizeCampaigns(rawCampaigns, { sourceName, scrapedAt });
+  const accepted = [];
+  const qualityRejectReasons = {};
+  for (const c of normalized) {
+    const reason = getQualityRejectionReason(c);
+    if (!reason) {
+      accepted.push(c);
+    } else {
+      qualityRejectReasons[reason] = (qualityRejectReasons[reason] || 0) + 1;
+    }
+  }
+
+  const acceptedTotal = accepted.length;
+  const rejectedByQuality = Math.max(0, normalized.length - acceptedTotal);
+  const rejectedOverall = Math.max(0, rawTotal - acceptedTotal);
+  const rejectRatio = rawTotal > 0 ? (rejectedOverall / rawTotal) : 0;
+
+  const degraded = rawTotal >= 5 && rejectRatio > 0.8;
+  return {
+    items: degraded ? [] : accepted,
+    stats: {
+      rawTotal,
+      normalizedTotal: normalized.length,
+      acceptedTotal,
+      droppedRequired,
+      rejectedByQuality,
+      rejectedOverall,
+      rejectRatio: Math.round(rejectRatio * 100) / 100,
+      degraded,
+      qualityRejectReasons,
+      scrapedAt,
+    },
+  };
 }
 
 /**
@@ -123,25 +163,26 @@ async function runScrapers() {
   console.info(runLog(runLogCtx, `run_id=${runLogCtx.run_id} started_at=${runLogCtx.started_at} mode=${runLogCtx.mode} environment=${runLogCtx.environment}`));
   console.info(runLog(runLogCtx, 'ADMIN GOVERNANCE ACTIVE: suggestions enabled, execution requires admin')); // FAZ 21.5
 
-  const runSummary = {
-    total: scrapers.length,
-    skippedHardBacklog: [],
-    scraped: [],
-    backlogWarn: [],
-    errors: [],
-    sources_temporarily_disabled: [],
-    confidenceSum: 0,
-    confidenceCount: 0,
-    lowConfidenceCount: 0,
-    highConfidenceCount: 0,
-    bySource: {}, // FAZ 14.1: per-source confidence for STS
-    feedback: { bySource: {} }, // FAZ 14.2: confidence feedback loop
-    freezeLearning: false, // FAZ 14.5
-    campaigns: { total_sent: 0, accepted: 0, downgraded: 0, hidden: 0, low_confidence: 0 }, // FAZ 15.4
-    adminFeedback: { bySource: {} }, // FAZ 16.2: admin action signals (run-local, log-only)
-    domUnstableSources: new Set(), // FAZ 17.4: run-local, DOM_CHANGED olan kaynaklar
-  };
-  const sourceHealth = {};
+	  const runSummary = {
+	    total: scrapers.length,
+	    skippedHardBacklog: [],
+	    scraped: [],
+	    backlogWarn: [],
+	    errors: [],
+	    sources_temporarily_disabled: [],
+	    confidenceSum: 0,
+	    confidenceCount: 0,
+	    lowConfidenceCount: 0,
+	    highConfidenceCount: 0,
+	    bySource: {}, // FAZ 14.1: per-source confidence for STS
+	    feedback: { bySource: {} }, // FAZ 14.2: confidence feedback loop
+	    freezeLearning: false, // FAZ 14.5
+	    campaigns: { total_sent: 0, accepted: 0, downgraded: 0, hidden: 0, low_confidence: 0 }, // FAZ 15.4
+	    adminFeedback: { bySource: {} }, // FAZ 16.2: admin action signals (run-local, log-only)
+	    domUnstableSources: new Set(), // FAZ 17.4: run-local, DOM_CHANGED olan kaynaklar
+	  };
+	  runSummary.sentBySource = {};
+	  const sourceHealth = {};
   const browserManager = createBrowserManager(runLogCtx, runLog); // FAZ 17.1–17.2
 
   for (const scraper of scrapers) {
@@ -217,6 +258,39 @@ async function runScrapers() {
       console.info(runLog(runLogCtx, `SOURCE SCRAPE_SUCCESS campaigns=${campaigns.length} durationMs=${durationMs} source=${scraper.sourceName}`));
       console.log(`📊 [${scraper.sourceName}] success=${campaigns.length} duration=${durationMs}ms`);
 
+      const gated = applyIngestionGate(campaigns, scraper.sourceName);
+      if (!runSummary.bySource[scraper.sourceName]) {
+        runSummary.bySource[scraper.sourceName] = { confidenceSum: 0, confidenceCount: 0, lowConfidenceCount: 0 };
+      }
+      runSummary.bySource[scraper.sourceName].gate = gated.stats;
+
+      if (gated.stats.degraded) {
+        console.warn(runLog(runLogCtx, `SOURCE_DEGRADED source=${scraper.sourceName} raw=${gated.stats.rawTotal} accepted=${gated.stats.acceptedTotal} reject_ratio=${gated.stats.rejectRatio}`));
+        runSummary.errors.push({
+          sourceName: scraper.sourceName,
+          failure_type: 'SOURCE_DEGRADED',
+          phase: 'gate',
+          durationMs,
+          stats: gated.stats,
+        });
+        console.info(runLog(runLogCtx, `SOURCE END status=failed source=${scraper.sourceName}`));
+        continue;
+      }
+
+      const campaignsAfterGate = gated.items;
+      if (campaignsAfterGate.length === 0) {
+        console.warn(runLog(runLogCtx, `SOURCE_EMPTY_AFTER_GATE source=${scraper.sourceName} raw=${gated.stats.rawTotal} normalized=${gated.stats.normalizedTotal}`));
+        runSummary.errors.push({
+          sourceName: scraper.sourceName,
+          failure_type: FAILURE_TYPES.EMPTY_RESULT,
+          phase: 'gate',
+          durationMs,
+          stats: gated.stats,
+        });
+        console.info(runLog(runLogCtx, `SOURCE END status=failed source=${scraper.sourceName}`));
+        continue;
+      }
+
       // FAZ 7.2: Category Campaign Mode kontrolü
       const isCategoryScraper = scraper.sourceName === 'Türkiye Finans' || scraper.sourceName === 'Ziraat Katılım';
       
@@ -225,7 +299,7 @@ async function runScrapers() {
       
       if (isCategoryScraper) {
         // Category scraper'lar: Tüm kampanyaları category olarak işaretle
-        const categoryCampaigns = campaigns.map((campaign) => ({
+        const categoryCampaigns = campaignsAfterGate.map((campaign) => ({
           ...campaign,
           campaignType: 'category',
           showInCategoryFeed: true,
@@ -237,7 +311,10 @@ async function runScrapers() {
           continue;
         }
 
+        const preBefore = categoryCampaigns.length;
         let toSendCategory = botPreFilter(categoryCampaigns);
+        const preDropped = Math.max(0, preBefore - toSendCategory.length);
+        runSummary.bySource[scraper.sourceName].prefilter = { before: preBefore, after: toSendCategory.length, dropped: preDropped };
         try {
           const runContext = {
             emptyResultSources: (runSummary.errors || []).filter((e) => e.failure_type === FAILURE_TYPES.EMPTY_RESULT).map((e) => e.sourceName),
@@ -266,16 +343,19 @@ async function runScrapers() {
 
         runSummary.campaigns.total_sent += toSendCategory.length;
         const results = await apiClient.createCampaigns(toSendCategory);
+        runSummary.sentBySource[scraper.sourceName] = runSummary.sentBySource[scraper.sourceName] || { sent: 0, accepted: 0, rejected: 0 };
+        runSummary.sentBySource[scraper.sourceName].sent += toSendCategory.length;
 
         let successCount = 0;
         let updateCount = 0;
         let errorCount = 0;
-        for (let i = 0; i < results.length; i++) {
-          const result = results[i];
-          const sent = toSendCategory[i];
+	        for (let i = 0; i < results.length; i++) {
+	          const result = results[i];
+	          const sent = toSendCategory[i];
           if (result.success) {
             successCount++;
             runSummary.campaigns.accepted += 1;
+            runSummary.sentBySource[scraper.sourceName].accepted += 1;
             if (result.applied_action === 'downgrade') runSummary.campaigns.downgraded += 1;
             if (result.applied_action === 'hide') runSummary.campaigns.hidden += 1;
             if (result.low_confidence) runSummary.campaigns.low_confidence += 1;
@@ -310,12 +390,13 @@ async function runScrapers() {
             if (result.freeze_learning) runSummary.freezeLearning = true;
           } else {
             errorCount++;
+            runSummary.sentBySource[scraper.sourceName].rejected += 1;
             console.error(`❌ ${scraper.sourceName}: ${result.campaign} - ${result.error}`);
           }
         }
-        for (let i = 0; i < results.length; i++) {
-          const result = results[i];
-          const sent = toSendCategory[i];
+	        for (let i = 0; i < results.length; i++) {
+	          const result = results[i];
+	          const sent = toSendCategory[i];
           const cid = (result.data && result.data.data && result.data.data.id) || (result.data && result.data.id);
           const action = result.success ? (result.applied_action || 'accepted') : 'rejected';
           const reason = result.low_confidence ? 'low_confidence' : (result.success ? 'ok' : 'error');
@@ -338,7 +419,7 @@ async function runScrapers() {
       if (isLowValueScraper) {
         // FAZ 7.5: Low Value scraper'lar: Tüm kampanyaları low value olarak işaretle
         // Kalite filtresini bypass etme, sadece value_level = 'low' işaretle
-        const lowValueCampaigns = campaigns.map((campaign) => ({
+        const lowValueCampaigns = campaignsAfterGate.map((campaign) => ({
           ...campaign,
           valueLevel: 'low',
         }));
@@ -349,7 +430,10 @@ async function runScrapers() {
           continue;
         }
 
+        const preBefore = lowValueCampaigns.length;
         let toSendLow = botPreFilter(lowValueCampaigns);
+        const preDropped = Math.max(0, preBefore - toSendLow.length);
+        runSummary.bySource[scraper.sourceName].prefilter = { before: preBefore, after: toSendLow.length, dropped: preDropped };
         try {
           const runContext = {
             emptyResultSources: (runSummary.errors || []).filter((e) => e.failure_type === FAILURE_TYPES.EMPTY_RESULT).map((e) => e.sourceName),
@@ -378,6 +462,8 @@ async function runScrapers() {
 
         runSummary.campaigns.total_sent += toSendLow.length;
         const results = await apiClient.createCampaigns(toSendLow);
+        runSummary.sentBySource[scraper.sourceName] = runSummary.sentBySource[scraper.sourceName] || { sent: 0, accepted: 0, rejected: 0 };
+        runSummary.sentBySource[scraper.sourceName].sent += toSendLow.length;
 
         let successCount = 0;
         let updateCount = 0;
@@ -389,6 +475,7 @@ async function runScrapers() {
             successCount++;
             if (result.isUpdate) updateCount++;
             runSummary.campaigns.accepted += 1;
+            runSummary.sentBySource[scraper.sourceName].accepted += 1;
             if (result.applied_action === 'downgrade') runSummary.campaigns.downgraded += 1;
             if (result.applied_action === 'hide') runSummary.campaigns.hidden += 1;
             if (result.low_confidence) runSummary.campaigns.low_confidence += 1;
@@ -420,15 +507,16 @@ async function runScrapers() {
                 console.warn(runLog(runLogCtx, `confidence_score=${sent && sent.confidence_score != null ? sent.confidence_score : 'n/a'}`));
               } catch (_) {}
             }
-            if (result.freeze_learning) runSummary.freezeLearning = true;
+          if (result.freeze_learning) runSummary.freezeLearning = true;
           } else {
             errorCount++;
+            runSummary.sentBySource[scraper.sourceName].rejected += 1;
             console.error(`❌ ${scraper.sourceName}: ${result.campaign} - ${result.error}`);
           }
         }
-        for (let i = 0; i < results.length; i++) {
-          const result = results[i];
-          const sent = toSendLow[i];
+	        for (let i = 0; i < results.length; i++) {
+	          const result = results[i];
+	          const sent = toSendLow[i];
           const cid = (result.data && result.data.data && result.data.data.id) || (result.data && result.data.id);
           const action = result.success ? (result.applied_action || 'accepted') : 'rejected';
           const reason = result.low_confidence ? 'low_confidence' : (result.success ? 'ok' : 'error');
@@ -448,8 +536,8 @@ async function runScrapers() {
         continue;
       }
 
-      const highQualityCampaigns = filterHighQualityCampaigns(campaigns);
-      console.log(`✅ ${scraper.sourceName}: ${highQualityCampaigns.length}/${campaigns.length} kampanya kaliteli`);
+	      const highQualityCampaigns = campaignsAfterGate;
+	      console.log(`✅ ${scraper.sourceName}: ${highQualityCampaigns.length}/${gated.stats.rawTotal} kampanya kalite kapısından geçti (dropped_required=${gated.stats.droppedRequired}, rejected_quality=${gated.stats.rejectedByQuality})`);
 
       if (highQualityCampaigns.length === 0) {
         console.info(runLog(runLogCtx, `SOURCE END status=success source=${scraper.sourceName}`));
@@ -457,7 +545,10 @@ async function runScrapers() {
         continue;
       }
 
-      let toSend = botPreFilter(highQualityCampaigns);
+	      const preBefore = highQualityCampaigns.length;
+	      let toSend = botPreFilter(highQualityCampaigns);
+	      const preDropped = Math.max(0, preBefore - toSend.length);
+	      runSummary.bySource[scraper.sourceName].prefilter = { before: preBefore, after: toSend.length, dropped: preDropped };
       try {
         const runContext = {
           emptyResultSources: (runSummary.errors || []).filter((e) => e.failure_type === FAILURE_TYPES.EMPTY_RESULT).map((e) => e.sourceName),
@@ -482,8 +573,10 @@ async function runScrapers() {
         }
         if (s > 70) runSummary.highConfidenceCount += 1;
       });
-      runSummary.campaigns.total_sent += toSend.length;
-      const results = await apiClient.createCampaigns(toSend);
+	      runSummary.campaigns.total_sent += toSend.length;
+	      const results = await apiClient.createCampaigns(toSend);
+	      runSummary.sentBySource[scraper.sourceName] = runSummary.sentBySource[scraper.sourceName] || { sent: 0, accepted: 0, rejected: 0 };
+	      runSummary.sentBySource[scraper.sourceName].sent += toSend.length;
 
       if (scrapers.indexOf(scraper) === 0) {
         const deadLetterResults = await apiClient.retryDeadLetters();
@@ -495,13 +588,14 @@ async function runScrapers() {
       let successCount = 0;
       let updateCount = 0;
       let errorCount = 0;
-      for (let i = 0; i < results.length; i++) {
-        const result = results[i];
-        const sent = toSend[i];
-        if (result.success) {
+	      for (let i = 0; i < results.length; i++) {
+	        const result = results[i];
+	        const sent = toSend[i];
+      if (result.success) {
           successCount++;
           if (result.isUpdate) updateCount++;
           runSummary.campaigns.accepted += 1;
+          runSummary.sentBySource[scraper.sourceName].accepted += 1;
           if (result.applied_action === 'downgrade') runSummary.campaigns.downgraded += 1;
           if (result.applied_action === 'hide') runSummary.campaigns.hidden += 1;
           if (result.low_confidence) runSummary.campaigns.low_confidence += 1;
@@ -536,6 +630,7 @@ async function runScrapers() {
           if (result.freeze_learning) runSummary.freezeLearning = true;
         } else {
           errorCount++;
+          runSummary.sentBySource[scraper.sourceName].rejected += 1;
           console.error(`❌ ${scraper.sourceName}: ${result.campaign} - ${result.error}`);
         }
       }
@@ -622,6 +717,40 @@ async function runScrapers() {
   }
   console.log('\n📊 BOT RUN SUMMARY');
   console.log('------------------');
+  try {
+    const reportRows = [];
+    const byName = runSummary.bySource || {};
+    const sent = runSummary.sentBySource || {};
+    const names = Array.from(new Set([...(runSummary.scraped || []), ...Object.keys(byName), ...Object.keys(sent)])).sort((a, b) => a.localeCompare(b));
+    for (const name of names) {
+      const gate = (byName[name] && byName[name].gate) || null;
+      const pre = (byName[name] && byName[name].prefilter) || null;
+      const s = sent[name] || { sent: 0, accepted: 0, rejected: 0 };
+      reportRows.push({
+        source: name,
+        scraped_raw: gate ? gate.rawTotal : null,
+        accepted_gate: gate ? gate.acceptedTotal : null,
+        dropped_required: gate ? gate.droppedRequired : null,
+        rejected_quality: gate ? gate.rejectedByQuality : null,
+        reject_ratio: gate ? gate.rejectRatio : null,
+        degraded: gate ? gate.degraded : null,
+        prefilter_dropped: pre ? pre.dropped : null,
+        sent: s.sent,
+        backend_ok: s.accepted,
+        backend_rejected: s.rejected,
+      });
+    }
+    console.log('\n📋 SOURCE RUN REPORT');
+    console.table(reportRows);
+    for (const name of names) {
+      const gate = (byName[name] && byName[name].gate) || null;
+      const reasons = gate && gate.qualityRejectReasons ? gate.qualityRejectReasons : null;
+      if (!reasons || Object.keys(reasons).length === 0) continue;
+      console.log(`QUALITY_REJECT_REASONS source=${name} ` + JSON.stringify(reasons));
+    }
+  } catch (e) {
+    console.warn('run report generation failed (log only):', e && e.message);
+  }
   console.log(`Total sources: ${runSummary.total}`);
   console.log(`Scraped: ${runSummary.scraped.length}`);
   console.log(`Skipped (hard_backlog): ${runSummary.skippedHardBacklog.length}`);
@@ -793,24 +922,25 @@ async function runFetchScrapers() {
   console.info(runLog(runLogCtx, `run_id=${runLogCtx.run_id} started_at=${runLogCtx.started_at} mode=${runLogCtx.mode} environment=${runLogCtx.environment}`));
   console.info(runLog(runLogCtx, 'ADMIN GOVERNANCE ACTIVE: suggestions enabled, execution requires admin')); // FAZ 21.5
 
-  const runSummary = {
-    total: fetchScrapers.length,
-    skippedHardBacklog: [],
-    scraped: [],
-    backlogWarn: [],
-    errors: [],
-    sources_temporarily_disabled: [],
-    confidenceSum: 0,
-    confidenceCount: 0,
-    lowConfidenceCount: 0,
-    highConfidenceCount: 0,
-    bySource: {},
-    feedback: { bySource: {} },
-    freezeLearning: false, // FAZ 14.5
-    campaigns: { total_sent: 0, accepted: 0, downgraded: 0, hidden: 0, low_confidence: 0 }, // FAZ 15.4
-    adminFeedback: { bySource: {} }, // FAZ 16.2: admin action signals (run-local, log-only)
-  };
-  const sourceHealth = {};
+	  const runSummary = {
+	    total: fetchScrapers.length,
+	    skippedHardBacklog: [],
+	    scraped: [],
+	    backlogWarn: [],
+	    errors: [],
+	    sources_temporarily_disabled: [],
+	    confidenceSum: 0,
+	    confidenceCount: 0,
+	    lowConfidenceCount: 0,
+	    highConfidenceCount: 0,
+	    bySource: {},
+	    feedback: { bySource: {} },
+	    freezeLearning: false, // FAZ 14.5
+	    campaigns: { total_sent: 0, accepted: 0, downgraded: 0, hidden: 0, low_confidence: 0 }, // FAZ 15.4
+	    adminFeedback: { bySource: {} }, // FAZ 16.2: admin action signals (run-local, log-only)
+	  };
+	  runSummary.sentBySource = {};
+	  const sourceHealth = {};
 
   for (const scraper of fetchScrapers) {
     const t0 = Date.now();
@@ -875,6 +1005,39 @@ async function runFetchScrapers() {
       console.info(runLog(runLogCtx, `SOURCE SCRAPE_SUCCESS campaigns=${campaigns.length} durationMs=${durationMs} source=${scraper.sourceName}`));
       console.log(`📊 [FAZ7] [${scraper.sourceName}] success=${campaigns.length} duration=${durationMs}ms`);
 
+      const gated = applyIngestionGate(campaigns, scraper.sourceName);
+      if (!runSummary.bySource[scraper.sourceName]) {
+        runSummary.bySource[scraper.sourceName] = { confidenceSum: 0, confidenceCount: 0, lowConfidenceCount: 0 };
+      }
+      runSummary.bySource[scraper.sourceName].gate = gated.stats;
+
+      if (gated.stats.degraded) {
+        console.warn(runLog(runLogCtx, `SOURCE_DEGRADED source=${scraper.sourceName} raw=${gated.stats.rawTotal} accepted=${gated.stats.acceptedTotal} reject_ratio=${gated.stats.rejectRatio}`));
+        runSummary.errors.push({
+          sourceName: scraper.sourceName,
+          failure_type: 'SOURCE_DEGRADED',
+          phase: 'gate',
+          durationMs,
+          stats: gated.stats,
+        });
+        console.info(runLog(runLogCtx, `SOURCE END status=failed source=${scraper.sourceName}`));
+        continue;
+      }
+
+      const campaignsAfterGate = gated.items;
+      if (campaignsAfterGate.length === 0) {
+        console.warn(runLog(runLogCtx, `SOURCE_EMPTY_AFTER_GATE source=${scraper.sourceName} raw=${gated.stats.rawTotal} normalized=${gated.stats.normalizedTotal}`));
+        runSummary.errors.push({
+          sourceName: scraper.sourceName,
+          failure_type: FAILURE_TYPES.EMPTY_RESULT,
+          phase: 'gate',
+          durationMs,
+          stats: gated.stats,
+        });
+        console.info(runLog(runLogCtx, `SOURCE END status=failed source=${scraper.sourceName}`));
+        continue;
+      }
+
       // FAZ 7.3: Light Campaign Mode
       // TEB için özel mantık: Tüm kampanyalar light olarak işaretlenir
       // Çünkü TEB kampanyaları kalite filtresinden geçemiyor (değer bilgisi yok)
@@ -883,37 +1046,20 @@ async function runFetchScrapers() {
       
       if (scraper.sourceName === 'TEB') {
         // TEB: TÜM kampanyaları light olarak işaretle (kalite filtresine sokmadan)
-        allCampaigns = campaigns.map((campaign) => ({
+        allCampaigns = campaignsAfterGate.map((campaign) => ({
           ...campaign,
           campaignType: 'light',
           showInLightFeed: true,
         }));
         console.log(`📊 [FAZ7] ${scraper.sourceName}: ${allCampaigns.length} kampanya light olarak işaretleniyor (TEB özel modu)`);
       } else {
-        // Diğer fetch scraper'lar için: Kalite filtresinden geçenler main, geçemeyenler light
-        const highQualityCampaigns = filterHighQualityCampaigns(campaigns);
-        console.log(`✅ [FAZ7] ${scraper.sourceName}: ${highQualityCampaigns.length}/${campaigns.length} kampanya kaliteli`);
-
-        // Kalite filtresinden geçemeyenler light olarak işaretle
-        const lightCampaigns = campaigns
-          .filter((campaign) => !highQualityCampaigns.some((hq) => hq.originalUrl === campaign.originalUrl))
-          .map((campaign) => ({
-            ...campaign,
-            campaignType: 'light',
-            showInLightFeed: true,
-          }));
-
-        // Hem kaliteli hem light kampanyaları gönder
-        allCampaigns = [
-          ...highQualityCampaigns.map((campaign) => ({
-            ...campaign,
-            campaignType: 'main',
-            showInLightFeed: false,
-          })),
-          ...lightCampaigns,
-        ];
-
-        console.log(`📊 [FAZ7] ${scraper.sourceName}: ${highQualityCampaigns.length} main, ${lightCampaigns.length} light kampanya gönderiliyor`);
+        // Strict mode: only send campaigns that passed the ingestion gate.
+        allCampaigns = campaignsAfterGate.map((campaign) => ({
+          ...campaign,
+          campaignType: 'main',
+          showInLightFeed: false,
+        }));
+        console.log(`✅ [FAZ7] ${scraper.sourceName}: ${allCampaigns.length}/${gated.stats.rawTotal} kampanya kalite kapısından geçti (dropped_required=${gated.stats.droppedRequired}, rejected_quality=${gated.stats.rejectedByQuality})`);
       }
 
       if (allCampaigns.length === 0) {
@@ -922,7 +1068,10 @@ async function runFetchScrapers() {
         continue;
       }
 
+      const preBefore = allCampaigns.length;
       let toSend = botPreFilter(allCampaigns);
+      const preDropped = Math.max(0, preBefore - toSend.length);
+      runSummary.bySource[scraper.sourceName].prefilter = { before: preBefore, after: toSend.length, dropped: preDropped };
       try {
         const runContext = {
           emptyResultSources: (runSummary.errors || []).filter((e) => e.failure_type === FAILURE_TYPES.EMPTY_RESULT).map((e) => e.sourceName),
@@ -949,6 +1098,8 @@ async function runFetchScrapers() {
       });
       runSummary.campaigns.total_sent += toSend.length;
       const results = await apiClient.createCampaigns(toSend);
+      runSummary.sentBySource[scraper.sourceName] = runSummary.sentBySource[scraper.sourceName] || { sent: 0, accepted: 0, rejected: 0 };
+      runSummary.sentBySource[scraper.sourceName].sent += toSend.length;
 
       let successCount = 0;
       let updateCount = 0;
@@ -960,6 +1111,7 @@ async function runFetchScrapers() {
           successCount++;
           if (result.isUpdate) updateCount++;
           runSummary.campaigns.accepted += 1;
+          runSummary.sentBySource[scraper.sourceName].accepted += 1;
           if (result.applied_action === 'downgrade') runSummary.campaigns.downgraded += 1;
           if (result.applied_action === 'hide') runSummary.campaigns.hidden += 1;
           if (result.low_confidence) runSummary.campaigns.low_confidence += 1;
@@ -994,6 +1146,7 @@ async function runFetchScrapers() {
           if (result.freeze_learning) runSummary.freezeLearning = true;
         } else {
           errorCount++;
+          runSummary.sentBySource[scraper.sourceName].rejected += 1;
           console.error(`❌ [FAZ7] ${scraper.sourceName}: ${result.campaign} - ${result.error}`);
         }
       }
@@ -1066,6 +1219,40 @@ async function runFetchScrapers() {
   }
   console.log('\n📊 BOT RUN SUMMARY');
   console.log('------------------');
+  try {
+    const reportRows = [];
+    const byName = runSummary.bySource || {};
+    const sent = runSummary.sentBySource || {};
+    const names = Array.from(new Set([...(runSummary.scraped || []), ...Object.keys(byName), ...Object.keys(sent)])).sort((a, b) => a.localeCompare(b));
+    for (const name of names) {
+      const gate = (byName[name] && byName[name].gate) || null;
+      const pre = (byName[name] && byName[name].prefilter) || null;
+      const s = sent[name] || { sent: 0, accepted: 0, rejected: 0 };
+      reportRows.push({
+        source: name,
+        scraped_raw: gate ? gate.rawTotal : null,
+        accepted_gate: gate ? gate.acceptedTotal : null,
+        dropped_required: gate ? gate.droppedRequired : null,
+        rejected_quality: gate ? gate.rejectedByQuality : null,
+        reject_ratio: gate ? gate.rejectRatio : null,
+        degraded: gate ? gate.degraded : null,
+        prefilter_dropped: pre ? pre.dropped : null,
+        sent: s.sent,
+        backend_ok: s.accepted,
+        backend_rejected: s.rejected,
+      });
+    }
+    console.log('\n📋 SOURCE RUN REPORT');
+    console.table(reportRows);
+    for (const name of names) {
+      const gate = (byName[name] && byName[name].gate) || null;
+      const reasons = gate && gate.qualityRejectReasons ? gate.qualityRejectReasons : null;
+      if (!reasons || Object.keys(reasons).length === 0) continue;
+      console.log(`QUALITY_REJECT_REASONS source=${name} ` + JSON.stringify(reasons));
+    }
+  } catch (e) {
+    console.warn('run report generation failed (log only):', e && e.message);
+  }
   console.log(`Total sources: ${runSummary.total}`);
   console.log(`Scraped: ${runSummary.scraped.length}`);
   console.log(`Skipped (hard_backlog): ${runSummary.skippedHardBacklog.length}`);
@@ -1176,18 +1363,29 @@ async function runFetchScrapers() {
  */
 async function main() {
   const mode = process.argv[2] || 'scheduler';
+  const lockPath = process.env.BOT_LOCK_PATH || '/tmp/1ndirim-bot.lock';
+  const ttlMs = Math.max(60_000, parseInt(process.env.BOT_LOCK_TTL_MS || String(2 * 60 * 60 * 1000), 10) || (2 * 60 * 60 * 1000));
 
   if (mode === 'once') {
     // Tek seferlik çalıştırma
     console.log('🚀 Bot tek seferlik çalıştırılıyor...');
-    await runScrapers();
-    // FAZ 7: Fetch scraper'ları da çalıştır (izole)
-    await runFetchScrapers();
+    const locked = await withFsRunLock(async () => {
+      await runScrapers();
+      await runFetchScrapers();
+    }, { lockPath, ttlMs, log: console });
+    if (locked && locked.skipped) {
+      console.warn(`⏭️ run skipped due to existing lock lock_path=${lockPath}`);
+    }
     process.exit(0);
   } else if (mode === 'faz7') {
     // Sadece FAZ 7 fetch scraper'ları çalıştır (test için)
     console.log('🔗 FAZ 7 fetch scraper\'lar çalıştırılıyor...');
-    await runFetchScrapers();
+    const locked = await withFsRunLock(async () => {
+      await runFetchScrapers();
+    }, { lockPath, ttlMs, log: console });
+    if (locked && locked.skipped) {
+      console.warn(`⏭️ run skipped due to existing lock lock_path=${lockPath}`);
+    }
     process.exit(0);
   } else {
     // Scheduler modu

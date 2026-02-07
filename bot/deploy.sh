@@ -54,12 +54,22 @@ apt-get install -y \
 
 # 6. Environment variables ayarla
 echo "⚙️ Environment variables ayarlanıyor..."
-cat > .env << EOF
+if [ -f ".env" ]; then
+    echo "✅ .env zaten var, overwrite edilmiyor (INTERNAL_BOT_TOKEN korunur)"
+else
+    cat > .env << EOF
 NODE_ENV=production
 BACKEND_API_URL=https://api.1indirim.birdir1.com/api
+INTERNAL_BOT_TOKEN=
+BOT_LOCK_PATH=/tmp/1ndirim-bot.lock
+BOT_LOCK_TTL_MS=7200000
+BOT_BATCH_SIZE=10
+BOT_BATCH_DELAY_MS=500
 SCRAPER_DELAY_MS=3000
 SCHEDULER_INTERVAL_MINUTES=30
 EOF
+    echo "⚠️ INTERNAL_BOT_TOKEN .env içinde ayarlanmadan backend'e yazma yapılamaz."
+fi
 
 # 7. Dead-letter dizini oluştur
 echo "📁 Dead-letter dizini oluşturuluyor..."
