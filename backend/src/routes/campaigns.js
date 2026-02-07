@@ -3,6 +3,7 @@ const router = express.Router();
 const Campaign = require('../models/Campaign');
 const CampaignClick = require('../models/CampaignClick');
 const { validateCampaignQuality } = require('../middleware/campaignQualityFilter');
+const { requireBotAuth } = require('../middleware/botAuth');
 const { assertBotPipelineUntouched, assertFetchPipelineIsolated } = require('../utils/safetyGuards');
 const AuditLogService = require('../services/auditLogService');
 const { validateCampaignId, validateSearch } = require('../middleware/validation');
@@ -681,7 +682,7 @@ router.post('/:id/click', async (req, res) => {
  * Yeni kampanya oluşturur veya duplicate ise günceller
  * Bot tarafından kullanılır
  */
-router.post('/', validateCampaignQuality, async (req, res) => {
+router.post('/', requireBotAuth, validateCampaignQuality, async (req, res) => {
   try {
     const {
       sourceName,
@@ -738,6 +739,22 @@ router.post('/', validateCampaignQuality, async (req, res) => {
         error: 'Geçersiz URL',
         message: 'campaignUrl geçerli bir HTTP/HTTPS URL olmalıdır',
       });
+    }
+
+    // Validasyon: affiliateUrl (opsiyonel) gerçek URL ve güvenli protokol
+    if (affiliateUrl) {
+      try {
+        const parsedAffiliateUrl = new URL(affiliateUrl);
+        if (!['http:', 'https:'].includes(parsedAffiliateUrl.protocol)) {
+          throw new Error('Invalid protocol');
+        }
+      } catch (_) {
+        return res.status(400).json({
+          success: false,
+          error: 'Geçersiz URL',
+          message: 'affiliateUrl geçerli bir HTTP/HTTPS URL olmalıdır',
+        });
+      }
     }
 
     // Validasyon: endDate ISO date parse
@@ -955,7 +972,7 @@ router.post('/', validateCampaignQuality, async (req, res) => {
  * PUT /campaigns/:id
  * Mevcut kampanyayı günceller
  */
-router.put('/:id', validateCampaignQuality, async (req, res) => {
+router.put('/:id', requireBotAuth, validateCampaignQuality, async (req, res) => {
   try {
     const { id } = req.params;
     const updates = req.body;
@@ -967,6 +984,21 @@ router.put('/:id', validateCampaignQuality, async (req, res) => {
         success: false,
         error: 'Kampanya bulunamadı',
       });
+    }
+
+    if (updates.campaignUrl) {
+      try {
+        const parsedUrl = new URL(updates.campaignUrl);
+        if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
+          throw new Error('Invalid protocol');
+        }
+      } catch (_) {
+        return res.status(400).json({
+          success: false,
+          error: 'Geçersiz URL',
+          message: 'campaignUrl geçerli bir HTTP/HTTPS URL olmalıdır',
+        });
+      }
     }
 
     // Güncelleme verilerini hazırla

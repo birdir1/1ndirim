@@ -27,6 +27,10 @@ const { deactivateExpiredCampaigns } = require('./jobs/deactivateExpiredCampaign
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Security: do not trust X-Forwarded-* by default. This prevents client-supplied spoofing
+// from affecting `req.ip` and rate limiting unless you explicitly configure a trusted proxy.
+app.set('trust proxy', false);
+
 // Rate Limiting - DDoS koruması
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 dakika
@@ -53,7 +57,27 @@ const authLimiter = rateLimit({
 
 // Middleware
 app.use(helmet()); // Security headers
-app.use(cors()); // CORS enabled for mobile app
+// CORS: keep public API open, optionally restrict admin routes by origin.
+// Env:
+// - ADMIN_CORS_ORIGINS: comma-separated list of allowed origins for /api/admin/* (optional)
+const publicCors = cors();
+const adminCorsOrigins = (process.env.ADMIN_CORS_ORIGINS || '')
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean);
+const adminCors = adminCorsOrigins.length
+  ? cors({
+      origin: (origin, cb) => {
+        // Non-browser clients (no Origin) should continue to work.
+        if (!origin) return cb(null, true);
+        return cb(null, adminCorsOrigins.includes(origin));
+      },
+    })
+  : publicCors;
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api/admin')) return adminCors(req, res, next);
+  return publicCors(req, res, next);
+});
 app.use(morgan('combined')); // Logging
 app.use(express.json()); // JSON body parser
 app.use(express.urlencoded({ extended: true })); // URL encoded body parser
