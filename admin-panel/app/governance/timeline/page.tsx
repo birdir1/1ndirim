@@ -78,9 +78,9 @@ export default function GovernanceTimelinePage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <div>
-                      <p className="font-semibold text-gray-700 mb-1">Henüz governance event'i yok</p>
+                      <p className="font-semibold text-gray-700 mb-1">Henüz governance event&apos;i yok</p>
                       <p className="text-sm text-gray-500 max-w-md">
-                        Admin panel'de yapılan işlemler (kampanya güncelleme, kaynak durumu değiştirme, öneri uygulama vb.) burada görünecek. 
+                        Admin panel&apos;de yapılan işlemler (kampanya güncelleme, kaynak durumu değiştirme, öneri uygulama vb.) burada görünecek. 
                         İlk admin işlemi yapıldığında bu sayfa dolmaya başlayacak.
                       </p>
                     </div>

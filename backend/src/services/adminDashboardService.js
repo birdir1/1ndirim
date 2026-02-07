@@ -287,6 +287,11 @@ class AdminDashboardService {
       feed_type = null,
       isActive = null,
       sourceId = null,
+      category = null,
+      includeExpired = false,
+      q = null,
+      sortBy = null,
+      sortDir = null,
       limit = 50,
       offset = 0,
     } = filters;
@@ -344,13 +349,49 @@ class AdminDashboardService {
         params.push(sourceId);
         paramIndex++;
       }
+
+      // Category filter (partial, case-insensitive)
+      if (category && String(category).trim().length > 0) {
+        whereConditions.push(`c.category ILIKE $${paramIndex}`);
+        params.push(`%${String(category).trim()}%`);
+        paramIndex++;
+      }
+
+      // Search query (partial, case-insensitive)
+      if (q && String(q).trim().length > 0) {
+        const qq = `%${String(q).trim()}%`;
+        whereConditions.push(
+          `(
+            c.title ILIKE $${paramIndex}
+            OR c.description ILIKE $${paramIndex}
+            OR c.category ILIKE $${paramIndex}
+            OR c.sub_category ILIKE $${paramIndex}
+            OR c.original_url ILIKE $${paramIndex}
+            OR c.affiliate_url ILIKE $${paramIndex}
+            OR s.name ILIKE $${paramIndex}
+          )`
+        );
+        params.push(qq);
+        paramIndex++;
+      }
       
       // Expiry filter (only for non-hidden feeds)
-      if (feed_type !== 'hidden') {
+      // Admin list should show expired/pasif when explicitly requested.
+      const shouldFilterExpiry = feed_type !== 'hidden' && !includeExpired && isActive !== false;
+      if (shouldFilterExpiry) {
         whereConditions.push(`c.expires_at > NOW()`);
       }
       
       const whereClause = whereConditions.join(' AND ');
+
+      // Server-side sorting (pinned is always prioritized)
+      const sortColumn = (() => {
+        const key = String(sortBy || '').toLowerCase();
+        if (key === 'scraped_at') return 'c.scraped_at';
+        if (key === 'expires_at') return 'c.expires_at';
+        return 'c.created_at';
+      })();
+      const sortDirection = String(sortDir || '').toLowerCase() === 'asc' ? 'ASC' : 'DESC';
       
       // Count query (for pagination)
       const countQuery = `
@@ -373,7 +414,11 @@ class AdminDashboardService {
         FROM campaigns c
         INNER JOIN sources s ON c.source_id = s.id
         WHERE ${whereClause}
-        ORDER BY c.is_pinned DESC, c.pinned_at DESC NULLS LAST, c.created_at DESC
+        ORDER BY
+          c.is_pinned DESC,
+          c.pinned_at DESC NULLS LAST,
+          ${sortColumn} ${sortDirection} NULLS LAST,
+          c.created_at DESC
         LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
       `;
       

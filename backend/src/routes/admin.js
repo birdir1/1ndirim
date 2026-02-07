@@ -48,6 +48,11 @@ router.get('/campaigns', requireViewerOrAbove(), async (req, res) => {
       feed_type: req.query.filter || req.query.feed_type || null,
       isActive: req.query.isActive !== undefined ? req.query.isActive === 'true' : null,
       sourceId: req.query.sourceId || null,
+      category: req.query.category || null,
+      includeExpired: req.query.includeExpired === 'true',
+      q: req.query.q || null,
+      sortBy: req.query.sortBy || null,
+      sortDir: req.query.sortDir || null,
       limit: parseInt(req.query.limit) || 50,
       offset: parseInt(req.query.offset) || 0,
     };
@@ -121,6 +126,54 @@ router.get('/campaigns/:id/explain', requireViewerOrAbove(), async (req, res) =>
     res.status(404).json({
       success: false,
       error: 'Kampanya açıklaması alınamadı',
+      message: error.message,
+    });
+  }
+});
+
+/**
+ * GET /admin/scrapers/health
+ * Proxy scraper health derived from DB (`campaigns.scraped_at`) per source.
+ *
+ * Query params:
+ * - sourceId: UUID (optional)
+ */
+router.get('/scrapers/health', requireViewerOrAbove(), async (req, res) => {
+  try {
+    const sourceId = req.query.sourceId ? String(req.query.sourceId) : null;
+    if (sourceId && !/^[0-9a-fA-F-]{36}$/.test(sourceId)) {
+      return res.status(400).json({ success: false, error: 'Geçersiz sourceId' });
+    }
+
+    const result = await pool.query(
+      `
+      SELECT
+        s.id AS source_id,
+        s.name AS source_name,
+        s.logo_url,
+        s.website_url,
+        COALESCE(s.source_status::text, 'active') AS source_status,
+        s.status_reason,
+        s.is_active,
+        MAX(c.scraped_at) AS last_scraped_at,
+        COUNT(*) FILTER (WHERE c.scraped_at >= NOW() - INTERVAL '24 hours')::int AS scraped_24h,
+        COUNT(*) FILTER (WHERE c.is_active = true AND c.expires_at > NOW())::int AS active_campaigns,
+        COUNT(*) FILTER (WHERE c.is_active = false)::int AS inactive_campaigns
+      FROM sources s
+      LEFT JOIN campaigns c ON c.source_id = s.id
+      WHERE ($1::uuid IS NULL OR s.id = $1::uuid)
+      GROUP BY s.id
+      ORDER BY s.name
+      `,
+      [sourceId]
+    );
+
+    return res.json({ success: true, data: result.rows });
+  } catch (error) {
+    console.error('Admin scrapers health error:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Health verisi alınamadı',
       message: error.message,
     });
   }
