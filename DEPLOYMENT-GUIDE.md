@@ -66,7 +66,7 @@ npm install
 #### 4.3: Restart Backend
 ```bash
 # If using PM2:
-pm2 restart backend
+pm2 restart 1ndirim-api
 
 # If using systemd:
 sudo systemctl restart 1ndirim-backend
@@ -179,7 +179,7 @@ psql -U user -d indirim_db -c "\d sources"
 **Solution:**
 ```bash
 # Check logs:
-pm2 logs backend --lines 50
+pm2 logs 1ndirim-api --lines 50
 
 # Check dependencies:
 cd backend && npm install

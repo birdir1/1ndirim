@@ -49,7 +49,7 @@ PGPASSWORD=$DB_PASSWORD psql -U $DB_USER -d $DB_NAME \
   -f migrations/003_enhance_campaign_source_models.sql
 
 # Restart backend
-pm2 restart backend
+pm2 restart 1ndirim-api
 # or: sudo systemctl restart 1ndirim-backend
 
 # Verify
@@ -86,7 +86,7 @@ pm2 list
 # or: systemctl status 1ndirim-backend
 
 # 9. Restart
-pm2 restart backend
+pm2 restart 1ndirim-api
 # or: sudo systemctl restart 1ndirim-backend
 
 # 10. Verify
@@ -176,7 +176,7 @@ pm2 logs phase1-test
 
 ### Backend won't start
 ```bash
-pm2 logs backend --lines 50
+pm2 logs 1ndirim-api --lines 50
 # Check for errors in logs
 ```
 
@@ -194,7 +194,7 @@ grep -r "dashboard" backend/src/server.js
 # Should see: app.use('/api/dashboard', dashboardRoutes);
 
 # Restart backend
-pm2 restart backend
+pm2 restart 1ndirim-api
 ```
 
 ### Scrapers fail

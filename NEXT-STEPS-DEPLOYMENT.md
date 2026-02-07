@@ -74,7 +74,7 @@ pm2 list
 systemctl status 1ndirim-backend
 
 # Restart:
-pm2 restart backend
+pm2 restart 1ndirim-api
 # or
 sudo systemctl restart 1ndirim-backend
 ```
@@ -205,7 +205,7 @@ After deployment:
 ### Backend Won't Start:
 ```bash
 # Check logs:
-pm2 logs backend --lines 50
+pm2 logs 1ndirim-api --lines 50
 # or
 journalctl -u 1ndirim-backend -n 50
 
@@ -231,7 +231,7 @@ psql -U user -d indirim_db -c "\d campaigns"
 grep -r "dashboard" backend/src/server.js
 
 # Restart backend:
-pm2 restart backend
+pm2 restart 1ndirim-api
 ```
 
 ---

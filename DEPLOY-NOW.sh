@@ -45,7 +45,7 @@ npm install --production
 # Step 5: Restart backend
 echo "🔄 Restarting backend..."
 if command -v pm2 &> /dev/null; then
-    pm2 restart backend || pm2 restart all
+    pm2 restart 1ndirim-api || pm2 restart all
     echo "✅ Backend restarted with PM2"
 elif systemctl is-active --quiet 1ndirim-backend; then
     sudo systemctl restart 1ndirim-backend
