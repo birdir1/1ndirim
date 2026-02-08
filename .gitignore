@@ -8,6 +8,7 @@
 
 # Backend
 backend/node_modules/
+backend/backups/
 
 # Bot
 bot/node_modules/
