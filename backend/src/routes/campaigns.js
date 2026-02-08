@@ -813,19 +813,26 @@ router.post('/', requireBotAuth, validateCampaignQuality, async (req, res) => {
     // Duplicate kontrolü (startDate dahil)
     const duplicate = await Campaign.findDuplicate(campaignUrl, sourceId, trimmedTitle, startsAt, expiresAt);
 
-    if (duplicate) {
-      // Duplicate varsa güncelle (PUT davranışı)
-      // Canonical field names (DB kolon isimleri)
-      const updates = {
-        title: trimmedTitle,
-        description: (description || '').trim() || duplicate.description || '',
-        detail_text: (detailText || '').trim() || duplicate.detail_text || '',
-        original_url: campaignUrl,
-        affiliate_url: affiliateUrl || null, // YENİ
-        expires_at: expiresAt,
-        status: 'active',
-        is_active: true,
-      };
+	    if (duplicate) {
+	      // Duplicate varsa güncelle (PUT davranışı)
+	      // Canonical field names (DB kolon isimleri)
+	      const updates = {
+	        title: trimmedTitle,
+	        description: (description || '').trim() || duplicate.description || '',
+	        detail_text: (detailText || '').trim() || duplicate.detail_text || '',
+	        original_url: campaignUrl,
+	        affiliate_url: affiliateUrl || null, // YENİ
+	        expires_at: expiresAt,
+	        status: 'active',
+	        is_active: true,
+	      };
+
+	      // Discover wiring: persist category when provided (or keep existing).
+	      if (typeof category === 'string' && category.trim()) {
+	        updates.category = category.trim();
+	      } else if (duplicate.category) {
+	        updates.category = duplicate.category;
+	      }
 
       // JSONB alanlar: explicit stringify
       if (howToUse && Array.isArray(howToUse)) {
@@ -891,26 +898,28 @@ router.post('/', requireBotAuth, validateCampaignQuality, async (req, res) => {
       console.log('low confidence campaign accepted (40–70):', { title: trimmedTitle, score: confidence_score });
     }
 
-    const campaignData = {
-      sourceId,
-      title: trimmedTitle,
-      description: (description || '').trim(),
-      detailText: (detailText || '').trim(),
-      iconName: 'local_offer',
-      iconColor: '#DC2626',
-      iconBgColor: '#FEE2E2',
-      tags: Array.isArray(tags) ? tags : [],
-      originalUrl: campaignUrl,
-      affiliateUrl: affiliateUrl || null, // YENİ
-      expiresAt,
-      howToUse: Array.isArray(howToUse) ? howToUse : [],
-      validityChannels: channel && allowedChannels.includes(channel) ? [channel] : [],
-      status: 'active',
-      campaignType: campaignType || 'main', // FAZ 7.3: default 'main'
-      showInLightFeed: showInLightFeed || false, // FAZ 7.3: default false
-      showInCategoryFeed: showInCategoryFeed || false, // FAZ 7.2: default false
-      valueLevel: applied_action === 'downgrade' ? 'low' : (valueLevel || 'high'), // FAZ 13.3: confidence < 40 → low
-    };
+	    const campaignData = {
+	      sourceId,
+	      title: trimmedTitle,
+	      description: (description || '').trim(),
+	      detailText: (detailText || '').trim(),
+	      iconName: 'local_offer',
+	      iconColor: '#DC2626',
+	      iconBgColor: '#FEE2E2',
+	      tags: Array.isArray(tags) ? tags : [],
+	      originalUrl: campaignUrl,
+	      affiliateUrl: affiliateUrl || null, // YENİ
+	      expiresAt,
+	      howToUse: Array.isArray(howToUse) ? howToUse : [],
+	      validityChannels: channel && allowedChannels.includes(channel) ? [channel] : [],
+	      status: 'active',
+	      campaignType: campaignType || 'main', // FAZ 7.3: default 'main'
+	      showInLightFeed: showInLightFeed || false, // FAZ 7.3: default false
+	      showInCategoryFeed: showInCategoryFeed || false, // FAZ 7.2: default false
+	      valueLevel: applied_action === 'downgrade' ? 'low' : (valueLevel || 'high'), // FAZ 13.3: confidence < 40 → low
+	      // Discover wiring: persist category for /campaigns/discover/:category
+	      category: (typeof category === 'string' && category.trim()) ? category.trim() : null,
+	    };
 
     if (startsAt) {
       campaignData.startsAt = startsAt;
