@@ -6,12 +6,15 @@ import 'package:video_player/video_player.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/config/api_config.dart';
+import '../../core/utils/source_logo_helper.dart';
 
 class CampaignDetailScreen extends StatefulWidget {
   final String title;
   final String description;
   final String detailText;
   final Color logoColor;
+  final String sourceName;
+  final String? primaryTag;
   final String? affiliateUrl;
   final String campaignId;
   final String originalUrl;
@@ -25,6 +28,8 @@ class CampaignDetailScreen extends StatefulWidget {
     required this.description,
     required this.detailText,
     required this.logoColor,
+    required this.sourceName,
+    this.primaryTag,
     this.affiliateUrl,
     required this.campaignId,
     required this.originalUrl,
@@ -34,13 +39,18 @@ class CampaignDetailScreen extends StatefulWidget {
   });
 
   /// OpportunityModel'den CampaignDetailScreen oluşturur
-  factory CampaignDetailScreen.fromOpportunity({required dynamic opportunity}) {
+  factory CampaignDetailScreen.fromOpportunity({
+    required dynamic opportunity,
+    String? primaryTag,
+  }) {
     return CampaignDetailScreen(
       title: opportunity.title,
       description: opportunity.subtitle,
       detailText:
           'Bu kampanyayı kullanmak için ilgili kartınızla alışveriş yapmanız yeterli.',
       logoColor: opportunity.iconColor,
+      sourceName: opportunity.sourceName,
+      primaryTag: primaryTag,
       affiliateUrl: opportunity.affiliateUrl,
       campaignId: opportunity.id,
       originalUrl: opportunity.originalUrl ?? '',
@@ -235,20 +245,30 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
         // Marka / Kampanya Görseli
         Center(
           child: Container(
-            width: 80,
-            height: 80,
+            width: 92,
+            height: 92,
             decoration: BoxDecoration(
-              color: widget.logoColor.withValues(alpha: 0.15),
+              color: Colors.white,
               shape: BoxShape.circle,
               border: Border.all(
-                color: widget.logoColor.withValues(alpha: 0.3),
+                color: widget.logoColor.withValues(alpha: 0.25),
                 width: 2,
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: widget.logoColor.withValues(alpha: 0.12),
+                  blurRadius: 14,
+                  offset: const Offset(0, 6),
+                ),
+              ],
             ),
-            child: Icon(
-              Icons.play_circle_filled,
-              color: widget.logoColor,
-              size: 40,
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: SourceLogoHelper.getLogoWidget(
+                widget.sourceName,
+                width: 56,
+                height: 56,
+              ),
             ),
           ),
         ),
@@ -268,6 +288,26 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
           style: AppTextStyles.bodySecondary(isDark: false),
           textAlign: TextAlign.center,
         ),
+        if (widget.primaryTag != null) ...[
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+            decoration: BoxDecoration(
+              color: widget.logoColor.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: widget.logoColor.withValues(alpha: 0.15),
+              ),
+            ),
+            child: Text(
+              widget.primaryTag!,
+              style: AppTextStyles.caption(isDark: false).copyWith(
+                color: widget.logoColor,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
       ],
     );
   }

@@ -6,6 +6,7 @@ import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/page_transitions.dart';
 import '../../../core/utils/source_logo_helper.dart';
 import '../../../core/utils/network_result.dart';
+import '../../../core/utils/tag_normalizer.dart';
 import '../../../core/providers/compare_provider.dart';
 import '../../../data/models/opportunity_model.dart';
 import '../../../data/repositories/favorite_repository.dart';
@@ -147,6 +148,9 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
     final sourceColor = SourceLogoHelper.getLogoBackgroundColor(
       widget.opportunity.sourceName,
     );
+    final normalized = TagNormalizer.normalize(widget.opportunity.tags);
+    final primaryTag = normalized.primary;
+    final chipTags = normalized.secondary.take(3).toList();
 
     return InkWell(
       onTap: () {
@@ -154,17 +158,18 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
           SlidePageRoute(
             child: CampaignDetailScreen.fromOpportunity(
               opportunity: widget.opportunity,
+              primaryTag: primaryTag,
             ),
             direction: SlideDirection.right,
           ),
         );
       },
       borderRadius: BorderRadius.circular(28),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(28),
+            child: Container(
+              margin: const EdgeInsets.only(bottom: 20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(28),
           border: Border.all(
             color: sourceColor.withValues(alpha: 0.25),
             width: 2,
@@ -204,14 +209,14 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
                 children: [
                   // Source Logo - ÇOK DAHA BÜYÜK VE NET
                   Container(
-                    width: 80,
-                    height: 80,
+                    width: 72,
+                    height: 72,
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
                         color: sourceColor.withValues(alpha: 0.3),
-                        width: 2.5,
+                        width: 2,
                       ),
                       boxShadow: [
                         BoxShadow(
@@ -222,11 +227,11 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
                       ],
                     ),
                     child: Padding(
-                      padding: const EdgeInsets.all(14.0),
+                      padding: const EdgeInsets.all(12.0),
                       child: SourceLogoHelper.getLogoWidget(
                         widget.opportunity.sourceName,
-                        width: 52,
-                        height: 52,
+                        width: 48,
+                        height: 48,
                       ),
                     ),
                   ),
@@ -249,7 +254,7 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 4),
-                        if (widget.opportunity.tags.isNotEmpty)
+                        if (primaryTag != null)
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 10,
@@ -260,7 +265,7 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
-                              widget.opportunity.tags.first,
+                              primaryTag,
                               style: AppTextStyles.small(isDark: false)
                                   .copyWith(
                                     fontSize: 12,
@@ -464,13 +469,9 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
                           displayText.contains(RegExp(r'^[A-Z0-9]+$'))) {
                         // Sadece büyük harf ve rakam
                         // Tags'den anlamlı bir açıklama bul
-                        if (widget.opportunity.tags.isNotEmpty) {
-                          displayText = widget.opportunity.tags
-                              .where(
-                                (tag) => tag.length > 10,
-                              ) // En az 10 karakter
-                              .take(2)
-                              .join(' • ');
+                        if (chipTags.isNotEmpty) {
+                          displayText =
+                              chipTags.where((tag) => tag.length > 6).take(2).join(' • ');
                         }
                       }
 
@@ -493,13 +494,11 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
                   const SizedBox(height: 16),
 
                   // Tags - Daha Büyük ve Görsel
-                  if (widget.opportunity.tags.length > 1)
+                  if (chipTags.isNotEmpty)
                     Wrap(
                       spacing: 10,
                       runSpacing: 10,
-                      children: widget.opportunity.tags.skip(1).take(3).map((
-                        tag,
-                      ) {
+                      children: chipTags.map((tag) {
                         final isDiscount =
                             tag.toLowerCase().contains('%') ||
                             tag.toLowerCase().contains('indirim') ||

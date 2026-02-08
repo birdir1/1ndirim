@@ -4,6 +4,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/page_transitions.dart';
 import '../../../core/utils/source_logo_helper.dart';
+import '../../../core/utils/tag_normalizer.dart';
 import '../../../data/models/opportunity_model.dart';
 import '../campaign_detail_screen.dart';
 
@@ -21,6 +22,7 @@ class OpportunityCardEnhanced extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final normalized = TagNormalizer.normalize(opportunity.tags);
     return InkWell(
       onTap: () {
         Navigator.of(context).push(
@@ -30,6 +32,8 @@ class OpportunityCardEnhanced extends StatelessWidget {
               description: opportunity.subtitle,
               detailText: 'Bu kampanyayı kullanmak için ilgili kartınızla alışveriş yapmanız yeterli.',
               logoColor: opportunity.iconColor,
+              sourceName: opportunity.sourceName,
+              primaryTag: normalized.primary,
               affiliateUrl: opportunity.affiliateUrl,
               campaignId: opportunity.id,
               originalUrl: opportunity.originalUrl ?? '',

@@ -307,12 +307,27 @@ class _EditSourcesScreenState extends State<EditSourcesScreen> {
     return shouldPop ?? false;
   }
 
+  static const _primaryOperatorIds = {
+    'turkcell',
+    'vodafone',
+    'turktelekom',
+    'pttcell',
+  };
+
   List<SourceModel> get _banks {
-    return _sources.where((s) => s.type == 'bank').toList();
+    return _sources
+        .where(
+          (s) => s.type == 'bank' || !_primaryOperatorIds.contains(s.id) && s.type == 'operator',
+        )
+        .toList();
   }
 
   List<SourceModel> get _operators {
-    return _sources.where((s) => s.type == 'operator').toList();
+    return _sources
+        .where(
+          (s) => s.type == 'operator' && _primaryOperatorIds.contains(s.id),
+        )
+        .toList();
   }
 
   @override

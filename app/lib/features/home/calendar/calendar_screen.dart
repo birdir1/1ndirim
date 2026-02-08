@@ -6,6 +6,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/page_transitions.dart';
 import '../../../core/utils/network_result.dart';
+import '../../../core/utils/tag_normalizer.dart';
 import '../../../core/providers/selected_sources_provider.dart';
 import '../../../data/models/opportunity_model.dart';
 import '../../../data/repositories/opportunity_repository.dart';
@@ -328,6 +329,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 SlidePageRoute(
                   child: CampaignDetailScreen.fromOpportunity(
                     opportunity: campaign,
+                    primaryTag: TagNormalizer.normalize(campaign.tags).primary,
                   ),
                   direction: SlideDirection.left,
                 ),

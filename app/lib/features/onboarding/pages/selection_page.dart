@@ -81,12 +81,27 @@ class _SelectionPageState extends State<SelectionPage> {
     }).toList();
   }
 
+  static const _primaryOperatorIds = {
+    'turkcell',
+    'vodafone',
+    'turktelekom',
+    'pttcell',
+  };
+
   List<SourceModel> get _banks {
-    return _filteredSources.where((s) => s.type == 'bank').toList();
+    return _filteredSources
+        .where(
+          (s) => s.type == 'bank' || (!_primaryOperatorIds.contains(s.id) && s.type == 'operator'),
+        )
+        .toList();
   }
 
   List<SourceModel> get _operators {
-    return _filteredSources.where((s) => s.type == 'operator').toList();
+    return _filteredSources
+        .where(
+          (s) => s.type == 'operator' && _primaryOperatorIds.contains(s.id),
+        )
+        .toList();
   }
 
   bool get _hasSelection => _sources.any((s) => s.isSelected);

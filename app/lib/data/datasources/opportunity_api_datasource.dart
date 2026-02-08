@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/config/api_config.dart';
 import '../../core/theme/app_colors.dart';
 import '../models/opportunity_model.dart';
+import '../../core/utils/tag_normalizer.dart';
 
 /// API Data Source
 /// Backend API'den kampanyaları çeker
@@ -459,6 +460,11 @@ class OpportunityApiDataSource {
       json['iconBgColor'] as String? ?? '#FEE2E2',
     );
 
+    final rawTags =
+        (json['tags'] as List<dynamic>?)?.map((e) => e.toString()).toList() ??
+            <String>[];
+    final normalized = TagNormalizer.normalize(rawTags);
+
     return OpportunityModel(
       id: json['id'] as String,
       title: json['title'] as String,
@@ -467,9 +473,10 @@ class OpportunityApiDataSource {
       icon: iconData,
       iconColor: iconColor,
       iconBgColor: iconBgColor,
-      tags:
-          (json['tags'] as List<dynamic>?)?.map((e) => e.toString()).toList() ??
-          [],
+      tags: [
+        if (normalized.primary != null) normalized.primary!,
+        ...normalized.secondary,
+      ],
       affiliateUrl: json['affiliateUrl'] as String?, // YENİ
       originalUrl: json['originalUrl'] as String?, // YENİ
       expiresAt: json['expiresAt'] as String?,
