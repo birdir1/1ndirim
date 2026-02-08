@@ -155,7 +155,7 @@ function cleanOldBackups() {
 /**
  * Main backup process
  */
-async function main() {
+async function backupDatabase() {
   console.log('='.repeat(60));
   console.log('🗄️  PostgreSQL Database Backup');
   console.log('='.repeat(60));
@@ -165,20 +165,25 @@ async function main() {
   console.log(`👤 Kullanıcı: ${DB_USER}`);
   console.log('='.repeat(60));
   
+  // Create backup
+  const result = await createBackup();
+  
+  // Compress backup (optional)
+  const finalPath = await compressBackup(result.filepath);
+  
+  // Clean old backups
+  cleanOldBackups();
+  
+  console.log('='.repeat(60));
+  console.log('✅ Backup işlemi başarıyla tamamlandı');
+  console.log('='.repeat(60));
+  
+  return { ...result, finalPath };
+}
+
+async function main() {
   try {
-    // Create backup
-    const result = await createBackup();
-    
-    // Compress backup (optional)
-    const finalPath = await compressBackup(result.filepath);
-    
-    // Clean old backups
-    cleanOldBackups();
-    
-    console.log('='.repeat(60));
-    console.log('✅ Backup işlemi başarıyla tamamlandı');
-    console.log('='.repeat(60));
-    
+    await backupDatabase();
     process.exit(0);
   } catch (error) {
     console.error('='.repeat(60));
@@ -189,5 +194,9 @@ async function main() {
   }
 }
 
-// Run backup
-main();
+module.exports = { backupDatabase };
+
+// Run backup only when executed as a script, not when imported by the cron worker.
+if (require.main === module) {
+  main();
+}
