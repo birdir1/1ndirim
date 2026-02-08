@@ -175,9 +175,9 @@ class _AppNavigatorState extends State<AppNavigator> {
           _showAuth = false;
           _showOnboarding = true;
         } else {
-          // Giriş yapılmamış, login'e git
-          _showAuth = true;
-          _showOnboarding = false;
+          // Giriş yapılmamış: onboarding bittiyse direkt ana shell'e geç, bitmediyse onboarding göster
+          _showAuth = false;
+          _showOnboarding = !onboardingComplete;
         }
       });
     });

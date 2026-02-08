@@ -36,6 +36,9 @@ services:
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
+      # Firebase Admin (choose one: FIREBASE_SERVICE_ACCOUNT JSON string or mount a credentials file and set GOOGLE_APPLICATION_CREDENTIALS)
+      FIREBASE_SERVICE_ACCOUNT: ${FIREBASE_SERVICE_ACCOUNT:-}
+      # GOOGLE_APPLICATION_CREDENTIALS: /run/secrets/firebase-service-account.json
     depends_on:
       postgres:
         condition: service_healthy

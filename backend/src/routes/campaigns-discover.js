@@ -8,9 +8,10 @@ const router = express.Router();
 const Campaign = require('../models/Campaign');
 const { cacheMiddleware } = require('../middleware/cache');
 const CacheService = require('../services/cacheService');
+const { fetchActiveCategories, findActiveByName } = require('../models/CampaignCategory');
 
-// Discover categories configuration
-const DISCOVER_CATEGORIES = [
+// Fallback categories configuration (used only if DB categories are not available)
+const FALLBACK_CATEGORIES = [
   {
     id: 'entertainment',
     name: 'Eğlence',
@@ -61,6 +62,39 @@ const DISCOVER_CATEGORIES = [
   },
 ];
 
+function mapDbCategoryToContract(cat) {
+  return {
+    id: cat.name,
+    name: cat.display_name || cat.name,
+    icon: cat.icon || '🏷️',
+    sources: Array.isArray(cat.fixed_sources) ? cat.fixed_sources : [],
+    minCampaigns: cat.min_campaigns || 0,
+    fallbackMessage: cat.description || null,
+  };
+}
+
+async function getActiveCategoriesWithFallback() {
+  try {
+    const dbCategories = await fetchActiveCategories();
+    if (dbCategories && dbCategories.length > 0) {
+      return dbCategories.map(mapDbCategoryToContract);
+    }
+  } catch (e) {
+    console.warn('⚠️ Discover categories DB fetch failed, using fallback:', e.message);
+  }
+  return FALLBACK_CATEGORIES;
+}
+
+async function getCategoryByIdWithFallback(categoryId) {
+  try {
+    const cat = await findActiveByName(categoryId);
+    if (cat) return mapDbCategoryToContract(cat);
+  } catch (e) {
+    console.warn('⚠️ Discover category lookup failed, using fallback:', e.message);
+  }
+  return FALLBACK_CATEGORIES.find((c) => c.id === categoryId) || null;
+}
+
 /**
  * GET /campaigns/discover
  * Keşfet sayfası için kategori bazlı kampanyalar
@@ -70,9 +104,10 @@ const DISCOVER_CATEGORIES = [
  */
 router.get('/discover', cacheMiddleware(CacheService.TTL.CAMPAIGNS_LIST), async (req, res) => {
   try {
+    const categories = await getActiveCategoriesWithFallback();
     const result = [];
 
-    for (const category of DISCOVER_CATEGORIES) {
+    for (const category of categories) {
       // Get campaigns for this category with fallback
       const { campaigns, isEmpty } = await Campaign.findByCategoryWithFallback(category.id, 20);
 
@@ -140,7 +175,7 @@ router.get('/discover/:category', cacheMiddleware(CacheService.TTL.CAMPAIGNS_LIS
     const { category } = req.params;
 
     // Validate category
-    const categoryConfig = DISCOVER_CATEGORIES.find((c) => c.id === category);
+    const categoryConfig = await getCategoryByIdWithFallback(category);
     if (!categoryConfig) {
       return res.status(404).json({
         success: false,
@@ -211,6 +246,7 @@ router.get('/stats', cacheMiddleware(600), async (req, res) => {
   try {
     const pool = require('../config/database');
     const Source = require('../models/Source');
+    const categories = await getActiveCategoriesWithFallback();
 
     // Total active campaigns
     const totalResult = await pool.query(`
@@ -224,7 +260,7 @@ router.get('/stats', cacheMiddleware(600), async (req, res) => {
 
     // By category
     const byCategory = {};
-    for (const category of DISCOVER_CATEGORIES) {
+    for (const category of categories) {
       const categoryResult = await pool.query(`
         SELECT COUNT(*) as count
         FROM campaigns
@@ -279,7 +315,7 @@ router.get('/stats', cacheMiddleware(600), async (req, res) => {
         bySource,
         recentlyAdded,
         recentlyScraped,
-        categories: DISCOVER_CATEGORIES.map((c) => ({
+        categories: categories.map((c) => ({
           id: c.id,
           name: c.name,
           icon: c.icon,

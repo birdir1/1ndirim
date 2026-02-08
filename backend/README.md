@@ -101,6 +101,13 @@ GET /api/sources
 - `npm run migrate` - Database migration
 - `npm run seed` - Seed data oluştur
 
+## 🔐 Firebase Admin (prod)
+
+- Aşağıdakilerden **birini** tanımla:
+  - `FIREBASE_SERVICE_ACCOUNT` : Tek satırlık JSON (private_key içindeki new line karakterlerini `\\n` ile kaçırın).
+  - veya `GOOGLE_APPLICATION_CREDENTIALS` : Konteyner içindeki service account dosya yolu (örn. `/run/secrets/firebase-service-account.json`), dosyayı secret/volume olarak mount edin.
+- `docker-compose.prod.yml` backend servisi bu env'leri passthrough eder; tanımlı değilse `firebaseAuth` middleware 500 döndürür.
+
 ## 📝 Notlar
 
 - Şu anda bot entegrasyonu yok, sadece manuel seed data ile çalışıyor

@@ -67,9 +67,11 @@ const firebaseAuth = async (req, res, next) => {
     }
     
     // Production'da hata döndür
+    console.error('❌ Firebase Admin is not configured. Returning 500 for firebase-protected route.');
     return res.status(500).json({
       success: false,
-      error: 'Authentication servisi yapılandırılmamış',
+      error: 'Authentication servisi yapılandırılmamış (Firebase Admin cred eksik)',
+      message: 'Set FIREBASE_SERVICE_ACCOUNT or GOOGLE_APPLICATION_CREDENTIALS on the backend service.',
     });
   }
 
