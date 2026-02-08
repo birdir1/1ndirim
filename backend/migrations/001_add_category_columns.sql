@@ -22,12 +22,12 @@ CREATE INDEX IF NOT EXISTS idx_campaigns_data_hash ON campaigns(data_hash);
 ALTER TABLE campaigns 
 ADD CONSTRAINT chk_title_not_empty CHECK (
   title IS NULL OR LENGTH(TRIM(title)) >= 10
-);
+) NOT VALID;
 
 ALTER TABLE campaigns 
 ADD CONSTRAINT chk_description_not_empty CHECK (
   description IS NULL OR LENGTH(TRIM(description)) >= 20
-);
+) NOT VALID;
 
 -- Note: We don't add NOT NULL constraint on category yet
 -- This will be enforced at application level for new campaigns
