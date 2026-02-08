@@ -28,11 +28,10 @@ class AuthService {
 
   // GoogleSignIn lazy initialization - sadece gerektiğinde initialize et
   GoogleSignIn? _googleSignIn;
+  bool _googleInitialized = false;
   GoogleSignIn? get googleSignIn {
     try {
-      _googleSignIn ??= GoogleSignIn(
-        scopes: ['email', 'profile'],
-      );
+      _googleSignIn ??= GoogleSignIn.instance;
       return _googleSignIn;
     } catch (e) {
       AppLogger.warning('GoogleSignIn initialization failed: $e');
@@ -175,16 +174,22 @@ class AuthService {
     }
 
     try {
-      // 1. Google Sign-In account'u al
-      final GoogleSignInAccount? account = await googleSignIn!.signIn();
-
-      if (account == null) {
-        // Kullanıcı iptal etti
-        return null;
+      // 0. Google SDK initialize (yeni API'de zorunlu)
+      if (!_googleInitialized) {
+        await googleSignIn!.initialize();
+        _googleInitialized = true;
       }
 
-      // 2. Google Authentication bilgilerini al
-      final GoogleSignInAuthentication googleAuth = await account.authentication;
+      // 1. Google Sign-In account'u al
+      final GoogleSignInAccount account = await googleSignIn!.authenticate(
+        scopeHint: const ['email', 'profile'],
+      );
+
+      // 2. Google Authentication bilgilerini al (idToken mevcut, accessToken artık opsiyonel)
+      final GoogleSignInAuthentication googleAuth = account.authentication;
+      if (googleAuth.idToken == null) {
+        throw AuthException('Google Sign-In: idToken alınamadı');
+      }
 
       // 3. Firebase'e Google credential ile sign in
       // Firebase kontrolü
@@ -193,7 +198,6 @@ class AuthService {
       }
       
       final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
       
@@ -225,7 +229,7 @@ class AuthService {
         name: name,
         photoUrl: account.photoUrl,
         idToken: googleAuth.idToken,
-        accessToken: googleAuth.accessToken,
+        accessToken: null,
       );
     } on FirebaseAuthException catch (e) {
       throw AuthException('Firebase Authentication hatası: ${e.message}');
