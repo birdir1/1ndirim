@@ -304,32 +304,24 @@ class AdminDashboardService {
       let paramIndex = 1;
       
       // Feed type filter
-      if (feed_type) {
-        if (feed_type === 'main') {
-          whereConditions.push(`(c.campaign_type = 'main' OR c.campaign_type IS NULL)`);
-          whereConditions.push(`(c.campaign_type != 'category' OR c.campaign_type IS NULL)`);
-          whereConditions.push(`(c.campaign_type != 'light' OR c.campaign_type IS NULL)`);
-          whereConditions.push(`(c.campaign_type != 'hidden' OR c.campaign_type IS NULL)`);
-          whereConditions.push(`(c.value_level = 'high' OR c.value_level IS NULL)`);
-          whereConditions.push(`(c.is_hidden = false OR c.is_hidden IS NULL)`);
-        } else if (feed_type === 'light') {
-          whereConditions.push(`c.campaign_type = 'light'`);
-          whereConditions.push(`c.show_in_light_feed = true`);
-          whereConditions.push(`(c.is_hidden = false OR c.is_hidden IS NULL)`);
-          whereConditions.push(`(c.campaign_type != 'hidden' OR c.campaign_type IS NULL)`);
-        } else if (feed_type === 'category') {
-          whereConditions.push(`c.campaign_type = 'category'`);
-          whereConditions.push(`c.show_in_category_feed = true`);
-          whereConditions.push(`(c.is_hidden = false OR c.is_hidden IS NULL)`);
-          whereConditions.push(`(c.campaign_type != 'hidden' OR c.campaign_type IS NULL)`);
-        } else if (feed_type === 'low') {
-          whereConditions.push(`c.value_level = 'low'`);
-          whereConditions.push(`(c.is_hidden = false OR c.is_hidden IS NULL)`);
-          whereConditions.push(`(c.campaign_type != 'hidden' OR c.campaign_type IS NULL)`);
-        } else if (feed_type === 'hidden') {
-          whereConditions.push(`(c.is_hidden = true OR c.campaign_type = 'hidden')`);
+        if (feed_type) {
+          if (feed_type === 'main') {
+            whereConditions.push(`(c.campaign_type = 'main' OR c.campaign_type IS NULL)`);
+            whereConditions.push(`(c.campaign_type != 'category' OR c.campaign_type IS NULL)`);
+            whereConditions.push(`(c.campaign_type != 'light' OR c.campaign_type IS NULL)`);
+            whereConditions.push(`(c.value_level = 'high' OR c.value_level IS NULL)`);
+          } else if (feed_type === 'light') {
+            whereConditions.push(`c.campaign_type = 'light'`);
+            whereConditions.push(`c.show_in_light_feed = true`);
+          } else if (feed_type === 'category') {
+            whereConditions.push(`c.campaign_type = 'category'`);
+            whereConditions.push(`c.show_in_category_feed = true`);
+          } else if (feed_type === 'low') {
+            whereConditions.push(`c.value_level = 'low'`);
+          } else if (feed_type === 'hidden') {
+            whereConditions.push(`1=0`); -- hidden feed unsupported without is_hidden column
+          }
         }
-      }
       
       // Active filter
       if (isActive !== null) {
