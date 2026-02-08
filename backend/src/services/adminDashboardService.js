@@ -35,7 +35,6 @@ class AdminDashboardService {
             AND (campaign_type = 'main' OR campaign_type IS NULL)
             AND (campaign_type != 'category' OR campaign_type IS NULL)
             AND (campaign_type != 'light' OR campaign_type IS NULL)
-            AND (campaign_type != 'hidden' OR campaign_type IS NULL)
             AND (value_level = 'high' OR value_level IS NULL)
             AND (is_hidden = false OR is_hidden IS NULL)
           ) as main_feed_count,
@@ -46,7 +45,6 @@ class AdminDashboardService {
             AND campaign_type = 'light'
             AND show_in_light_feed = true
             AND (is_hidden = false OR is_hidden IS NULL)
-            AND (campaign_type != 'hidden' OR campaign_type IS NULL)
           ) as light_feed_count,
           
           COUNT(*) FILTER (
@@ -55,7 +53,6 @@ class AdminDashboardService {
             AND campaign_type = 'category'
             AND show_in_category_feed = true
             AND (is_hidden = false OR is_hidden IS NULL)
-            AND (campaign_type != 'hidden' OR campaign_type IS NULL)
           ) as category_feed_count,
           
           COUNT(*) FILTER (
@@ -63,11 +60,10 @@ class AdminDashboardService {
             AND expires_at > NOW()
             AND value_level = 'low'
             AND (is_hidden = false OR is_hidden IS NULL)
-            AND (campaign_type != 'hidden' OR campaign_type IS NULL)
           ) as low_value_feed_count,
           
           -- Special states
-          COUNT(*) FILTER (WHERE is_hidden = true OR campaign_type = 'hidden') as hidden_count,
+          COUNT(*) FILTER (WHERE is_hidden = true) as hidden_count,
           COUNT(*) FILTER (WHERE is_pinned = true) as pinned_count,
           
           -- Expiring soon (next 7 days)
@@ -150,7 +146,6 @@ class AdminDashboardService {
         WHERE is_active = true
           AND expires_at > NOW()
           AND (is_hidden = false OR is_hidden IS NULL)
-          AND (campaign_type != 'hidden' OR campaign_type IS NULL)
         GROUP BY campaign_type, value_level
         ORDER BY campaign_type, value_level
       `);
@@ -161,7 +156,7 @@ class AdminDashboardService {
           campaign_type,
           COUNT(*) as count
         FROM campaigns
-        WHERE is_hidden = true OR campaign_type = 'hidden'
+        WHERE is_hidden = true
         GROUP BY campaign_type
         ORDER BY campaign_type
       `);
