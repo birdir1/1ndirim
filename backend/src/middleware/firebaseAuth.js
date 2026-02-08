@@ -30,6 +30,13 @@ try {
   } else if (process.env.FIREBASE_SERVICE_ACCOUNT) {
     // Service account JSON string
     const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+    // Common production pattern: private_key is stored with literal "\\n" sequences in env vars.
+    // firebase-admin expects actual newlines in the PEM.
+    if (serviceAccount && typeof serviceAccount.private_key === 'string') {
+      serviceAccount.private_key = serviceAccount.private_key
+        .replace(/\\r\\n/g, '\n')
+        .replace(/\\n/g, '\n');
+    }
     firebaseAdmin = admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
     });
