@@ -316,12 +316,12 @@ class AdminDashboardService {
           } else if (feed_type === 'category') {
             whereConditions.push(`c.campaign_type = 'category'`);
             whereConditions.push(`c.show_in_category_feed = true`);
-          } else if (feed_type === 'low') {
-            whereConditions.push(`c.value_level = 'low'`);
-          } else if (feed_type === 'hidden') {
-            whereConditions.push(`1=0`); -- hidden feed unsupported without is_hidden column
-          }
+        } else if (feed_type === 'low') {
+          whereConditions.push(`c.value_level = 'low'`);
+        } else if (feed_type === 'hidden') {
+          whereConditions.push(`1=0`);
         }
+      }
       
       // Active filter
       if (isActive !== null) {
