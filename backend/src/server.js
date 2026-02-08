@@ -82,8 +82,11 @@ app.use(morgan('combined')); // Logging
 app.use(express.json()); // JSON body parser
 app.use(express.urlencoded({ extended: true })); // URL encoded body parser
 
-// Global rate limiting (tüm API'ye)
-app.use('/api/', limiter);
+// Global rate limiting (tüm API'ye, admin hariç)
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api/admin')) return next();
+  return limiter(req, res, next);
+});
 
 // Root endpoint (legal router'dan önce)
 app.get('/', (req, res) => {
