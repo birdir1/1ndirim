@@ -52,6 +52,16 @@ async function requireAdmin(req, res, next) {
     // Method 2: Email-based authentication (production)
     if (adminEmail) {
       const email = adminEmail.trim().toLowerCase();
+
+      // Production/admin-panel contract: require API key as a second factor.
+      // Without this, any client can spoof x-admin-email and become that admin.
+      if (!adminApiKey) {
+        return res.status(401).json({
+          success: false,
+          error: 'Unauthorized',
+          message: 'Admin API key required (x-admin-api-key)',
+        });
+      }
       
       // Validate email format
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -65,7 +75,7 @@ async function requireAdmin(req, res, next) {
       
       // Lookup admin user from database
       const result = await pool.query(
-        `SELECT id, email, role, is_active 
+        `SELECT id, email, role, is_active, admin_api_key
          FROM admin_users 
          WHERE email = $1`,
         [email]
@@ -87,6 +97,17 @@ async function requireAdmin(req, res, next) {
           success: false,
           error: 'Forbidden',
           message: 'Admin account is inactive',
+        });
+      }
+
+      // Verify API key matches the admin user record
+      const providedKey = String(adminApiKey || '').trim();
+      const expectedKey = adminUser.admin_api_key ? String(adminUser.admin_api_key).trim() : '';
+      if (!expectedKey || providedKey !== expectedKey) {
+        return res.status(403).json({
+          success: false,
+          error: 'Forbidden',
+          message: 'Invalid admin API key',
         });
       }
       

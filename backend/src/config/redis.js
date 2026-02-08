@@ -6,12 +6,6 @@ const redisClient = redis.createClient({
   socket: {
     host: process.env.REDIS_HOST || 'localhost',
     port: process.env.REDIS_PORT || 6379,
-  },
-  password: process.env.REDIS_PASSWORD || undefined,
-  database: process.env.REDIS_DB || 0,
-  
-  // Connection options
-  socket: {
     reconnectStrategy: (retries) => {
       if (retries > 10) {
         console.error('❌ Redis: Too many reconnection attempts');
@@ -21,6 +15,8 @@ const redisClient = redis.createClient({
       return Math.min(retries * 50, 3000);
     },
   },
+  password: process.env.REDIS_PASSWORD || undefined,
+  database: process.env.REDIS_DB || 0,
 });
 
 // Event handlers

@@ -39,10 +39,12 @@ function cacheMiddleware(ttl = 300) {
       // Override res.json to cache the response
       const originalJson = res.json.bind(res);
       res.json = function(data) {
-        // Cache the response
-        CacheService.set(cacheKey, data, ttl).catch(err => {
-          console.error('Cache set error:', err);
-        });
+        // Cache only successful responses. Never cache errors or partial failures.
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          CacheService.set(cacheKey, data, ttl).catch(err => {
+            console.error('Cache set error:', err);
+          });
+        }
         
         // Send response
         return originalJson(data);

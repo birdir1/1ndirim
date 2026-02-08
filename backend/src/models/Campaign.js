@@ -468,10 +468,7 @@ class Campaign {
         c.*,
         s.name as source_name,
         s.type as source_type,
-        s.logo_url as source_logo_url,
-        
-        
-        
+        s.logo_url as source_logo_url
       FROM campaigns c
       INNER JOIN sources s ON c.source_id = s.id
       WHERE c.id = $1
@@ -493,10 +490,7 @@ class Campaign {
         c.*,
         s.name as source_name,
         s.type as source_type,
-        s.logo_url as source_logo_url,
-        
-        
-        
+        s.logo_url as source_logo_url
       FROM campaigns c
       INNER JOIN sources s ON c.source_id = s.id
       WHERE c.is_active = true
@@ -529,21 +523,18 @@ class Campaign {
       };
     }
 
-    // Fallback: Get last known campaigns (even if expired)
-    const query = `
-      SELECT 
-        c.*,
-        s.name as source_name,
-        s.type as source_type,
-        s.logo_url as source_logo_url,
-        
-        
-        ,
-        true as is_expired
-      FROM campaigns c
-      INNER JOIN sources s ON c.source_id = s.id
-      WHERE c.category = $1
-        AND (c.is_hidden = false OR c.is_hidden IS NULL)
+	    // Fallback: Get last known campaigns (even if expired)
+	    const query = `
+	      SELECT 
+	        c.*,
+	        s.name as source_name,
+	        s.type as source_type,
+	        s.logo_url as source_logo_url,
+	        true as is_expired
+	      FROM campaigns c
+	      INNER JOIN sources s ON c.source_id = s.id
+	      WHERE c.category = $1
+	        AND (c.is_hidden = false OR c.is_hidden IS NULL)
       ORDER BY c.created_at DESC
       LIMIT $2
     `;
