@@ -268,7 +268,7 @@ class FavoriteApiDataSource {
     try {
       final options = await _getAuthOptions();
       await _dio.post(
-        '/api/users/fcm-token',
+        '/users/fcm-token',
         data: {'fcmToken': fcmToken},
         options: options,
       );
