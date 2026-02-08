@@ -12,6 +12,9 @@ class TagNormalizer {
   static final Set<String> _blacklist = {
     'general',
     'transport',
+    'transpor',
+    'general transport',
+    'general transpor',
     'education',
     'business',
     'finance',
@@ -25,6 +28,10 @@ class TagNormalizer {
     'banner',
     'campaign',
     'kampanya',
+    'faz7',
+    'faz',
+    'tag',
+    'labels',
   };
 
   static final Map<String, String> _map = {
@@ -47,6 +54,8 @@ class TagNormalizer {
     'internet': 'İnternet',
     'mobile': 'Mobil',
     'bank': 'Banka',
+    'wallet': 'Cüzdan',
+    'finans': 'Finans',
     'cashback': 'Cashback',
     'bonus': 'Bonus',
     'points': 'Puan',
@@ -58,6 +67,8 @@ class TagNormalizer {
     'airline': 'Uçuş',
     'hotel': 'Otel',
     'education ': 'Eğitim',
+    'operator': 'Operatör',
+    'campaign': 'Kampanya',
   };
 
   static NormalizedTags normalize(List<String> tags) {
@@ -76,7 +87,8 @@ class TagNormalizer {
           lower.startsWith('title:')) {
         continue;
       }
-      if (t.length > 50) continue;
+      if (t.length > 50 || t.length < 2) continue;
+      if (RegExp(r'^[0-9%]+$').hasMatch(lower)) continue;
 
       final normalizedKey = lower.replaceAll('_', ' ').replaceAll('-', ' ');
       if (_blacklist.contains(normalizedKey)) continue;
@@ -86,12 +98,15 @@ class TagNormalizer {
           .firstWhereOrNull((e) => normalizedKey.contains(e.key))
           ?.value;
 
-      final display = mapped ??
+      final display =
+          mapped ??
           normalizedKey
               .split(' ')
-              .map((word) => word.isEmpty
-                  ? ''
-                  : '${word[0].toUpperCase()}${word.substring(1)}')
+              .map(
+                (word) => word.isEmpty
+                    ? ''
+                    : '${word[0].toUpperCase()}${word.substring(1)}',
+              )
               .join(' ')
               .trim();
 
@@ -103,8 +118,16 @@ class TagNormalizer {
       return const NormalizedTags(primary: null, secondary: []);
     }
 
-    final primary = cleaned.first;
-    final secondary = cleaned.skip(1).toList();
+    // Öncelik: indirim/puan içeren etiketler
+    final prioritized = cleaned.sortedBy<num>((t) {
+      final lower = t.toLowerCase();
+      if (lower.contains('%') || lower.contains('indirim')) return 0;
+      if (lower.contains('puan') || lower.contains('bonus')) return 1;
+      return 2;
+    });
+
+    final primary = prioritized.first;
+    final secondary = prioritized.skip(1).take(5).toList();
     return NormalizedTags(primary: primary, secondary: secondary);
   }
 }

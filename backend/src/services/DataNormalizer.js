@@ -32,6 +32,17 @@ class DataNormalizer {
       validityChannels: Array.isArray(rawCampaign.validityChannels) ? rawCampaign.validityChannels : [],
     };
 
+    // Tag noise temizliği (UI'da gereksiz etiketlerin görünmemesi için)
+    const tagBlacklist = new Set([
+      'general', 'transport', 'education', 'business', 'finance', 'card', 'cardcampaign',
+      'url', 'source', 'title', 'image', 'banner', 'campaign', 'kampanya', 'faz7', 'faz',
+    ]);
+    campaign.tags = campaign.tags
+      .map(t => (typeof t === 'string' ? t.trim() : ''))
+      .filter(t => t.length > 1 && t.length < 50)
+      .filter(t => !tagBlacklist.has(t.toLowerCase()))
+      .filter((t, idx, arr) => arr.indexOf(t) === idx);
+
     // Step 2: Category detection (rule-based + AI fallback handled by caller)
     campaign.category = rawCampaign.category || this.detectCategory(campaign);
     campaign.subCategory = rawCampaign.subCategory || rawCampaign.sub_category || this.detectSubCategory(campaign);

@@ -40,6 +40,7 @@ class SourceRepository {
   static Future<void> _init() async {
     _prefs ??= await SharedPreferences.getInstance();
   }
+
   /// Tüm kaynakları (segments ile) getirir
   static List<SourceModel> getAllSourcesWithSegments() {
     return [
@@ -53,10 +54,19 @@ class SourceRepository {
         segments: [
           SourceSegment(id: 'ziraat_bankkart', name: 'Bankkart'),
           SourceSegment(id: 'ziraat_bankkart_basak', name: 'Bankkart Başak'),
-          SourceSegment(id: 'ziraat_bankkart_business', name: 'Bankkart Business'),
+          SourceSegment(
+            id: 'ziraat_bankkart_business',
+            name: 'Bankkart Business',
+          ),
           SourceSegment(id: 'ziraat_bankkart_genc', name: 'Bankkart Genç'),
-          SourceSegment(id: 'ziraat_bankkart_prestij', name: 'Bankkart Prestij'),
-          SourceSegment(id: 'ziraat_bankkart_platinum', name: 'Bankkart Platinum'),
+          SourceSegment(
+            id: 'ziraat_bankkart_prestij',
+            name: 'Bankkart Prestij',
+          ),
+          SourceSegment(
+            id: 'ziraat_bankkart_platinum',
+            name: 'Bankkart Platinum',
+          ),
         ],
       ),
       SourceModel(
@@ -84,7 +94,10 @@ class SourceRepository {
           SourceSegment(id: 'vakifbank_world_platinum', name: 'World Platinum'),
           SourceSegment(id: 'vakifbank_world_business', name: 'World Business'),
           SourceSegment(id: 'vakifbank_troy_kart', name: 'VakıfBank Troy Kart'),
-          SourceSegment(id: 'vakifbank_banka_karti', name: 'VakıfBank Banka Kartı'),
+          SourceSegment(
+            id: 'vakifbank_banka_karti',
+            name: 'VakıfBank Banka Kartı',
+          ),
         ],
       ),
 
@@ -118,7 +131,10 @@ class SourceRepository {
           SourceSegment(id: 'yapikredi_world_business', name: 'World Business'),
           SourceSegment(id: 'yapikredi_adios', name: 'Adios'),
           SourceSegment(id: 'yapikredi_adios_premium', name: 'Adios Premium'),
-          SourceSegment(id: 'yapikredi_banka_karti', name: 'Yapı Kredi Banka Kartı'),
+          SourceSegment(
+            id: 'yapikredi_banka_karti',
+            name: 'Yapı Kredi Banka Kartı',
+          ),
         ],
       ),
       SourceModel(
@@ -129,13 +145,25 @@ class SourceRepository {
         color: const Color(0xFF2563EB),
         segments: [
           SourceSegment(id: 'isbank_maximum', name: 'Maximum'),
-          SourceSegment(id: 'isbank_maximum_platinum', name: 'Maximum Platinum'),
+          SourceSegment(
+            id: 'isbank_maximum_platinum',
+            name: 'Maximum Platinum',
+          ),
           SourceSegment(id: 'isbank_maximum_black', name: 'Maximum Black'),
-          SourceSegment(id: 'isbank_maximum_aidatsiz', name: 'Maximum Aidatsız'),
+          SourceSegment(
+            id: 'isbank_maximum_aidatsiz',
+            name: 'Maximum Aidatsız',
+          ),
           SourceSegment(id: 'isbank_maximum_genc', name: 'Maximum Genç'),
-          SourceSegment(id: 'isbank_maximum_business', name: 'Maximum Business'),
+          SourceSegment(
+            id: 'isbank_maximum_business',
+            name: 'Maximum Business',
+          ),
           SourceSegment(id: 'isbank_bankamatik_kart', name: 'Bankamatik Kart'),
-          SourceSegment(id: 'isbank_maximum_bankamatik', name: 'Maximum Bankamatik'),
+          SourceSegment(
+            id: 'isbank_maximum_bankamatik',
+            name: 'Maximum Bankamatik',
+          ),
         ],
       ),
       SourceModel(
@@ -150,8 +178,14 @@ class SourceRepository {
           SourceSegment(id: 'garanti_bonus_platinum', name: 'Bonus Platinum'),
           SourceSegment(id: 'garanti_bonus_business', name: 'Bonus Business'),
           SourceSegment(id: 'garanti_shopfly', name: 'Shop&Fly'),
-          SourceSegment(id: 'garanti_shopfly_platinum', name: 'Shop&Fly Platinum'),
-          SourceSegment(id: 'garanti_shopfly_miles_smiles', name: 'Shop&Fly Miles&Smiles'),
+          SourceSegment(
+            id: 'garanti_shopfly_platinum',
+            name: 'Shop&Fly Platinum',
+          ),
+          SourceSegment(
+            id: 'garanti_shopfly_miles_smiles',
+            name: 'Shop&Fly Miles&Smiles',
+          ),
           SourceSegment(id: 'garanti_paracard', name: 'Paracard'),
           SourceSegment(id: 'garanti_paracard_bonus', name: 'Paracard Bonus'),
         ],
@@ -164,10 +198,19 @@ class SourceRepository {
         color: const Color(0xFF0D9488),
         segments: [
           SourceSegment(id: 'qnb_cardfinans', name: 'CardFinans'),
-          SourceSegment(id: 'qnb_cardfinans_platinum', name: 'CardFinans Platinum'),
+          SourceSegment(
+            id: 'qnb_cardfinans_platinum',
+            name: 'CardFinans Platinum',
+          ),
           SourceSegment(id: 'qnb_cardfinans_gold', name: 'CardFinans Gold'),
-          SourceSegment(id: 'qnb_cardfinans_aidatsiz', name: 'CardFinans Aidatsız'),
-          SourceSegment(id: 'qnb_cardfinans_business', name: 'CardFinans Business'),
+          SourceSegment(
+            id: 'qnb_cardfinans_aidatsiz',
+            name: 'CardFinans Aidatsız',
+          ),
+          SourceSegment(
+            id: 'qnb_cardfinans_business',
+            name: 'CardFinans Business',
+          ),
           SourceSegment(id: 'qnb_enpara_kart', name: 'Enpara.com Kart'),
         ],
       ),
@@ -181,7 +224,10 @@ class SourceRepository {
           SourceSegment(id: 'denizbank_bonus', name: 'Bonus'),
           SourceSegment(id: 'denizbank_bonus_platinum', name: 'Bonus Platinum'),
           SourceSegment(id: 'denizbank_bonus_business', name: 'Bonus Business'),
-          SourceSegment(id: 'denizbank_banka_karti', name: 'DenizBank Banka Kartı'),
+          SourceSegment(
+            id: 'denizbank_banka_karti',
+            name: 'DenizBank Banka Kartı',
+          ),
           SourceSegment(id: 'denizbank_genc_kart', name: 'DenizBank Genç Kart'),
         ],
       ),
@@ -220,7 +266,10 @@ class SourceRepository {
         segments: [
           SourceSegment(id: 'sekerbank_bonus', name: 'Bonus'),
           SourceSegment(id: 'sekerbank_bonus_platinum', name: 'Bonus Platinum'),
-          SourceSegment(id: 'sekerbank_banka_karti', name: 'Şekerbank Banka Kartı'),
+          SourceSegment(
+            id: 'sekerbank_banka_karti',
+            name: 'Şekerbank Banka Kartı',
+          ),
         ],
       ),
       SourceModel(
@@ -232,7 +281,10 @@ class SourceRepository {
         segments: [
           SourceSegment(id: 'fibabanka_bonus', name: 'Bonus'),
           SourceSegment(id: 'fibabanka_bonus_platinum', name: 'Bonus Platinum'),
-          SourceSegment(id: 'fibabanka_banka_karti', name: 'Fibabanka Banka Kartı'),
+          SourceSegment(
+            id: 'fibabanka_banka_karti',
+            name: 'Fibabanka Banka Kartı',
+          ),
         ],
       ),
       SourceModel(
@@ -243,8 +295,14 @@ class SourceRepository {
         color: const Color(0xFF9333EA),
         segments: [
           SourceSegment(id: 'anadolubank_worldcard', name: 'Worldcard'),
-          SourceSegment(id: 'anadolubank_world_platinum', name: 'World Platinum'),
-          SourceSegment(id: 'anadolubank_banka_karti', name: 'Anadolubank Banka Kartı'),
+          SourceSegment(
+            id: 'anadolubank_world_platinum',
+            name: 'World Platinum',
+          ),
+          SourceSegment(
+            id: 'anadolubank_banka_karti',
+            name: 'Anadolubank Banka Kartı',
+          ),
         ],
       ),
       SourceModel(
@@ -255,8 +313,14 @@ class SourceRepository {
         color: const Color(0xFF2563EB),
         segments: [
           SourceSegment(id: 'alternatif_bonus', name: 'Bonus'),
-          SourceSegment(id: 'alternatif_bonus_platinum', name: 'Bonus Platinum'),
-          SourceSegment(id: 'alternatif_banka_karti', name: 'Alternatif Bank Banka Kartı'),
+          SourceSegment(
+            id: 'alternatif_bonus_platinum',
+            name: 'Bonus Platinum',
+          ),
+          SourceSegment(
+            id: 'alternatif_banka_karti',
+            name: 'Alternatif Bank Banka Kartı',
+          ),
         ],
       ),
       SourceModel(
@@ -267,8 +331,14 @@ class SourceRepository {
         color: const Color(0xFF16A34A),
         segments: [
           SourceSegment(id: 'odeabank_odeacard', name: 'OdeaCard'),
-          SourceSegment(id: 'odeabank_odeacard_platinum', name: 'OdeaCard Platinum'),
-          SourceSegment(id: 'odeabank_banka_karti', name: 'OdeaBank Banka Kartı'),
+          SourceSegment(
+            id: 'odeabank_odeacard_platinum',
+            name: 'OdeaCard Platinum',
+          ),
+          SourceSegment(
+            id: 'odeabank_banka_karti',
+            name: 'OdeaBank Banka Kartı',
+          ),
         ],
       ),
       SourceModel(
@@ -290,7 +360,10 @@ class SourceRepository {
         color: const Color(0xFF0D9488),
         segments: [
           SourceSegment(id: 'burgan_on_dijital_kart', name: 'On Dijital Kart'),
-          SourceSegment(id: 'burgan_banka_karti', name: 'Burgan Bank Banka Kartı'),
+          SourceSegment(
+            id: 'burgan_banka_karti',
+            name: 'Burgan Bank Banka Kartı',
+          ),
         ],
       ),
       SourceModel(
@@ -300,8 +373,14 @@ class SourceRepository {
         icon: _getIconData('account_balance'),
         color: const Color(0xFF38BDF8),
         segments: [
-          SourceSegment(id: 'turkishbank_kredi_karti', name: 'Turkish Bank Kredi Kartı'),
-          SourceSegment(id: 'turkishbank_banka_karti', name: 'Turkish Bank Banka Kartı'),
+          SourceSegment(
+            id: 'turkishbank_kredi_karti',
+            name: 'Turkish Bank Kredi Kartı',
+          ),
+          SourceSegment(
+            id: 'turkishbank_banka_karti',
+            name: 'Turkish Bank Banka Kartı',
+          ),
         ],
       ),
       SourceModel(
@@ -312,7 +391,10 @@ class SourceRepository {
         color: const Color(0xFFDC2626),
         segments: [
           SourceSegment(id: 'hsbc_advantage', name: 'Advantage'),
-          SourceSegment(id: 'hsbc_advantage_platinum', name: 'Advantage Platinum'),
+          SourceSegment(
+            id: 'hsbc_advantage_platinum',
+            name: 'Advantage Platinum',
+          ),
           SourceSegment(id: 'hsbc_premier_kart', name: 'HSBC Premier Kart'),
           SourceSegment(id: 'hsbc_banka_karti', name: 'HSBC Banka Kartı'),
         ],
@@ -327,9 +409,18 @@ class SourceRepository {
         color: const Color(0xFFCA8A04),
         segments: [
           SourceSegment(id: 'kuveyt_saglam_kart', name: 'Sağlam Kart'),
-          SourceSegment(id: 'kuveyt_saglam_kart_platinum', name: 'Sağlam Kart Platinum'),
-          SourceSegment(id: 'kuveyt_saglam_kart_business', name: 'Sağlam Kart Business'),
-          SourceSegment(id: 'kuveyt_banka_karti', name: 'Kuveyt Türk Banka Kartı'),
+          SourceSegment(
+            id: 'kuveyt_saglam_kart_platinum',
+            name: 'Sağlam Kart Platinum',
+          ),
+          SourceSegment(
+            id: 'kuveyt_saglam_kart_business',
+            name: 'Sağlam Kart Business',
+          ),
+          SourceSegment(
+            id: 'kuveyt_banka_karti',
+            name: 'Kuveyt Türk Banka Kartı',
+          ),
         ],
       ),
       SourceModel(
@@ -341,7 +432,10 @@ class SourceRepository {
         segments: [
           SourceSegment(id: 'albaraka_world', name: 'Albaraka World'),
           SourceSegment(id: 'albaraka_platinum', name: 'Albaraka Platinum'),
-          SourceSegment(id: 'albaraka_banka_karti', name: 'Albaraka Banka Kartı'),
+          SourceSegment(
+            id: 'albaraka_banka_karti',
+            name: 'Albaraka Banka Kartı',
+          ),
         ],
       ),
       SourceModel(
@@ -352,8 +446,14 @@ class SourceRepository {
         color: const Color(0xFF2563EB),
         segments: [
           SourceSegment(id: 'turkiyefinans_finanscard', name: 'FinansCard'),
-          SourceSegment(id: 'turkiyefinans_finanscard_platinum', name: 'FinansCard Platinum'),
-          SourceSegment(id: 'turkiyefinans_banka_karti', name: 'Türkiye Finans Banka Kartı'),
+          SourceSegment(
+            id: 'turkiyefinans_finanscard_platinum',
+            name: 'FinansCard Platinum',
+          ),
+          SourceSegment(
+            id: 'turkiyefinans_banka_karti',
+            name: 'Türkiye Finans Banka Kartı',
+          ),
         ],
       ),
       SourceModel(
@@ -364,7 +464,10 @@ class SourceRepository {
         color: const Color(0xFF9333EA),
         segments: [
           SourceSegment(id: 'vakifkatilim_kart', name: 'Vakıf Katılım Kart'),
-          SourceSegment(id: 'vakifkatilim_platinum', name: 'Vakıf Katılım Platinum'),
+          SourceSegment(
+            id: 'vakifkatilim_platinum',
+            name: 'Vakıf Katılım Platinum',
+          ),
         ],
       ),
       SourceModel(
@@ -374,8 +477,14 @@ class SourceRepository {
         icon: _getIconData('account_balance'),
         color: const Color(0xFF16A34A),
         segments: [
-          SourceSegment(id: 'ziraatkatilim_katilim_bankkart', name: 'Katılım Bankkart'),
-          SourceSegment(id: 'ziraatkatilim_katilim_bankkart_platinum', name: 'Katılım Bankkart Platinum'),
+          SourceSegment(
+            id: 'ziraatkatilim_katilim_bankkart',
+            name: 'Katılım Bankkart',
+          ),
+          SourceSegment(
+            id: 'ziraatkatilim_katilim_bankkart_platinum',
+            name: 'Katılım Bankkart Platinum',
+          ),
         ],
       ),
       SourceModel(
@@ -386,7 +495,10 @@ class SourceRepository {
         color: const Color(0xFFEF4444),
         segments: [
           SourceSegment(id: 'emlakkatilim_kart', name: 'Emlak Katılım Kart'),
-          SourceSegment(id: 'emlakkatilim_banka_karti', name: 'Emlak Katılım Banka Kartı'),
+          SourceSegment(
+            id: 'emlakkatilim_banka_karti',
+            name: 'Emlak Katılım Banka Kartı',
+          ),
         ],
       ),
 
@@ -409,8 +521,14 @@ class SourceRepository {
         icon: _getIconData('account_balance'),
         color: const Color(0xFFEA580C),
         segments: [
-          SourceSegment(id: 'cepteteb_kredi_karti', name: 'CEPTETEB Kredi Kartı'),
-          SourceSegment(id: 'cepteteb_banka_karti', name: 'CEPTETEB Banka Kartı'),
+          SourceSegment(
+            id: 'cepteteb_kredi_karti',
+            name: 'CEPTETEB Kredi Kartı',
+          ),
+          SourceSegment(
+            id: 'cepteteb_banka_karti',
+            name: 'CEPTETEB Banka Kartı',
+          ),
         ],
       ),
       SourceModel(
@@ -421,7 +539,10 @@ class SourceRepository {
         color: const Color(0xFF38BDF8),
         segments: [
           SourceSegment(id: 'hayatfinans_kart', name: 'Hayat Finans Kart'),
-          SourceSegment(id: 'hayatfinans_banka_karti', name: 'Hayat Finans Banka Kartı'),
+          SourceSegment(
+            id: 'hayatfinans_banka_karti',
+            name: 'Hayat Finans Banka Kartı',
+          ),
         ],
       ),
       SourceModel(
@@ -460,6 +581,17 @@ class SourceRepository {
         ],
       ),
       SourceModel(
+        id: 'tosla',
+        name: 'Tosla',
+        type: 'bank',
+        icon: _getIconData('account_balance'),
+        color: const Color(0xFFFF3D57),
+        segments: [
+          SourceSegment(id: 'tosla_kart', name: 'Tosla Kart'),
+          SourceSegment(id: 'tosla_sanal_kart', name: 'Tosla Sanal Kart'),
+        ],
+      ),
+      SourceModel(
         id: 'paycell',
         name: 'Paycell',
         type: 'bank',
@@ -468,17 +600,6 @@ class SourceRepository {
         segments: [
           SourceSegment(id: 'paycell_kart', name: 'Paycell Kart'),
           SourceSegment(id: 'paycell_sanal_kart', name: 'Paycell Sanal Kart'),
-        ],
-      ),
-      SourceModel(
-        id: 'papel',
-        name: 'Papel',
-        type: 'bank',
-        icon: _getIconData('account_balance'),
-        color: const Color(0xFF434444),
-        segments: [
-          SourceSegment(id: 'papel_kart', name: 'Papel Kart'),
-          SourceSegment(id: 'papel_sanal_kart', name: 'Papel Sanal Kart'),
         ],
       ),
 
@@ -516,10 +637,19 @@ class SourceRepository {
         icon: _getIconData('router'),
         color: const Color(0xFF38BDF8),
         segments: [
-          SourceSegment(id: 'turktelekom_faturali', name: 'Türk Telekom Faturalı'),
-          SourceSegment(id: 'turktelekom_faturasiz', name: 'Türk Telekom Faturasız'),
+          SourceSegment(
+            id: 'turktelekom_faturali',
+            name: 'Türk Telekom Faturalı',
+          ),
+          SourceSegment(
+            id: 'turktelekom_faturasiz',
+            name: 'Türk Telekom Faturasız',
+          ),
           SourceSegment(id: 'turktelekom_prime', name: 'Türk Telekom Prime'),
-          SourceSegment(id: 'turktelekom_business', name: 'Türk Telekom Business'),
+          SourceSegment(
+            id: 'turktelekom_business',
+            name: 'Türk Telekom Business',
+          ),
         ],
       ),
 
@@ -540,31 +670,23 @@ class SourceRepository {
         color: const Color(0xFF38BDF8),
         segments: [],
       ),
-
-      // MVNO - Vodafone Altyapısı
-      SourceModel(
-        id: 'teknosacell',
-        name: 'Teknosacell',
-        type: 'operator',
-        icon: _getIconData('signal_cellular_alt'),
-        color: const Color(0xFFEF4444),
-        segments: [],
-      ),
     ];
   }
 
   /// Tüm kaynakları (segments olmadan) getirir - onboarding için
   static List<SourceModel> getAllSources() {
     return getAllSourcesWithSegments()
-        .map((source) => SourceModel(
-              id: source.id,
-              name: source.name,
-              type: source.type,
-              icon: source.icon,
-              color: source.color,
-              segments: [],
-              isSelected: source.isSelected,
-            ))
+        .map(
+          (source) => SourceModel(
+            id: source.id,
+            name: source.name,
+            type: source.type,
+            icon: source.icon,
+            color: source.color,
+            segments: [],
+            isSelected: source.isSelected,
+          ),
+        )
         .toList();
   }
 
@@ -616,15 +738,17 @@ class SourceRepository {
       final selectedSourceIds = await getSelectedSources();
       final selectedSegmentIds = await getSelectedSegments();
       final allSources = getAllSourcesWithSegments();
-      
+
       return allSources.where((source) {
         // Kaynak ID'si seçili listede varsa
         if (selectedSourceIds.contains(source.id)) {
           return true;
         }
-        
+
         // Veya en az bir segmenti seçiliyse
-        return source.segments.any((segment) => selectedSegmentIds.contains(segment.id));
+        return source.segments.any(
+          (segment) => selectedSegmentIds.contains(segment.id),
+        );
       }).toList();
     } catch (e) {
       return [];

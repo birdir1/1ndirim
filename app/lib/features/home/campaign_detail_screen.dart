@@ -21,6 +21,7 @@ class CampaignDetailScreen extends StatefulWidget {
   final String? videoUrl;
   final String? videoThumbnailUrl;
   final int? videoDuration;
+  final String? expiresAt;
 
   const CampaignDetailScreen({
     super.key,
@@ -36,6 +37,7 @@ class CampaignDetailScreen extends StatefulWidget {
     this.videoUrl,
     this.videoThumbnailUrl,
     this.videoDuration,
+    this.expiresAt,
   });
 
   /// OpportunityModel'den CampaignDetailScreen oluşturur
@@ -46,8 +48,9 @@ class CampaignDetailScreen extends StatefulWidget {
     return CampaignDetailScreen(
       title: opportunity.title,
       description: opportunity.subtitle,
-      detailText:
-          'Bu kampanyayı kullanmak için ilgili kartınızla alışveriş yapmanız yeterli.',
+      detailText: opportunity.subtitle?.isNotEmpty == true
+          ? opportunity.subtitle
+          : opportunity.title,
       logoColor: opportunity.iconColor,
       sourceName: opportunity.sourceName,
       primaryTag: primaryTag,
@@ -57,6 +60,7 @@ class CampaignDetailScreen extends StatefulWidget {
       videoUrl: opportunity.videoUrl,
       videoThumbnailUrl: opportunity.videoThumbnailUrl,
       videoDuration: opportunity.videoDuration,
+      expiresAt: opportunity.expiresAt,
     );
   }
 
@@ -301,10 +305,9 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
             ),
             child: Text(
               widget.primaryTag!,
-              style: AppTextStyles.caption(isDark: false).copyWith(
-                color: widget.logoColor,
-                fontWeight: FontWeight.w600,
-              ),
+              style: AppTextStyles.caption(
+                isDark: false,
+              ).copyWith(color: widget.logoColor, fontWeight: FontWeight.w600),
             ),
           ),
         ],
@@ -319,7 +322,9 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
         .where((line) => line.trim().isNotEmpty)
         .toList();
     if (details.isEmpty) {
-      details.add(widget.detailText);
+      details.add(
+        widget.description.isNotEmpty ? widget.description : widget.title,
+      );
     }
 
     return Column(
@@ -373,11 +378,11 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
   }
 
   Widget _buildHowToUse() {
-    // Örnek adımlar
+    // Dinamik, marka agnostik adımlar
     final steps = [
-      'Yapı Kredi Mobil > Kampanyalar menüsünden "Katıl" butonuna tıklayın.',
-      'Netflix ödemenizi kayıtlı Yapı Kredi kartınız ile yapın.',
-      'İade tutarı bir sonraki ekstrenize yansıtılacaktır.',
+      '${widget.sourceName} uygulamasında veya web sitesinde kampanyaya katılın.',
+      'Uygun kart/hesap ile ödeme veya işlemi tamamlayın.',
+      'Koşullar sağlanınca ödül/indirim otomatik tanımlanır.',
     ];
 
     return Column(
@@ -435,6 +440,10 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
   }
 
   Widget _buildValidity() {
+    final expiresText = widget.expiresAt?.isNotEmpty == true
+        ? 'Son tarih: ${widget.expiresAt}'
+        : 'Geçerlilik tarihi sağlanmadı';
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -476,7 +485,7 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    '30 Kasım\'a kadar',
+                    expiresText,
                     style: AppTextStyles.bodySecondary(
                       isDark: false,
                     ).copyWith(fontSize: 13),
@@ -486,34 +495,23 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
             ),
 
             // Kanal Çipi
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: AppColors.primaryLight,
-                borderRadius: BorderRadius.circular(20),
+            if (widget.primaryTag != null)
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryLight,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  widget.primaryTag!,
+                  style: AppTextStyles.bodySecondary(
+                    isDark: false,
+                  ).copyWith(fontSize: 13, color: AppColors.cardBackground),
+                ),
               ),
-              child: Text(
-                'Online',
-                style: AppTextStyles.bodySecondary(
-                  isDark: false,
-                ).copyWith(fontSize: 13, color: AppColors.cardBackground),
-              ),
-            ),
-
-            // Durum Çipi
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: AppColors.opportunityGreenLight,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                'Aktif',
-                style: AppTextStyles.bodySecondary(
-                  isDark: false,
-                ).copyWith(fontSize: 13, color: AppColors.success),
-              ),
-            ),
           ],
         ),
       ],

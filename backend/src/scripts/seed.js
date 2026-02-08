@@ -40,6 +40,12 @@ async function seed() {
         logoUrl: null,
         websiteUrl: 'https://www.turkcell.com.tr',
       },
+      {
+        name: 'Tosla',
+        type: 'bank',
+        logoUrl: null,
+        websiteUrl: 'https://www.tosla.com',
+      },
     ];
 
     const createdSources = [];

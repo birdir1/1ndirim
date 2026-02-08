@@ -165,11 +165,11 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
         );
       },
       borderRadius: BorderRadius.circular(28),
-            child: Container(
-              margin: const EdgeInsets.only(bottom: 20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(28),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(28),
           border: Border.all(
             color: sourceColor.withValues(alpha: 0.25),
             width: 2,
@@ -209,8 +209,8 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
                 children: [
                   // Source Logo - ÇOK DAHA BÜYÜK VE NET
                   Container(
-                    width: 72,
-                    height: 72,
+                    width: 80,
+                    height: 80,
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(20),
@@ -227,11 +227,11 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
                       ],
                     ),
                     child: Padding(
-                      padding: const EdgeInsets.all(12.0),
+                      padding: const EdgeInsets.all(14.0),
                       child: SourceLogoHelper.getLogoWidget(
                         widget.opportunity.sourceName,
-                        width: 48,
-                        height: 48,
+                        width: 52,
+                        height: 52,
                       ),
                     ),
                   ),
@@ -470,8 +470,10 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
                         // Sadece büyük harf ve rakam
                         // Tags'den anlamlı bir açıklama bul
                         if (chipTags.isNotEmpty) {
-                          displayText =
-                              chipTags.where((tag) => tag.length > 6).take(2).join(' • ');
+                          displayText = chipTags
+                              .where((tag) => tag.length > 6)
+                              .take(2)
+                              .join(' • ');
                         }
                       }
 

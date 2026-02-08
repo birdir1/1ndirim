@@ -52,6 +52,7 @@ class SourceLogoHelper {
       'teb': 'assets/images/logos/teb.png',
       'teknosacell': 'assets/images/logos/teknosacell.png',
       'tombank': 'assets/images/logos/tombank.svg',
+      'tosla': 'assets/images/logos/tosla.svg',
       'turkcell': 'assets/images/logos/turkcell.png',
       'turkishbank': 'assets/images/logos/turkishbank.png',
       'turkiyefinans': 'assets/images/logos/turkiyefinans.png',
@@ -70,16 +71,17 @@ class SourceLogoHelper {
   }
 
   /// Source logo widget'ı döndürür
-  static Widget getLogoWidget(String sourceName, {double? width, double? height, Color? color}) {
+  static Widget getLogoWidget(
+    String sourceName, {
+    double? width,
+    double? height,
+    Color? color,
+  }) {
     final logoPath = getLogoPath(sourceName);
-    
+
     if (logoPath == null) {
       // Logo bulunamadıysa generic icon göster
-      return Icon(
-        Icons.business,
-        size: width ?? 24,
-        color: color,
-      );
+      return Icon(Icons.business, size: width ?? 24, color: color);
     }
 
     // SVG mi PNG mi kontrol et
@@ -89,7 +91,9 @@ class SourceLogoHelper {
         width: width,
         height: height,
         fit: BoxFit.contain, // Logo'nun tam görünmesi için
-        colorFilter: color != null ? ColorFilter.mode(color, BlendMode.srcIn) : null,
+        colorFilter: color != null
+            ? ColorFilter.mode(color, BlendMode.srcIn)
+            : null,
         placeholderBuilder: (context) => Container(
           width: width,
           height: height,
@@ -138,6 +142,13 @@ class SourceLogoHelper {
       'vodafone': const Color(0xFFDC2626),
       'turktelekom': const Color(0xFF2563EB),
       'türktelekom': const Color(0xFF2563EB),
+      'papara': const Color(0xFF2D2A32),
+      'tosla': const Color(0xFFFF3D57),
+      'pttcell': const Color(0xFF0066B2),
+      'vakifbank': const Color(0xFFFFB703),
+      'kuveytturk': const Color(0xFF0A9F6D),
+      'nkolay': const Color(0xFF2E64FE),
+      'enpara': const Color(0xFF8A2BE2),
     };
 
     final normalized = sourceName.toLowerCase().replaceAll(' ', '');
