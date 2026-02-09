@@ -89,6 +89,19 @@ function _hasRealValue(campaign) {
   const detailText = (campaign.detailText || '').toLowerCase();
   const text = `${title} ${description} ${detailText}`;
 
+  // Finance/credit campaigns: low percentages can be meaningful when they represent interest rates.
+  // Example: "%1,99 faiz" should be treated as a value signal even though it's < 10%.
+  const hasCreditContext =
+    text.includes('faiz') ||
+    text.includes('kredi') ||
+    text.includes('ihtiyac') ||
+    text.includes('i̇htiyaç') ||
+    text.includes('konut') ||
+    text.includes('taşıt') ||
+    text.includes('tasıt');
+  const rateMatch = text.match(/%\s*(\d{1,2}(?:[.,]\d{1,2})?)/i) || text.match(/(\d{1,2}(?:[.,]\d{1,2})?)\s*%/i);
+  if (hasCreditContext && rateMatch) return true;
+
   // İndirim yüzdesi
   const discountMatch = text.match(/(\d+)\s*%|%\s*(\d+)/);
   if (discountMatch) {

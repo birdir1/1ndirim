@@ -24,6 +24,16 @@ const GENERIC_DESCRIPTIONS = [
   'çerez',
   'cookies',
   'faq',
+  'müşteri hizmetleri',
+  'musteri hizmetleri',
+  'çağrı merkezi',
+  'cagri merkezi',
+  'bize ulaş',
+  'bize ulas',
+  'iletişim',
+  'iletisim',
+  'canlı destek',
+  'canli destek',
   'url source:',
   'markdown content:',
 ];
@@ -53,6 +63,14 @@ function normalizeSourceKey(name) {
 function cleanText(text) {
   if (!text) return '';
   return normalizeWhitespace(decodeHtmlEntities(text));
+}
+
+function normalizeForCompare(text) {
+  return cleanText(text || '')
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 function stripTrailingIncele(text) {
@@ -334,6 +352,46 @@ function isGenericDescription(desc) {
   return GENERIC_DESCRIPTIONS.some((p) => lower.includes(p));
 }
 
+function removeBoilerplateSentences(text) {
+  let t = cleanText(text || '');
+  if (!t) return '';
+
+  const badSnippets = [
+    'müşteri hizmetleri',
+    'musteri hizmetleri',
+    'çağrı merkezi',
+    'cagri merkezi',
+    'bize ulaş',
+    'bize ulas',
+    'iletişim',
+    'iletisim',
+    'canlı destek',
+    'canli destek',
+    'sana nasıl yardımcı olabiliriz',
+    'sizin için ne yapabilirim',
+    'devam etmek istiyor musunuz',
+    'şu anda sayfasına yönlendiriliyorsunuz',
+    'sayfasına yönlendiriliyorsunuz',
+  ];
+
+  const phoneRe = /\b(?:0?\s?\d{3}\s?\d{3}\s?\d{2}\s?\d{2}|444\s?\d{2}\s?\d{2}|0850\s?\d{3}\s?\d{2}\s?\d{2})\b/g;
+
+  // Split into rough "sentences" by punctuation/newlines, filter, then rejoin.
+  const parts = t
+    .split(/[\n\r]+|(?<=[.!?])\s+/g)
+    .map((s) => normalizeWhitespace(s))
+    .filter(Boolean);
+
+  const filtered = parts.filter((p) => {
+    const lower = p.toLowerCase();
+    if (phoneRe.test(p)) return false;
+    if (badSnippets.some((x) => lower.includes(x))) return false;
+    return true;
+  });
+
+  return normalizeWhitespace(filtered.join(' '));
+}
+
 function deriveTitleFromDescription(desc) {
   if (!desc) return null;
   const sentence = desc.split('.').map((s) => s.trim()).find((s) => s.length > 12);
@@ -394,6 +452,8 @@ function normalizeDescription(campaign) {
     desc = localizePaparaText(desc);
   }
 
+  desc = removeBoilerplateSentences(desc);
+
   // If description is just a URL or a DAM asset link, treat it as garbage.
   if (looksLikeUrl(desc) || isAssetFilenameLike(desc)) {
     desc = '';
@@ -403,6 +463,29 @@ function normalizeDescription(campaign) {
     const detail = cleanText(campaign.detailText || '');
     if (detail && !isGenericDescription(detail)) {
       desc = detail;
+    }
+  }
+
+  // If description is redundant (same as title), try to derive a better summary from detailText.
+  const cmpTitle = normalizeForCompare(normalizedTitle);
+  const cmpDesc = normalizeForCompare(desc);
+  if (cmpTitle && cmpDesc && (cmpDesc === cmpTitle || cmpDesc.includes(cmpTitle) || cmpTitle.includes(cmpDesc))) {
+    desc = '';
+  }
+
+  if (!desc || desc.length < 8) {
+    const rawDetail = removeBoilerplateSentences(cleanText(campaign.detailText || ''));
+    if (rawDetail && rawDetail.length >= 20 && !isGenericDescription(rawDetail)) {
+      // Prefer a sentence/segment that isn't just the title repeated.
+      const parts = rawDetail
+        .split(/[\n\r]+|(?<=[.!?])\s+/g)
+        .map((s) => normalizeWhitespace(s))
+        .filter((s) => s.length >= 20);
+      const picked =
+        parts.find((p) => normalizeForCompare(p) !== cmpTitle && !isGenericDescription(p)) ||
+        parts.find((p) => !isGenericDescription(p)) ||
+        rawDetail;
+      if (picked) desc = picked;
     }
   }
 
@@ -427,6 +510,9 @@ function normalizeDescription(campaign) {
     }
   }
 
+  // Keep list cards readable.
+  desc = normalizeWhitespace(desc);
+  if (desc.length > 180) desc = `${desc.slice(0, 177)}...`;
   return desc;
 }
 
@@ -439,6 +525,8 @@ function normalizeDetailText(campaign) {
   if (sourceKey === 'papara') {
     text = localizePaparaText(text);
   }
+
+  text = removeBoilerplateSentences(text);
 
   // Strip common wrapper prefixes (often from proxy readers / metadata dumps).
   text = text
