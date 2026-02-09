@@ -129,15 +129,26 @@ class _CalendarScreenState extends State<CalendarScreen> {
     }
 
     final ids = _campaigns.map((e) => e.id).toList();
-    final key =
+    final desiredKey =
         '${_selectedDay.toIso8601String().substring(0, 10)}_${ids.length}_${ids.isNotEmpty ? ids.first : ''}_${ids.isNotEmpty ? ids.last : ''}';
-    if (_favoriteMapKey == key) return;
-    _favoriteMapKey = key;
+    if (_favoriteMapKey == desiredKey) return;
+    if (ids.isEmpty) {
+      if (_favoriteMap.isNotEmpty) {
+        setState(() {
+          _favoriteMap = {};
+          _favoriteMapKey = desiredKey;
+        });
+      } else {
+        _favoriteMapKey = desiredKey;
+      }
+      return;
+    }
 
     final map = await _favoriteRepository.checkFavorites(ids);
     if (!mounted) return;
     setState(() {
       _favoriteMap = map;
+      _favoriteMapKey = desiredKey;
     });
   }
 

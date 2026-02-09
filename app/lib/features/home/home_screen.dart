@@ -122,15 +122,26 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final ids = visible.map((e) => e.id).toList();
     // Avoid spamming the endpoint on rebuilds.
-    final key =
+    final desiredKey =
         '${_selectedFilter}_${ids.length}_${ids.isNotEmpty ? ids.first : ''}_${ids.isNotEmpty ? ids.last : ''}';
-    if (_favoriteMapKey == key) return;
-    _favoriteMapKey = key;
+    if (_favoriteMapKey == desiredKey) return;
+    if (ids.isEmpty) {
+      if (_favoriteMap.isNotEmpty) {
+        setState(() {
+          _favoriteMap = {};
+          _favoriteMapKey = desiredKey;
+        });
+      } else {
+        _favoriteMapKey = desiredKey;
+      }
+      return;
+    }
 
     final map = await _favoriteRepository.checkFavorites(ids);
     if (!mounted) return;
     setState(() {
       _favoriteMap = map;
+      _favoriteMapKey = desiredKey;
     });
   }
 
