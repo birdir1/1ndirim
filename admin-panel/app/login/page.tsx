@@ -24,7 +24,7 @@ export default function LoginPage() {
     const out = await apiFetch<unknown>('/sources', auth, { method: 'GET' });
     setLoading(false);
     if (out.error || (out.status >= 400)) {
-      setError(out.error || `HTTP ${out.status}`);
+      setError(out.message || out.error || `HTTP ${out.status}`);
       return;
     }
     setAuth(auth);
