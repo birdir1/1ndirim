@@ -138,6 +138,21 @@ class AdminSourceService {
       query += ` AND type = $${paramIndex}`;
       params.push(type);
       paramIndex++;
+
+      // Operatör filtresinde sadece ana operatörler görünsün
+      if (type === 'operator') {
+        const allowedOperators = [
+          'turkcell',
+          'vodafone',
+          'türk telekom',
+          'turk telekom',
+          'bimcell',
+          'pttcell',
+        ];
+        query += ` AND LOWER(name) = ANY($${paramIndex})`;
+        params.push(allowedOperators);
+        paramIndex++;
+      }
     }
     
     if (isActive !== null) {
