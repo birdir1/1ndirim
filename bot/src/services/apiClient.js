@@ -78,11 +78,19 @@ class ApiClient {
       } catch (error) {
         lastError = error;
 
-        // 4xx hatalar (client error) retry edilmez
+        // 4xx hatalar (client error) retry edilmez (429 hariç: rate-limit geçici bir durum)
         if (error.response && error.response.status >= 400 && error.response.status < 500) {
           try {
             const status = error.response.status;
             const errMsg = (error.response.data && (error.response.data.error || error.response.data.message)) || error.message;
+            if (status === 429 && attempt < maxRetries) {
+              const retryAfterRaw = (error.response.headers && (error.response.headers['retry-after'] || error.response.headers['Retry-After'])) || '';
+              const retryAfterSec = Number.parseInt(String(retryAfterRaw || '').trim(), 10);
+              const waitMs = Number.isFinite(retryAfterSec) && retryAfterSec > 0 ? retryAfterSec * 1000 : Math.pow(2, attempt) * 5000;
+              console.warn(`⬅️  POST /campaigns status=429 (retry) waitMs=${waitMs} error=${errMsg}`);
+              await new Promise((resolve) => setTimeout(resolve, waitMs));
+              continue;
+            }
             console.warn(`⬅️  POST /campaigns status=${status} (no-retry) error=${errMsg}`);
           } catch (_) {}
           return {
@@ -218,8 +226,8 @@ class ApiClient {
     const results = [];
     // Defaults tuned to avoid backend rate limits (429) on production.
     // Can be overridden via env for faster backfills.
-    const batchSize = parseInt(process.env.BOT_BATCH_SIZE || '3', 10);
-    const batchDelayMs = parseInt(process.env.BOT_BATCH_DELAY_MS || '1500', 10);
+    const batchSize = parseInt(process.env.BOT_BATCH_SIZE || '1', 10);
+    const batchDelayMs = parseInt(process.env.BOT_BATCH_DELAY_MS || '2500', 10);
     for (let i = 0; i < campaigns.length; i += batchSize) {
       const batch = campaigns.slice(i, i + batchSize);
       const batchResults = await Promise.all(batch.map((campaign) => this.createCampaign(campaign, 3)));
