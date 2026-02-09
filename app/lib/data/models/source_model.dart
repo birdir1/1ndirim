@@ -12,11 +12,7 @@ class SourceSegment {
     this.isSelected = false,
   });
 
-  SourceSegment copyWith({
-    String? id,
-    String? name,
-    bool? isSelected,
-  }) {
+  SourceSegment copyWith({String? id, String? name, bool? isSelected}) {
     return SourceSegment(
       id: id ?? this.id,
       name: name ?? this.name,
@@ -34,6 +30,9 @@ class SourceModel {
   final Color color;
   final List<SourceSegment> segments;
   bool isSelected;
+  final bool hasScraper;
+  final bool planned;
+  final bool noCampaignPage;
 
   SourceModel({
     required this.id,
@@ -43,6 +42,9 @@ class SourceModel {
     required this.color,
     this.segments = const [],
     this.isSelected = false,
+    this.hasScraper = true,
+    this.planned = false,
+    this.noCampaignPage = false,
   });
 
   SourceModel copyWith({
@@ -53,6 +55,9 @@ class SourceModel {
     Color? color,
     List<SourceSegment>? segments,
     bool? isSelected,
+    bool? hasScraper,
+    bool? planned,
+    bool? noCampaignPage,
   }) {
     return SourceModel(
       id: id ?? this.id,
@@ -62,6 +67,9 @@ class SourceModel {
       color: color ?? this.color,
       segments: segments ?? this.segments,
       isSelected: isSelected ?? this.isSelected,
+      hasScraper: hasScraper ?? this.hasScraper,
+      planned: planned ?? this.planned,
+      noCampaignPage: noCampaignPage ?? this.noCampaignPage,
     );
   }
 }

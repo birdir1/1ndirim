@@ -334,12 +334,34 @@ class _HomeScreenState extends State<HomeScreen> {
 
       // Filtre sonucu boşsa
       if (filtered.isEmpty) {
+        final selectedSources = sourcesProvider.selectedSources;
+        final singleSource = selectedSources.length == 1
+            ? selectedSources.firstWhere(
+                (s) => _selectedFilter == 'Tümü' || s.name == _selectedFilter,
+                orElse: () => selectedSources.first,
+              )
+            : null;
+
+        String title = 'Fırsat bulunamadı';
+        String description = _selectedFilter == 'Tümü'
+            ? 'Seçtiğin kaynaklar için henüz aktif fırsat yok. Yakında burada görünecek.'
+            : '$_selectedFilter için şu anda aktif fırsat bulunmuyor. Farklı bir filtre seçmeyi dene.';
+
+        if (singleSource != null) {
+          if (!singleSource.hasScraper && singleSource.planned) {
+            title = 'Şu an kampanya yok';
+            description =
+                '${singleSource.name} için kampanyalar yakında burada olacak.';
+          } else if (singleSource.hasScraper) {
+            title = 'Bu bankada şu an aktif kampanya yok';
+            description = 'Yeni kampanyalar eklendiğinde burada göstereceğiz.';
+          }
+        }
+
         return AppEmptyState(
           icon: Icons.search_off,
-          title: 'Fırsat bulunamadı',
-          description: _selectedFilter == 'Tümü'
-              ? 'Seçtiğin kaynaklar için henüz aktif fırsat yok. Yakında burada görünecek.'
-              : '$_selectedFilter için şu anda aktif fırsat bulunmuyor. Farklı bir filtre seçmeyi dene.',
+          title: title,
+          description: description,
           actionText: _selectedFilter != 'Tümü' ? 'Tümünü Göster' : null,
           onAction: _selectedFilter != 'Tümü'
               ? () {

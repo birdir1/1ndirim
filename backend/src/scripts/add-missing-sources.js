@@ -37,6 +37,19 @@ async function addMissingSources() {
         logoUrl: null,
         websiteUrl: 'https://www.turktelekom.com.tr',
       },
+      // Yeni talep edilen bankalar
+      { name: 'Şekerbank', type: 'bank', logoUrl: null, websiteUrl: 'https://www.sekerbank.com.tr' },
+      { name: 'Fibabanka', type: 'bank', logoUrl: null, websiteUrl: 'https://www.fibabanka.com.tr' },
+      { name: 'Anadolubank', type: 'bank', logoUrl: null, websiteUrl: 'https://www.anadolubank.com.tr' },
+      { name: 'Alternatif Bank', type: 'bank', logoUrl: null, websiteUrl: 'https://www.abank.com.tr' },
+      { name: 'OdeaBank', type: 'bank', logoUrl: null, websiteUrl: 'https://www.odeabank.com.tr' },
+      { name: 'ICBC Turkey Bank', type: 'bank', logoUrl: null, websiteUrl: 'https://www.icbc.com.tr' },
+      { name: 'Burgan Bank', type: 'bank', logoUrl: null, websiteUrl: 'https://www.burgan.com.tr' },
+      { name: 'Turkish Bank', type: 'bank', logoUrl: null, websiteUrl: 'https://www.turkishbank.com' },
+      { name: 'HSBC Türkiye', type: 'bank', logoUrl: null, websiteUrl: 'https://www.hsbc.com.tr' },
+      { name: 'Hayat Finans', type: 'bank', logoUrl: null, websiteUrl: 'https://www.hayatfinans.com.tr' },
+      { name: 'TOM Bank', type: 'bank', logoUrl: null, websiteUrl: 'https://www.tombank.com.tr' },
+      },
     ];
 
     // Mevcut source'ları kontrol et

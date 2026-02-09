@@ -3,6 +3,7 @@ const router = express.Router();
 const Source = require('../models/Source');
 const { cacheMiddleware } = require('../middleware/cache');
 const CacheService = require('../services/cacheService');
+const { getCapability } = require('../utils/sourceCapabilities');
 
 /**
  * GET /sources/status
@@ -39,15 +40,21 @@ router.get('/', cacheMiddleware(CacheService.TTL.SOURCES_LIST), async (req, res)
 
     // Flutter uygulaması için format
     // Not: icon ve color Flutter tarafında hardcoded, burada sadece metadata
-    const formattedSources = sources.map((source) => ({
-      id: source.id,
-      name: source.name,
-      type: source.type, // 'bank' or 'operator'
-      logoUrl: source.logo_url,
-      websiteUrl: source.website_url,
-      segments: source.segments || [],
-      isSelected: false, // Bu client-side state, backend'de tutulmaz
-    }));
+    const formattedSources = sources.map((source) => {
+      const capability = getCapability(source.name);
+      return {
+        id: source.id,
+        name: source.name,
+        type: source.type, // 'bank' or 'operator'
+        logoUrl: source.logo_url,
+        websiteUrl: source.website_url,
+        segments: source.segments || [],
+        isSelected: false, // client-side state
+        hasScraper: capability.hasScraper,
+        planned: capability.planned || false,
+        noCampaignPage: capability.noCampaignPage || false,
+      };
+    });
 
     res.json({
       success: true,

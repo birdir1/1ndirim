@@ -263,6 +263,8 @@ class SourceRepository {
         type: 'bank',
         icon: _getIconData('account_balance'),
         color: const Color(0xFFCA8A04),
+        hasScraper: false,
+        planned: true,
         segments: [
           SourceSegment(id: 'sekerbank_bonus', name: 'Bonus'),
           SourceSegment(id: 'sekerbank_bonus_platinum', name: 'Bonus Platinum'),
@@ -278,6 +280,8 @@ class SourceRepository {
         type: 'bank',
         icon: _getIconData('account_balance'),
         color: const Color(0xFFEF4444),
+        hasScraper: false,
+        planned: true,
         segments: [
           SourceSegment(id: 'fibabanka_bonus', name: 'Bonus'),
           SourceSegment(id: 'fibabanka_bonus_platinum', name: 'Bonus Platinum'),
@@ -293,6 +297,8 @@ class SourceRepository {
         type: 'bank',
         icon: _getIconData('account_balance'),
         color: const Color(0xFF9333EA),
+        hasScraper: false,
+        planned: true,
         segments: [
           SourceSegment(id: 'anadolubank_worldcard', name: 'Worldcard'),
           SourceSegment(
@@ -311,6 +317,8 @@ class SourceRepository {
         type: 'bank',
         icon: _getIconData('account_balance'),
         color: const Color(0xFF2563EB),
+        hasScraper: false,
+        planned: true,
         segments: [
           SourceSegment(id: 'alternatif_bonus', name: 'Bonus'),
           SourceSegment(
@@ -329,6 +337,8 @@ class SourceRepository {
         type: 'bank',
         icon: _getIconData('account_balance'),
         color: const Color(0xFF16A34A),
+        hasScraper: false,
+        planned: true,
         segments: [
           SourceSegment(id: 'odeabank_odeacard', name: 'OdeaCard'),
           SourceSegment(
@@ -347,6 +357,8 @@ class SourceRepository {
         type: 'bank',
         icon: _getIconData('account_balance'),
         color: const Color(0xFFDC2626),
+        hasScraper: false,
+        planned: true,
         segments: [
           SourceSegment(id: 'icbc_card', name: 'ICBC Card'),
           SourceSegment(id: 'icbc_banka_karti', name: 'ICBC Banka Kartı'),
@@ -358,6 +370,8 @@ class SourceRepository {
         type: 'bank',
         icon: _getIconData('account_balance'),
         color: const Color(0xFF0D9488),
+        hasScraper: false,
+        planned: true,
         segments: [
           SourceSegment(id: 'burgan_on_dijital_kart', name: 'On Dijital Kart'),
           SourceSegment(
@@ -372,6 +386,8 @@ class SourceRepository {
         type: 'bank',
         icon: _getIconData('account_balance'),
         color: const Color(0xFF38BDF8),
+        hasScraper: false,
+        planned: true,
         segments: [
           SourceSegment(
             id: 'turkishbank_kredi_karti',
@@ -389,6 +405,8 @@ class SourceRepository {
         type: 'bank',
         icon: _getIconData('account_balance'),
         color: const Color(0xFFDC2626),
+        hasScraper: false,
+        planned: true,
         segments: [
           SourceSegment(id: 'hsbc_advantage', name: 'Advantage'),
           SourceSegment(
@@ -537,6 +555,8 @@ class SourceRepository {
         type: 'bank',
         icon: _getIconData('account_balance'),
         color: const Color(0xFF38BDF8),
+        hasScraper: false,
+        planned: true,
         segments: [
           SourceSegment(id: 'hayatfinans_kart', name: 'Hayat Finans Kart'),
           SourceSegment(
@@ -551,6 +571,9 @@ class SourceRepository {
         type: 'bank',
         icon: _getIconData('account_balance'),
         color: const Color(0xFF9333EA),
+        hasScraper: false,
+        planned: true,
+        noCampaignPage: true,
         segments: [
           SourceSegment(id: 'tombank_tom_kart', name: 'TOM Kart'),
           SourceSegment(id: 'tombank_tom_sanal_kart', name: 'TOM Sanal Kart'),

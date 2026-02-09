@@ -18,6 +18,7 @@ const {
   shouldDropCampaign,
   fingerprint,
 } = require('../utils/campaignTextCleaner');
+const { getCapability } = require('../utils/sourceCapabilities');
 
 /**
  * GET /campaigns
@@ -199,7 +200,6 @@ router.get('/search', async (req, res) => {
 
     const campaigns = await Campaign.search(searchTerm, sourceIds, filters);
 
-    // Flutter uygulaması için format
     const formattedCampaigns = [];
     const seen = new Set();
 
@@ -247,6 +247,8 @@ router.get('/search', async (req, res) => {
       data: formattedCampaigns,
       count: formattedCampaigns.length,
       searchTerm: searchTerm,
+      emptySources: [],
+      sourceCapabilities: {},
     });
   } catch (error) {
     console.error('Campaigns/search error:', error.message);
@@ -335,10 +337,44 @@ router.get('/all', async (req, res) => {
       });
     }
 
+    // Empty sources info for selected set
+    let emptySources = [];
+    try {
+      const Source = require('../models/Source');
+      const allSources = await Source.findAll();
+      const filterIds = sourceIds || allSources.map((s) => s.id);
+      const hasCampaign = new Set(formattedCampaigns.map((c) => c.sourceId));
+      emptySources = allSources
+        .filter((s) => filterIds.includes(s.id) && !hasCampaign.has(s.id))
+        .map((s) => {
+          const capability = getCapability(s.name);
+          return {
+            id: s.id,
+            name: s.name,
+            hasScraper: capability.hasScraper,
+            planned: capability.planned || false,
+            noCampaignPage: capability.noCampaignPage || false,
+            reason: capability.hasScraper ? 'no_active_campaigns' : 'no_scraper',
+          };
+        });
+    } catch (_) {
+      emptySources = [];
+    }
+
+    // Capability map for client
+    const sourceCapabilities = {};
+    for (const c of formattedCampaigns) {
+      if (!sourceCapabilities[c.sourceName]) {
+        sourceCapabilities[c.sourceName] = getCapability(c.sourceName);
+      }
+    }
+
     res.json({
       success: true,
       data: formattedCampaigns,
       count: formattedCampaigns.length,
+      emptySources,
+      sourceCapabilities,
     });
   } catch (error) {
     console.error('Campaigns/all list error:', error.message);
@@ -637,6 +673,8 @@ router.get('/expiring-soon', async (req, res) => {
       data: formattedCampaigns,
       count: formattedCampaigns.length,
       days,
+      emptySources: [],
+      sourceCapabilities: {},
     });
   } catch (error) {
     console.error('Expiring soon campaigns error:', error);
@@ -695,6 +733,9 @@ router.get('/:id', async (req, res) => {
       validityChannels: campaign.validity_channels || [],
       status: campaign.status,
       logoColor: campaign.icon_color || '#DC2626',
+      hasScraper: getCapability(campaign.source_name).hasScraper,
+      planned: getCapability(campaign.source_name).planned || false,
+      noCampaignPage: getCapability(campaign.source_name).noCampaignPage || false,
     };
 
     res.json({
