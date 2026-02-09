@@ -216,8 +216,10 @@ class ApiClient {
     }
 
     const results = [];
-    const batchSize = parseInt(process.env.BOT_BATCH_SIZE || '10', 10);
-    const batchDelayMs = parseInt(process.env.BOT_BATCH_DELAY_MS || '500', 10);
+    // Defaults tuned to avoid backend rate limits (429) on production.
+    // Can be overridden via env for faster backfills.
+    const batchSize = parseInt(process.env.BOT_BATCH_SIZE || '3', 10);
+    const batchDelayMs = parseInt(process.env.BOT_BATCH_DELAY_MS || '1500', 10);
     for (let i = 0; i < campaigns.length; i += batchSize) {
       const batch = campaigns.slice(i, i + batchSize);
       const batchResults = await Promise.all(batch.map((campaign) => this.createCampaign(campaign, 3)));
