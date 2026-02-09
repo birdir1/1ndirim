@@ -80,6 +80,11 @@ class ApiClient {
 
         // 4xx hatalar (client error) retry edilmez
         if (error.response && error.response.status >= 400 && error.response.status < 500) {
+          try {
+            const status = error.response.status;
+            const errMsg = (error.response.data && (error.response.data.error || error.response.data.message)) || error.message;
+            console.warn(`⬅️  POST /campaigns status=${status} (no-retry) error=${errMsg}`);
+          } catch (_) {}
           return {
             success: false,
             error: error.response.data.error || 'Backend hatası',
