@@ -6,7 +6,7 @@ void main() {
   setUpAll(() async {
     // Initialize dotenv for tests
     TestWidgetsFlutterBinding.ensureInitialized();
-    dotenv.testLoad(fileInput: 'API_BASE_URL=https://api.test.com');
+    dotenv.loadFromString(envString: 'API_BASE_URL=https://api.test.com');
   });
 
   group('ApiConfig', () {

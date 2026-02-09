@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/empty_state.dart' show AppEmptyState;
 import '../../../core/utils/network_result.dart';
 import '../../../core/providers/selected_sources_provider.dart';
 import '../../../data/models/opportunity_model.dart';
+import '../../../data/repositories/favorite_repository.dart';
 import '../../../data/repositories/opportunity_repository.dart';
 import '../widgets/opportunity_card_v2.dart';
 
@@ -21,6 +23,8 @@ class SearchScreen extends StatefulWidget {
 class _SearchScreenState extends State<SearchScreen> {
   final OpportunityRepository _opportunityRepository =
       OpportunityRepository.instance;
+  final FavoriteRepository _favoriteRepository = FavoriteRepository.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _focusNode = FocusNode();
 
@@ -28,6 +32,8 @@ class _SearchScreenState extends State<SearchScreen> {
     [],
   );
   List<OpportunityModel> _searchResults = [];
+  Map<String, bool> _favoriteMap = {};
+  String? _favoriteMapKey;
   String _lastSearchTerm = '';
   Timer? _debounceTimer;
 
@@ -99,6 +105,7 @@ class _SearchScreenState extends State<SearchScreen> {
             _searchResults = result.data;
           }
         });
+        _prefetchFavorites();
       }
     } catch (e) {
       if (mounted && _lastSearchTerm == searchTerm) {
@@ -109,6 +116,31 @@ class _SearchScreenState extends State<SearchScreen> {
         });
       }
     }
+  }
+
+  Future<void> _prefetchFavorites() async {
+    if (!mounted) return;
+    if (_auth.currentUser == null) {
+      if (_favoriteMap.isNotEmpty) {
+        setState(() {
+          _favoriteMap = {};
+          _favoriteMapKey = null;
+        });
+      }
+      return;
+    }
+
+    final ids = _searchResults.map((e) => e.id).toList();
+    final key =
+        '${_lastSearchTerm}_${ids.length}_${ids.isNotEmpty ? ids.first : ''}_${ids.isNotEmpty ? ids.last : ''}';
+    if (_favoriteMapKey == key) return;
+    _favoriteMapKey = key;
+
+    final map = await _favoriteRepository.checkFavorites(ids);
+    if (!mounted) return;
+    setState(() {
+      _favoriteMap = map;
+    });
   }
 
   @override
@@ -219,7 +251,10 @@ class _SearchScreenState extends State<SearchScreen> {
 
           final opportunity = _searchResults[index - 1];
           return RepaintBoundary(
-            child: OpportunityCardV2(opportunity: opportunity),
+            child: OpportunityCardV2(
+              opportunity: opportunity,
+              isFavorite: _favoriteMap[opportunity.id],
+            ),
           );
         },
       );

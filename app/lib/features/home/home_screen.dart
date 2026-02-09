@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
@@ -7,6 +8,8 @@ import '../../core/utils/page_transitions.dart';
 import '../../core/utils/network_result.dart';
 import '../../core/providers/selected_sources_provider.dart';
 import '../../data/models/opportunity_model.dart';
+import '../../data/models/source_model.dart';
+import '../../data/repositories/favorite_repository.dart';
 import '../../data/repositories/opportunity_repository.dart';
 import '../sources/edit_sources_screen.dart';
 import 'widgets/opportunity_card_v2.dart';
@@ -26,6 +29,8 @@ class _HomeScreenState extends State<HomeScreen> {
       const NetworkLoading();
   List<OpportunityModel> _allOpportunities = [];
   List<OpportunityModel> _expiringSoonOpportunities = [];
+  final Map<String, NetworkResult<List<OpportunityModel>>> _perSourceResults =
+      {};
   List<Map<String, dynamic>> _filters = [];
   List<OpportunityModel>? _cachedFilteredOpportunities;
   String? _cachedFilterKey;
@@ -34,6 +39,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final OpportunityRepository _opportunityRepository =
       OpportunityRepository.instance;
+  final FavoriteRepository _favoriteRepository = FavoriteRepository.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  Map<String, bool> _favoriteMap = {};
+  String? _favoriteMapKey;
 
   @override
   void initState() {
@@ -74,6 +84,7 @@ class _HomeScreenState extends State<HomeScreen> {
         setState(() {
           _expiringSoonOpportunities = result.data;
         });
+        _prefetchFavoritesForVisible();
       }
     } catch (e) {
       // Hata durumunda sessizce devam et, ana kampanyalar yüklenmeye devam etsin
@@ -83,6 +94,44 @@ class _HomeScreenState extends State<HomeScreen> {
         });
       }
     }
+  }
+
+  Future<void> _prefetchFavoritesForVisible() async {
+    if (!mounted) return;
+    if (_auth.currentUser == null) {
+      // Not logged in: keep UI consistent without hitting the API.
+      if (_favoriteMap.isNotEmpty) {
+        setState(() {
+          _favoriteMap = {};
+          _favoriteMapKey = null;
+        });
+      }
+      return;
+    }
+
+    final visible = <OpportunityModel>[];
+    if (_selectedFilter == 'Tümü') {
+      visible.addAll(_allOpportunities);
+    } else {
+      final r = _perSourceResults[_selectedFilter];
+      if (r is NetworkSuccess<List<OpportunityModel>>) {
+        visible.addAll(r.data);
+      }
+    }
+    visible.addAll(_expiringSoonOpportunities);
+
+    final ids = visible.map((e) => e.id).toList();
+    // Avoid spamming the endpoint on rebuilds.
+    final key =
+        '${_selectedFilter}_${ids.length}_${ids.isNotEmpty ? ids.first : ''}_${ids.isNotEmpty ? ids.last : ''}';
+    if (_favoriteMapKey == key) return;
+    _favoriteMapKey = key;
+
+    final map = await _favoriteRepository.checkFavorites(ids);
+    if (!mounted) return;
+    setState(() {
+      _favoriteMap = map;
+    });
   }
 
   /// Repository'den fırsatları yükler
@@ -141,6 +190,7 @@ class _HomeScreenState extends State<HomeScreen> {
             _cachedFilterKey = null;
           }
         });
+        _prefetchFavoritesForVisible();
       }
     } catch (e) {
       if (mounted) {
@@ -152,6 +202,33 @@ class _HomeScreenState extends State<HomeScreen> {
         });
       }
     }
+  }
+
+  Future<void> _loadOpportunitiesForSource(String sourceName) async {
+    if (!mounted) return;
+    if (sourceName == 'Tümü') return;
+
+    final existing = _perSourceResults[sourceName];
+    if (existing is NetworkSuccess<List<OpportunityModel>> &&
+        existing.data.isNotEmpty) {
+      // Cache hit; still ensure favorite map is prefetched for visible content.
+      _prefetchFavoritesForVisible();
+      return;
+    }
+
+    setState(() {
+      _perSourceResults[sourceName] = const NetworkLoading();
+    });
+
+    final result = await _opportunityRepository.getOpportunitiesBySources([
+      sourceName,
+    ]);
+
+    if (!mounted) return;
+    setState(() {
+      _perSourceResults[sourceName] = result;
+    });
+    _prefetchFavoritesForVisible();
   }
 
   /// Filtreleri günceller (Provider'dan kaynakları alır)
@@ -179,6 +256,10 @@ class _HomeScreenState extends State<HomeScreen> {
         !_filters.any((f) => f['name'] == _selectedFilter)) {
       _selectedFilter = 'Tümü';
     }
+
+    // Drop per-source cache entries that are no longer selectable.
+    final validNames = _filters.map((f) => f['name'] as String).toSet();
+    _perSourceResults.removeWhere((k, v) => !validNames.contains(k));
   }
 
   /// Kaynak için filtre rengini döndürür
@@ -267,6 +348,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   _cachedFilteredOpportunities = null; // Cache'i temizle
                   _cachedFilterKey = null;
                 });
+                if (_selectedFilter != 'Tümü') {
+                  _loadOpportunitiesForSource(_selectedFilter);
+                } else {
+                  _prefetchFavoritesForVisible();
+                }
               },
             ),
           );
@@ -278,6 +364,14 @@ class _HomeScreenState extends State<HomeScreen> {
   /// Seçili kaynaklara göre fırsatları filtreler (memoized)
   /// Not: _allOpportunities zaten sadece seçili kaynaklardan geliyor
   List<OpportunityModel> get _filteredOpportunities {
+    if (_selectedFilter != 'Tümü') {
+      final r = _perSourceResults[_selectedFilter];
+      if (r is NetworkSuccess<List<OpportunityModel>>) {
+        return r.data;
+      }
+      return [];
+    }
+
     final sourcesProvider = Provider.of<SelectedSourcesProvider>(
       context,
       listen: false,
@@ -319,40 +413,58 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     // Fırsatlar yükleniyor
-    if (_opportunitiesResult is NetworkLoading) {
+    if (_selectedFilter == 'Tümü' && _opportunitiesResult is NetworkLoading) {
       return _buildLoadingSkeleton();
     }
 
+    if (_selectedFilter != 'Tümü') {
+      final r = _perSourceResults[_selectedFilter];
+      if (r == null || r is NetworkLoading) {
+        return _buildLoadingSkeleton();
+      }
+      if (r is NetworkError<List<OpportunityModel>>) {
+        return _buildErrorState(r);
+      }
+    }
+
     // Fırsatlar yüklenirken hata oluştu
-    if (_opportunitiesResult is NetworkError) {
+    if (_selectedFilter == 'Tümü' && _opportunitiesResult is NetworkError) {
       return _buildErrorState(_opportunitiesResult as NetworkError);
     }
 
     // Başarılı sonuç
-    if (_opportunitiesResult is NetworkSuccess) {
+    if (_selectedFilter == 'Tümü' && _opportunitiesResult is NetworkSuccess ||
+        _selectedFilter != 'Tümü') {
       final filtered = _filteredOpportunities;
 
       // Filtre sonucu boşsa
       if (filtered.isEmpty) {
         final selectedSources = sourcesProvider.selectedSources;
-        final singleSource = selectedSources.length == 1
-            ? selectedSources.firstWhere(
-                (s) => _selectedFilter == 'Tümü' || s.name == _selectedFilter,
-                orElse: () => selectedSources.first,
-              )
-            : null;
+        SourceModel? selectedSource;
+        if (_selectedFilter == 'Tümü') {
+          if (selectedSources.length == 1) {
+            selectedSource = selectedSources.first;
+          }
+        } else {
+          for (final s in selectedSources) {
+            if (s.name == _selectedFilter) {
+              selectedSource = s;
+              break;
+            }
+          }
+        }
 
         String title = 'Fırsat bulunamadı';
         String description = _selectedFilter == 'Tümü'
             ? 'Seçtiğin kaynaklar için henüz aktif fırsat yok. Yakında burada görünecek.'
             : '$_selectedFilter için şu anda aktif fırsat bulunmuyor. Farklı bir filtre seçmeyi dene.';
 
-        if (singleSource != null) {
-          if (!singleSource.hasScraper && singleSource.planned) {
+        if (selectedSource != null) {
+          if (!selectedSource.hasScraper && selectedSource.planned) {
             title = 'Şu an kampanya yok';
             description =
-                '${singleSource.name} için kampanyalar yakında burada olacak.';
-          } else if (singleSource.hasScraper) {
+                '${selectedSource.name} için kampanyalar yakında burada olacak.';
+          } else if (selectedSource.hasScraper) {
             title = 'Bu bankada şu an aktif kampanya yok';
             description = 'Yeni kampanyalar eklendiğinde burada göstereceğiz.';
           }
@@ -388,7 +500,10 @@ class _HomeScreenState extends State<HomeScreen> {
               delegate: SliverChildBuilderDelegate((context, index) {
                 final opportunity = filtered[index];
                 return RepaintBoundary(
-                  child: OpportunityCardV2(opportunity: opportunity),
+                  child: OpportunityCardV2(
+                    opportunity: opportunity,
+                    isFavorite: _favoriteMap[opportunity.id],
+                  ),
                 );
               }, childCount: filtered.length),
             ),
@@ -452,7 +567,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 return Container(
                   width: 280,
                   margin: const EdgeInsets.only(right: 12),
-                  child: OpportunityCardV2(opportunity: opportunity),
+                  child: OpportunityCardV2(
+                    opportunity: opportunity,
+                    isFavorite: _favoriteMap[opportunity.id],
+                  ),
                 );
               },
             ),

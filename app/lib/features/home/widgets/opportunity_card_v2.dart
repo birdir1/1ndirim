@@ -41,22 +41,16 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
   void initState() {
     super.initState();
     _isFavorite = widget.isFavorite ?? false;
-    // Kullanıcı giriş yapmışsa favori durumunu kontrol et
-    if (_auth.currentUser != null && widget.isFavorite == null) {
-      _checkFavoriteStatus();
-    }
+    // Favorite state is expected to be prefetched by the parent (batch-check).
+    // We intentionally avoid per-card network calls to prevent request storms/429s.
   }
 
-  Future<void> _checkFavoriteStatus() async {
-    try {
-      final isFav = await _favoriteRepository.isFavorite(widget.opportunity.id);
-      if (mounted) {
-        setState(() {
-          _isFavorite = isFav;
-        });
-      }
-    } catch (e) {
-      // Silent fail - favori durumu kontrol edilemezse varsayılan olarak false
+  @override
+  void didUpdateWidget(covariant OpportunityCardV2 oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Parent may update the initial favorite state after batch-check completes.
+    if (widget.isFavorite != null && widget.isFavorite != oldWidget.isFavorite) {
+      _isFavorite = widget.isFavorite!;
     }
   }
 

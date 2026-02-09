@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
@@ -9,6 +10,7 @@ import '../../../core/utils/network_result.dart';
 import '../../../core/utils/tag_normalizer.dart';
 import '../../../core/providers/selected_sources_provider.dart';
 import '../../../data/models/opportunity_model.dart';
+import '../../../data/repositories/favorite_repository.dart';
 import '../../../data/repositories/opportunity_repository.dart';
 import '../widgets/opportunity_card_v2.dart';
 import '../campaign_detail_screen.dart';
@@ -34,6 +36,11 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   final OpportunityRepository _opportunityRepository =
       OpportunityRepository.instance;
+  final FavoriteRepository _favoriteRepository = FavoriteRepository.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  Map<String, bool> _favoriteMap = {};
+  String? _favoriteMapKey;
 
   @override
   void initState() {
@@ -89,6 +96,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
             _campaignsResult = NetworkSuccess(filteredCampaigns);
             _isLoading = false;
           });
+          _prefetchFavorites();
         } else {
           setState(() {
             _campaignsResult = result;
@@ -106,6 +114,31 @@ class _CalendarScreenState extends State<CalendarScreen> {
         });
       }
     }
+  }
+
+  Future<void> _prefetchFavorites() async {
+    if (!mounted) return;
+    if (_auth.currentUser == null) {
+      if (_favoriteMap.isNotEmpty) {
+        setState(() {
+          _favoriteMap = {};
+          _favoriteMapKey = null;
+        });
+      }
+      return;
+    }
+
+    final ids = _campaigns.map((e) => e.id).toList();
+    final key =
+        '${_selectedDay.toIso8601String().substring(0, 10)}_${ids.length}_${ids.isNotEmpty ? ids.first : ''}_${ids.isNotEmpty ? ids.last : ''}';
+    if (_favoriteMapKey == key) return;
+    _favoriteMapKey = key;
+
+    final map = await _favoriteRepository.checkFavorites(ids);
+    if (!mounted) return;
+    setState(() {
+      _favoriteMap = map;
+    });
   }
 
   /// Tarih seçildiğinde çağrılır
@@ -336,7 +369,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
               );
             },
             borderRadius: BorderRadius.circular(20),
-            child: OpportunityCardV2(opportunity: campaign),
+            child: OpportunityCardV2(
+              opportunity: campaign,
+              isFavorite: _favoriteMap[campaign.id],
+            ),
           ),
         );
       },
