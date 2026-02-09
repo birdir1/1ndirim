@@ -28,9 +28,23 @@ const { isTrustedBotRequest } = require('./middleware/botAuth');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Security: do not trust X-Forwarded-* by default. This prevents client-supplied spoofing
-// from affecting `req.ip` and rate limiting unless you explicitly configure a trusted proxy.
-app.set('trust proxy', false);
+// Behind a reverse proxy (nginx), `req.ip` must reflect the real client IP so rate limiting
+// does not treat all traffic as coming from the proxy itself.
+//
+// Default:
+// - production: trust 1 proxy hop (nginx)
+// - non-production: do not trust proxy headers
+//
+// Override with TRUST_PROXY (e.g. "1", "true", "false") if needed.
+const trustProxyEnv = process.env.TRUST_PROXY;
+if (typeof trustProxyEnv === 'string' && trustProxyEnv.trim() !== '') {
+  const v = trustProxyEnv.trim().toLowerCase();
+  if (v === 'true') app.set('trust proxy', true);
+  else if (v === 'false') app.set('trust proxy', false);
+  else app.set('trust proxy', Number.isFinite(Number(v)) ? Number(v) : trustProxyEnv);
+} else {
+  app.set('trust proxy', process.env.NODE_ENV === 'production' ? 1 : false);
+}
 
 // Rate Limiting - DDoS koruması
 const limiter = rateLimit({
