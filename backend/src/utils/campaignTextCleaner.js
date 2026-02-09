@@ -37,9 +37,53 @@ function decodeHtmlEntities(text) {
   return he.decode(text);
 }
 
+function normalizeSourceKey(name) {
+  return (name || '')
+    .toString()
+    .toLowerCase()
+    .replace(/\s+/g, '')
+    .replace(/ı/g, 'i')
+    .replace(/ğ/g, 'g')
+    .replace(/ü/g, 'u')
+    .replace(/ş/g, 's')
+    .replace(/ö/g, 'o')
+    .replace(/ç/g, 'c');
+}
+
 function cleanText(text) {
   if (!text) return '';
   return normalizeWhitespace(decodeHtmlEntities(text));
+}
+
+function localizePaparaText(text) {
+  let t = cleanText(text || '');
+  if (!t) return '';
+
+  // Common vocabulary
+  t = t.replace(/\bCashback\b/gi, 'Nakit İade');
+
+  // "X – You can earn up to 25 TL each month." -> "X - Ayda en fazla 25 TL kazanabilirsin."
+  t = t.replace(
+    /(\S.*?)[\s]*[–-][\s]*you can earn up to\s*(\d+(?:[.,]\d+)?)\s*tl\s*each month\.?/i,
+    (_m, left, amount) => `${left.trim()} - Ayda en fazla ${amount} TL kazanabilirsin.`,
+  );
+
+  // "You can earn up to 25 TL each month." -> "Ayda en fazla 25 TL kazanabilirsin."
+  t = t.replace(
+    /you can earn up to\s*(\d+(?:[.,]\d+)?)\s*tl\s*each month\.?/i,
+    (_m, amount) => `Ayda en fazla ${amount} TL kazanabilirsin.`,
+  );
+
+  // "You can earn up to 25 TL." -> "En fazla 25 TL kazanabilirsin."
+  t = t.replace(
+    /you can earn up to\s*(\d+(?:[.,]\d+)?)\s*tl\.?/i,
+    (_m, amount) => `En fazla ${amount} TL kazanabilirsin.`,
+  );
+
+  // Loose cleanups
+  t = t.replace(/\beach month\b/gi, 'her ay');
+
+  return normalizeWhitespace(t);
 }
 
 function stripLabelPrefix(text) {
@@ -155,7 +199,11 @@ function deriveTitleFromDescription(desc) {
 }
 
 function normalizeTitle(campaign) {
+  const sourceKey = normalizeSourceKey(campaign.sourceName || campaign.source_name || '');
   let title = stripLabelPrefix(cleanText(campaign.title || ''));
+  if (sourceKey === 'papara') {
+    title = localizePaparaText(title);
+  }
   if (isAssetFilenameLike(title)) {
     title = humanizeAssetFilename(title);
   }
@@ -168,7 +216,11 @@ function normalizeTitle(campaign) {
 }
 
 function normalizeDescription(campaign) {
+  const sourceKey = normalizeSourceKey(campaign.sourceName || campaign.source_name || '');
   let desc = stripLabelPrefix(cleanText(campaign.description || ''));
+  if (sourceKey === 'papara') {
+    desc = localizePaparaText(desc);
+  }
 
   // If description is just a URL or a DAM asset link, treat it as garbage.
   if (looksLikeUrl(desc) || isAssetFilenameLike(desc)) {
@@ -185,8 +237,13 @@ function normalizeDescription(campaign) {
 }
 
 function normalizeDetailText(campaign) {
+  const sourceKey = normalizeSourceKey(campaign.sourceName || campaign.source_name || '');
   let text = cleanText(campaign.detailText || campaign.detail_text || '');
   if (!text) return '';
+
+  if (sourceKey === 'papara') {
+    text = localizePaparaText(text);
+  }
 
   // Strip common wrapper prefixes (often from proxy readers / metadata dumps).
   text = text
@@ -223,7 +280,7 @@ function shouldDropCampaign(campaign) {
 
 function fingerprint(campaign) {
   return [
-    (campaign.sourceName || '').toLowerCase(),
+    (campaign.sourceName || campaign.source_name || '').toLowerCase(),
     normalizeWhitespace(cleanText(campaign.title || '')),
     normalizeWhitespace(cleanText(campaign.description || '')),
     campaign.originalUrl || campaign.url || '',

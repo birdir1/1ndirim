@@ -57,7 +57,8 @@ class BrandStyles {
     'cepteteb': _style(const Color(0xFF00A651)),
 
     // Fintech / cüzdan
-    'papara': _style(const Color(0xFF7016FF)),
+    // Papara brand is essentially black/white; keep UI neutral (no purple).
+    'papara': _style(const Color(0xFF111111)),
     'paycell': _style(const Color(0xFF111111)),
     'tosla': _style(const Color(0xFFFF3D57)),
     'papel': _style(const Color(0xFF434444)),

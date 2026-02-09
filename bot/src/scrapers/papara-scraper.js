@@ -10,6 +10,39 @@
 
 const BaseScraper = require('./base-scraper');
 
+function normalizeWhitespace(text) {
+  return (text || '').toString().replace(/\s+/g, ' ').trim();
+}
+
+function localizePaparaText(text) {
+  let t = normalizeWhitespace(text || '');
+  if (!t) return '';
+
+  // Common vocabulary
+  t = t.replace(/\bCashback\b/gi, 'Nakit İade');
+
+  // "X – You can earn up to 25 TL each month." -> "X - Ayda en fazla 25 TL kazanabilirsin."
+  t = t.replace(
+    /(\S.*?)[\s]*[–-][\s]*you can earn up to\s*(\d+(?:[.,]\d+)?)\s*tl\s*each month\.?/i,
+    (_m, left, amount) => `${left.trim()} - Ayda en fazla ${amount} TL kazanabilirsin.`,
+  );
+
+  // "You can earn up to 25 TL each month." -> "Ayda en fazla 25 TL kazanabilirsin."
+  t = t.replace(
+    /you can earn up to\s*(\d+(?:[.,]\d+)?)\s*tl\s*each month\.?/i,
+    (_m, amount) => `Ayda en fazla ${amount} TL kazanabilirsin.`,
+  );
+
+  // "You can earn up to 25 TL." -> "En fazla 25 TL kazanabilirsin."
+  t = t.replace(
+    /you can earn up to\s*(\d+(?:[.,]\d+)?)\s*tl\.?/i,
+    (_m, amount) => `En fazla ${amount} TL kazanabilirsin.`,
+  );
+
+  t = t.replace(/\beach month\b/gi, 'her ay');
+  return normalizeWhitespace(t);
+}
+
 class PaparaScraper extends BaseScraper {
   constructor() {
     super('Papara', 'https://www.papara.com/kampanyalar');
@@ -108,9 +141,9 @@ class PaparaScraper extends BaseScraper {
       try {
         const campaign = {
           sourceName: this.sourceName,
-          title: item.title || item.name || 'Papara Kampanyası',
-          description: item.description || item.summary || item.title,
-          detailText: item.detail || item.content || '',
+          title: localizePaparaText(item.title || item.name || 'Papara Kampanyası'),
+          description: localizePaparaText(item.description || item.summary || item.title || ''),
+          detailText: localizePaparaText(item.detail || item.content || ''),
           campaignUrl: item.url || item.link || this.sourceUrl,
           originalUrl: item.url || item.link || this.sourceUrl,
           affiliateUrl: null,
@@ -216,9 +249,9 @@ class PaparaScraper extends BaseScraper {
 
       return {
         sourceName: this.sourceName,
-        title: content.title || 'Papara Kampanyası',
-        description: content.description || content.title,
-        detailText: content.fullText.substring(0, 500),
+        title: localizePaparaText(content.title || 'Papara Kampanyası'),
+        description: localizePaparaText(content.description || content.title || ''),
+        detailText: localizePaparaText(content.fullText.substring(0, 500)),
         campaignUrl: url,
         originalUrl: url,
         affiliateUrl: null,
