@@ -128,6 +128,34 @@ function _hasRealValue(campaign) {
     }
   }
 
+  // Finance/bank campaigns often advertise value without explicit TL/% in the first fold
+  // (e.g. "taksit", "faizsiz", "puan/bonus"). Treat these as value signals.
+  const bankValueKeywords = [
+    'taksit',
+    'vade farksiz',
+    'vade farksız',
+    'faizsiz',
+    'faiz',
+    'masrafsiz',
+    'masrafsız',
+    'komisyonsuz',
+    'ücretsiz',
+    'ucretsiz',
+    'aidatsiz',
+    'aidatsız',
+    'puan',
+    'bonus',
+    'mil',
+    'cashback',
+    'iade',
+    'kazanc',
+    'kazanç',
+    'indirim',
+  ];
+  for (const keyword of bankValueKeywords) {
+    if (text.includes(keyword)) return true;
+  }
+
   return false;
 }
 
