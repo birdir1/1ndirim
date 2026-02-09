@@ -23,6 +23,7 @@ const blogRouter = require('./routes/blog'); // Blog & Content
 const referralsRouter = require('./routes/referrals'); // Referral System
 const premiumRouter = require('./routes/premium'); // Premium Subscriptions
 const { deactivateExpiredCampaigns } = require('./jobs/deactivateExpiredCampaigns');
+const { isTrustedBotRequest } = require('./middleware/botAuth');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -85,6 +86,9 @@ app.use(express.urlencoded({ extended: true })); // URL encoded body parser
 // Global rate limiting (tüm API'ye, admin hariç)
 app.use((req, res, next) => {
   if (req.path.startsWith('/api/admin')) return next();
+  // Bot ingestion runs bursty and is already protected by token + loopback/private IP.
+  // Do not apply public rate limit to trusted bot requests.
+  if (isTrustedBotRequest(req)) return next();
   return limiter(req, res, next);
 });
 
