@@ -76,6 +76,12 @@ function localizePaparaText(text) {
     (_m, spend, earn) => `${spend} TL harcarsan ${earn} TL Nakit İade kazanırsın.`,
   );
 
+  // "If you spend 500 TL, you can earn a maximum of 25 TL cashback per month."
+  t = t.replace(
+    /if you spend\s*(\d+(?:[.,]\d+)?)\s*tl[^,]*,\s*you can earn a maximum of\s*(\d+(?:[.,]\d+)?)\s*tl[^.]*per month\.?/gi,
+    (_m, spend, amount) => `${spend} TL harcarsan ayda en fazla ${amount} TL Nakit İade kazanabilirsin.`,
+  );
+
   // "you can earn a maximum of 25 TL ... per month."
   t = t.replace(
     /you can earn a maximum of\s*(\d+(?:[.,]\d+)?)\s*tl[^.]*per month\.?/gi,

@@ -33,6 +33,11 @@ function localizePaparaText(text) {
   );
 
   t = t.replace(
+    /if you spend\s*(\d+(?:[.,]\d+)?)\s*tl[^,]*,\s*you can earn a maximum of\s*(\d+(?:[.,]\d+)?)\s*tl[^.]*per month\.?/gi,
+    (_m, spend, amount) => `${spend} TL harcarsan ayda en fazla ${amount} TL Nakit İade kazanabilirsin.`,
+  );
+
+  t = t.replace(
     /you can earn a maximum of\s*(\d+(?:[.,]\d+)?)\s*tl[^.]*per month\.?/gi,
     (_m, amount) => `Ayda en fazla ${amount} TL Nakit İade kazanabilirsin.`,
   );
