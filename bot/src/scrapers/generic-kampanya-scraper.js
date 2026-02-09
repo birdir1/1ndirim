@@ -48,7 +48,15 @@ class GenericKampanyaScraper extends BaseScraper {
         ],
         fallback: ['a[href]'],
       };
-      links = await this.tryTieredLinks(tiers);
+      const res = await this.tryTieredLinks(tiers);
+      // tryTieredLinks returns { tier, links: [{href,text}] } in this codebase
+      if (Array.isArray(res)) {
+        links = res;
+      } else if (res && Array.isArray(res.links)) {
+        links = res.links.map((l) => l.href).filter(Boolean);
+      } else {
+        links = [];
+      }
     } catch (_) {
       links = [];
     }
@@ -210,4 +218,3 @@ class GenericKampanyaScraper extends BaseScraper {
 }
 
 module.exports = GenericKampanyaScraper;
-
