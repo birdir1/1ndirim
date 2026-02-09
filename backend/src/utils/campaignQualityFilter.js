@@ -22,7 +22,6 @@ function isHighQualityCampaign(campaign) {
     'deneme',
     'test',
     'özel fırsat', // Belirsiz
-    'kampanya', // Genel
   ];
 
   const titleLower = (campaign.title || '').toLowerCase().trim();
@@ -173,6 +172,18 @@ function _isOfficialUrl(url) {
     'cepteteb.com.tr', // FAZ 6.6.2: CEPTETEB eklendi
     'nkolay.com', // FAZ 6.6.3: N Kolay eklendi
     'pttcell.com.tr', // FAZ 6.7: PTTcell eklendi
+    // Expansion banks
+    'sekerbank.com.tr',
+    'fibabanka.com.tr',
+    'anadolubank.com.tr',
+    'abank.com.tr',
+    'odeabank.com.tr',
+    'icbc.com.tr',
+    'burgan.com.tr',
+    'turkishbank.com',
+    'hsbc.com.tr',
+    'hayatfinans.com.tr',
+    'tombank.com.tr',
   ];
 
   try {
