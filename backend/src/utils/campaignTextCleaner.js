@@ -62,6 +62,34 @@ function localizePaparaText(text) {
   // Common vocabulary
   t = t.replace(/\bCashback\b/gi, 'Nakit İade');
 
+  // Detail sentence patterns from Papara cashback pages
+  // "Earn instant 10% Cashback on your total spending up to 250 TL at X with your Papara Card."
+  // Note: we run after "Cashback -> Nakit İade", so match both variants.
+  t = t.replace(
+    /earn instant\s*(\d{1,2})%\s*(?:cashback|nakit\s*[iİ]ade)\s*on your total spending up to\s*(\d+(?:[.,]\d+)?)\s*tl\s*at\s*(.+?)(?:\s*with your papara card)?(?:\.\s*|$)/i,
+    (_m, pct, cap, place) => `Papara Kart ile ${place.trim()} harcamalarında anında %${pct} Nakit İade. Ayda en fazla ${cap} TL. `,
+  );
+
+  // "If you spend 150 TL at X, you will earn 15 TL."
+  t = t.replace(
+    /if you spend\s*(\d+(?:[.,]\d+)?)\s*tl[^,]*,\s*you will earn\s*(\d+(?:[.,]\d+)?)\s*tl\.?/gi,
+    (_m, spend, earn) => `${spend} TL harcarsan ${earn} TL Nakit İade kazanırsın.`,
+  );
+
+  // "you can earn a maximum of 25 TL ... per month."
+  t = t.replace(
+    /you can earn a maximum of\s*(\d+(?:[.,]\d+)?)\s*tl[^.]*per month\.?/gi,
+    (_m, amount) => `Ayda en fazla ${amount} TL Nakit İade kazanabilirsin.`,
+  );
+
+  // Some pages use "maximum of X TL ... per month" without "you can earn"
+  t = t.replace(
+    /maximum of\s*(\d+(?:[.,]\d+)?)\s*tl[^.]*per month\.?/gi,
+    (_m, amount) => `Ayda en fazla ${amount} TL Nakit İade.`,
+  );
+
+  t = t.replace(/\bwith your papara card\b/gi, 'Papara Kart ile');
+
   // "X – You can earn up to 25 TL each month." -> "X - Ayda en fazla 25 TL kazanabilirsin."
   t = t.replace(
     /(\S.*?)[\s]*[–-][\s]*you can earn up to\s*(\d+(?:[.,]\d+)?)\s*tl\s*each month\.?/i,

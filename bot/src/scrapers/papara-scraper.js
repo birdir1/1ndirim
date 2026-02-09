@@ -21,6 +21,29 @@ function localizePaparaText(text) {
   // Common vocabulary
   t = t.replace(/\bCashback\b/gi, 'Nakit İade');
 
+  // Detail sentence patterns from Papara cashback pages
+  t = t.replace(
+    /earn instant\s*(\d{1,2})%\s*(?:cashback|nakit\s*[iİ]ade)\s*on your total spending up to\s*(\d+(?:[.,]\d+)?)\s*tl\s*at\s*(.+?)(?:\s*with your papara card)?(?:\.\s*|$)/i,
+    (_m, pct, cap, place) => `Papara Kart ile ${place.trim()} harcamalarında anında %${pct} Nakit İade. Ayda en fazla ${cap} TL. `,
+  );
+
+  t = t.replace(
+    /if you spend\s*(\d+(?:[.,]\d+)?)\s*tl[^,]*,\s*you will earn\s*(\d+(?:[.,]\d+)?)\s*tl\.?/gi,
+    (_m, spend, earn) => `${spend} TL harcarsan ${earn} TL Nakit İade kazanırsın.`,
+  );
+
+  t = t.replace(
+    /you can earn a maximum of\s*(\d+(?:[.,]\d+)?)\s*tl[^.]*per month\.?/gi,
+    (_m, amount) => `Ayda en fazla ${amount} TL Nakit İade kazanabilirsin.`,
+  );
+
+  t = t.replace(
+    /maximum of\s*(\d+(?:[.,]\d+)?)\s*tl[^.]*per month\.?/gi,
+    (_m, amount) => `Ayda en fazla ${amount} TL Nakit İade.`,
+  );
+
+  t = t.replace(/\bwith your papara card\b/gi, 'Papara Kart ile');
+
   // "X – You can earn up to 25 TL each month." -> "X - Ayda en fazla 25 TL kazanabilirsin."
   t = t.replace(
     /(\S.*?)[\s]*[–-][\s]*you can earn up to\s*(\d+(?:[.,]\d+)?)\s*tl\s*each month\.?/i,
