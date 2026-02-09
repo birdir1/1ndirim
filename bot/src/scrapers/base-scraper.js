@@ -130,7 +130,13 @@ class BaseScraper {
    * tiers: { primary, secondary, fallback } her biri string veya string[]
    */
   async tryTieredLinks(tiers) {
-    return tryTieredLinks(this.page, tiers, this.sourceName);
+    // domSelectors.tryTieredLinks returns { tier, links:[{href,text}] }.
+    // Most scrapers expect a simple string[] of hrefs.
+    const res = await tryTieredLinks(this.page, tiers, this.sourceName);
+    if (!res) return [];
+    if (Array.isArray(res)) return res;
+    if (res && Array.isArray(res.links)) return res.links.map((l) => l && l.href).filter(Boolean);
+    return [];
   }
 
   /**
