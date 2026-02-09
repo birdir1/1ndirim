@@ -94,7 +94,10 @@ function applyIngestionGate(rawCampaigns, sourceName) {
   const rejectedOverall = Math.max(0, rawTotal - acceptedTotal);
   const rejectRatio = rawTotal > 0 ? (rejectedOverall / rawTotal) : 0;
 
-  const degraded = rawTotal >= 5 && rejectRatio > 0.8;
+  // Degraded sources often indicate DOM/selector drift, but a strict gate can also
+  // over-reject valid campaigns for some banks. Only hard-stop when *everything*
+  // is rejected; otherwise keep the accepted items and just report degraded stats.
+  const degraded = rawTotal >= 5 && rejectRatio > 0.8 && acceptedTotal === 0;
   return {
     items: degraded ? [] : accepted,
     stats: {
