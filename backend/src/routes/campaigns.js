@@ -288,6 +288,14 @@ router.get('/search', async (req, res) => {
  */
 router.get('/all', async (req, res) => {
   try {
+    const limitRaw = req.query.limit;
+    const offsetRaw = req.query.offset;
+    const limit = Number.isFinite(Number(limitRaw)) ? Number(limitRaw) : null;
+    const offset = Number.isFinite(Number(offsetRaw)) ? Number(offsetRaw) : 0;
+    // Keep this conservative; the mobile feed should not pull thousands of items at once.
+    const effectiveLimit = limit != null ? Math.max(1, Math.min(500, limit)) : null;
+    const effectiveOffset = Math.max(0, offset || 0);
+
     let sourceIds = null;
 
     // sourceNames parametresi varsa (Flutter'dan geliyor)
@@ -398,10 +406,16 @@ router.get('/all', async (req, res) => {
       }
     }
 
+    const totalCount = formattedCampaigns.length;
+    const paged = effectiveLimit != null
+      ? formattedCampaigns.slice(effectiveOffset, effectiveOffset + effectiveLimit)
+      : formattedCampaigns;
+
     res.json({
       success: true,
-      data: formattedCampaigns,
-      count: formattedCampaigns.length,
+      data: paged,
+      count: paged.length,
+      totalCount,
       emptySources,
       sourceCapabilities,
     });

@@ -46,6 +46,7 @@ class ApiConfig {
   static const String health = '/health';
 
   // Timeout
-  static const Duration connectTimeout = Duration(seconds: 10);
-  static const Duration receiveTimeout = Duration(seconds: 10);
+  // Mobile networks can be slow, and `/campaigns/all` responses can be large.
+  static const Duration connectTimeout = Duration(seconds: 20);
+  static const Duration receiveTimeout = Duration(seconds: 30);
 }

@@ -4,22 +4,14 @@ import '../../core/config/api_config.dart';
 import '../../core/theme/app_colors.dart';
 import '../models/opportunity_model.dart';
 import '../../core/utils/tag_normalizer.dart';
+import '../../core/services/dio_client.dart';
 
 /// API Data Source
 /// Backend API'den kampanyaları çeker
 class OpportunityApiDataSource {
   final Dio _dio;
 
-  OpportunityApiDataSource({Dio? dio})
-    : _dio =
-          dio ??
-          Dio(
-            BaseOptions(
-              baseUrl: ApiConfig.baseUrl,
-              connectTimeout: ApiConfig.connectTimeout,
-              receiveTimeout: ApiConfig.receiveTimeout,
-            ),
-          );
+  OpportunityApiDataSource({Dio? dio}) : _dio = dio ?? DioClient.instance;
 
   /// Tüm kampanyaları getirir
   Future<List<OpportunityModel>> getOpportunities({
@@ -223,9 +215,13 @@ class OpportunityApiDataSource {
     try {
       // Backend'de sourceNames parametresi ile filtreleme
       // TÜM kampanyaları getirmek için /all endpoint'ini kullan
-      final queryParams = sourceNames.isNotEmpty
-          ? {'sourceNames': sourceNames.join(',')}
-          : null;
+      // Defensive: selected sources can be large; do not fetch thousands of items at once.
+      // Backend supports `limit/offset` on `/campaigns/all`.
+      final queryParams = {
+        if (sourceNames.isNotEmpty) 'sourceNames': sourceNames.join(','),
+        'limit': 250,
+        'offset': 0,
+      };
 
       // Tüm kampanyaları getir (feed type'a bakmaz)
       final response = await _dio.get(
@@ -277,7 +273,8 @@ class OpportunityApiDataSource {
     } on DioException catch (e) {
       // Connection timeout
       if (e.type == DioExceptionType.connectionTimeout ||
-          e.type == DioExceptionType.receiveTimeout) {
+          e.type == DioExceptionType.receiveTimeout ||
+          e.type == DioExceptionType.sendTimeout) {
         throw Exception('Bağlantı zaman aşımı. Lütfen tekrar deneyin.');
       }
 
@@ -291,6 +288,11 @@ class OpportunityApiDataSource {
       // HTTP error (500, 503, etc.)
       if (e.response != null) {
         final statusCode = e.response!.statusCode;
+        if (statusCode == 429) {
+          throw Exception(
+            'Çok fazla istek gönderildi. Lütfen biraz sonra tekrar deneyin.',
+          );
+        }
         if (statusCode == 500) {
           throw Exception('Sunucu hatası. Lütfen daha sonra tekrar deneyin.');
         } else if (statusCode == 503) {
@@ -462,7 +464,7 @@ class OpportunityApiDataSource {
 
     final rawTags =
         (json['tags'] as List<dynamic>?)?.map((e) => e.toString()).toList() ??
-            <String>[];
+        <String>[];
     final normalized = TagNormalizer.normalize(rawTags);
 
     return OpportunityModel(
