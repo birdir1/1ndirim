@@ -34,7 +34,7 @@ function isHighQualityCampaign(campaign) {
   }
 
   if (sourceName !== 'TEB') {
-    if (!_hasRealValue({ title, description })) return false;
+    if (!_hasRealValue({ title, description, detailText })) return false;
   }
 
   return true;
@@ -70,7 +70,7 @@ function getQualityRejectionReason(campaign) {
   }
 
   if (sourceName !== 'TEB') {
-    if (!_hasRealValue({ title, description })) return 'no_value_signal';
+    if (!_hasRealValue({ title, description, detailText })) return 'no_value_signal';
   }
 
   return null;
@@ -84,7 +84,10 @@ function getQualityRejectionReason(campaign) {
 function _hasRealValue(campaign) {
   const title = (campaign.title || '').toLowerCase();
   const description = (campaign.description || '').toLowerCase();
-  const text = `${title} ${description}`;
+  // Value signals can live in long-form detailText, especially on bank campaign pages.
+  // Include it here to avoid dropping valid campaigns before backend ingestion.
+  const detailText = (campaign.detailText || '').toLowerCase();
+  const text = `${title} ${description} ${detailText}`;
 
   // İndirim yüzdesi
   const discountMatch = text.match(/(\d+)\s*%|%\s*(\d+)/);
@@ -136,7 +139,8 @@ function _hasRealValue(campaign) {
 function _extractValueAmount(campaign) {
   const title = (campaign.title || '').toLowerCase();
   const description = (campaign.description || '').toLowerCase();
-  const text = `${title} ${description}`;
+  const detailText = (campaign.detailText || '').toLowerCase();
+  const text = `${title} ${description} ${detailText}`;
 
   // İndirim yüzdesinden tahmini değer (örnek: %50 indirim = 50 TL değer)
   const discountMatch = text.match(/(\d+)\s*%|%\s*(\d+)/);
