@@ -52,6 +52,12 @@ router.get('/', cacheMiddleware(CacheService.TTL.CAMPAIGNS_LIST), async (req, re
               return sourceNames.includes(normalizedSourceName);
             })
             .map((source) => source.id);
+
+          // If caller requested a source filter but we couldn't resolve any IDs,
+          // returning "all campaigns" is misleading. Return empty instead.
+          if (Array.isArray(sourceIds) && sourceIds.length === 0) {
+            return res.json({ success: true, data: [], count: 0, emptySources: [], sourceCapabilities: {} });
+          }
         }
       } catch (sourceErr) {
         console.warn('Campaigns/: sourceNames filter failed, falling back to all', sourceErr.message);
@@ -179,6 +185,17 @@ router.get('/search', async (req, res) => {
               return sourceNames.includes(normalizedSourceName);
             })
             .map((source) => source.id);
+
+          if (Array.isArray(sourceIds) && sourceIds.length === 0) {
+            return res.json({
+              success: true,
+              data: [],
+              count: 0,
+              searchTerm: searchTerm,
+              emptySources: [],
+              sourceCapabilities: {},
+            });
+          }
         }
       } catch (sourceErr) {
         console.warn('Campaigns/search: sourceNames filter failed, falling back to all', sourceErr.message);
@@ -290,6 +307,16 @@ router.get('/all', async (req, res) => {
               return sourceNames.includes(normalizedSourceName);
             })
             .map((source) => source.id);
+
+          if (Array.isArray(sourceIds) && sourceIds.length === 0) {
+            return res.json({
+              success: true,
+              data: [],
+              count: 0,
+              emptySources: [],
+              sourceCapabilities: {},
+            });
+          }
         }
       } catch (sourceErr) {
         console.warn('Campaigns/all: sourceNames filter failed, falling back to all campaigns', sourceErr.message);
@@ -415,6 +442,15 @@ router.get('/low-value', async (req, res) => {
           return sourceNames.includes(normalizedSourceName);
         })
         .map((source) => source.id);
+
+      if (Array.isArray(sourceIds) && sourceIds.length === 0) {
+        return res.json({
+          success: true,
+          data: [],
+          count: 0,
+          warning: 'Bu kampanyalar düşük değerli olarak işaretlenmiştir. Varsayılan olarak gösterilmezler.',
+        });
+      }
     } else if (req.query.sourceIds) {
       // sourceIds parametresi varsa
       sourceIds = req.query.sourceIds.split(',').filter((id) => id.trim());
@@ -486,6 +522,10 @@ router.get('/category', async (req, res) => {
           return sourceNames.includes(normalizedSourceName);
         })
         .map((source) => source.id);
+
+      if (Array.isArray(sourceIds) && sourceIds.length === 0) {
+        return res.json({ success: true, data: [], count: 0 });
+      }
     } else if (req.query.sourceIds) {
       // sourceIds parametresi varsa
       sourceIds = req.query.sourceIds.split(',').filter((id) => id.trim());
@@ -555,6 +595,10 @@ router.get('/light', async (req, res) => {
           return sourceNames.includes(normalizedSourceName);
         })
         .map((source) => source.id);
+
+      if (Array.isArray(sourceIds) && sourceIds.length === 0) {
+        return res.json({ success: true, data: [], count: 0 });
+      }
     } else if (req.query.sourceIds) {
       // sourceIds parametresi varsa
       sourceIds = req.query.sourceIds.split(',').filter((id) => id.trim());
@@ -624,6 +668,17 @@ router.get('/expiring-soon', async (req, res) => {
           return sourceNames.includes(normalizedSourceName);
         })
         .map((source) => source.id);
+
+      if (Array.isArray(sourceIds) && sourceIds.length === 0) {
+        return res.json({
+          success: true,
+          data: [],
+          count: 0,
+          days,
+          emptySources: [],
+          sourceCapabilities: {},
+        });
+      }
     }
 
     const campaigns = await Campaign.findExpiringSoon(days, sourceIds);
