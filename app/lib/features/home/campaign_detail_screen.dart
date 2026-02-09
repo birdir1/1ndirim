@@ -208,41 +208,22 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
               ),
 
               const SizedBox(height: 20),
-
-              // Bilgi notu
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.primaryLight.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: AppColors.primaryLight.withValues(alpha: 0.3),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.info_outline,
-                      color: AppColors.primaryLight,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'Kampanya hakkında sorularınız için müşteri hizmetleri ile iletişime geçebilirsiniz.',
-                        style: AppTextStyles.body(
-                          isDark: false,
-                        ).copyWith(color: AppColors.primaryLight),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
             ],
           ),
         ),
       ),
     );
+  }
+
+  bool _isCustomerServiceText(String text) {
+    final t = text.toLowerCase();
+    // Remove "customer service" boilerplate from campaign details.
+    return t.contains('müşteri hizmet') ||
+        t.contains('musteri hizmet') ||
+        t.contains('çağrı merkez') ||
+        t.contains('cagri merkez') ||
+        t.contains('call center') ||
+        t.contains('customer service');
   }
 
   Widget _buildCampaignSummary() {
@@ -328,6 +309,7 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
     final details = widget.detailText
         .split('\n')
         .where((line) => line.trim().isNotEmpty)
+        .where((line) => !_isCustomerServiceText(line))
         .toList();
     if (details.isEmpty) {
       details.add(
@@ -448,7 +430,6 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
   }
 
   Widget _buildValidity() {
-    final brand = BrandStyles.getStyle(widget.sourceName);
     final expiresText = widget.expiresAt?.isNotEmpty == true
         ? formatDateTr(widget.expiresAt!)
         : 'Sürekli kampanya';
