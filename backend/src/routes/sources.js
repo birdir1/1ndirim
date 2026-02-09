@@ -4,6 +4,7 @@ const Source = require('../models/Source');
 const { cacheMiddleware } = require('../middleware/cache');
 const CacheService = require('../services/cacheService');
 const { getCapability } = require('../utils/sourceCapabilities');
+const { isHiddenSourceName } = require('../utils/sourceAliases');
 
 /**
  * GET /sources/status
@@ -16,7 +17,9 @@ const { getCapability } = require('../utils/sourceCapabilities');
 router.get('/status', cacheMiddleware(CacheService.TTL.SOURCES_LIST), async (req, res) => {
   try {
     const rows = await Source.getSourceStatusForBot();
-    const data = rows.map((r) => ({ name: r.name, source_status: r.source_status }));
+    const data = rows
+      .filter((r) => !isHiddenSourceName(r && r.name))
+      .map((r) => ({ name: r.name, source_status: r.source_status }));
     res.json({ success: true, data });
   } catch (error) {
     console.error('Sources status error:', error);
@@ -37,10 +40,11 @@ router.get('/status', cacheMiddleware(CacheService.TTL.SOURCES_LIST), async (req
 router.get('/', cacheMiddleware(CacheService.TTL.SOURCES_LIST), async (req, res) => {
   try {
     const sources = await Source.findAll();
+    const visibleSources = sources.filter((s) => !isHiddenSourceName(s && s.name));
 
     // Flutter uygulaması için format
     // Not: icon ve color Flutter tarafında hardcoded, burada sadece metadata
-    const formattedSources = sources.map((source) => {
+    const formattedSources = visibleSources.map((source) => {
       const capability = getCapability(source.name);
       return {
         id: source.id,

@@ -24,6 +24,7 @@ const Source = require('../models/Source');
 const pool = require('../config/database');
 const { getTimeline } = require('../services/governanceTimelineService');
 const governanceAssertions = require('../utils/governanceAssertions');
+const { isHiddenSourceName } = require('../utils/sourceAliases');
 
 // Tüm admin route'ları authentication gerektirir
 router.use(requireAdmin);
@@ -502,11 +503,12 @@ router.get('/sources', requireViewerOrAbove(), async (req, res) => {
     };
     
     const sources = await AdminSourceService.getAllSources(filters);
+    const visible = (sources || []).filter((s) => !isHiddenSourceName(s && s.name));
     
     res.json({
       success: true,
-      data: sources,
-      count: sources.length,
+      data: visible,
+      count: visible.length,
     });
   } catch (error) {
     console.error('Admin get sources error:', error);

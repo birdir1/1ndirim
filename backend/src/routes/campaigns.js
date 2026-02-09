@@ -19,6 +19,7 @@ const {
   fingerprint,
 } = require('../utils/campaignTextCleaner');
 const { getCapability } = require('../utils/sourceCapabilities');
+const { canonicalizeLowerList, canonicalizeSourceName, normalizeKey } = require('../utils/sourceAliases');
 
 /**
  * GET /campaigns
@@ -36,17 +37,17 @@ router.get('/', cacheMiddleware(CacheService.TTL.CAMPAIGNS_LIST), async (req, re
     // sourceNames parametresi varsa (Flutter'dan geliyor)
     if (req.query.sourceNames) {
       try {
-        const sourceNames = req.query.sourceNames
+        const sourceNames = canonicalizeLowerList(req.query.sourceNames
           .split(',')
           .map((name) => name.trim().toLowerCase())
-          .filter((name) => name.length > 0);
+          .filter((name) => name.length > 0));
         
         if (sourceNames.length > 0) {
           const Source = require('../models/Source');
           const allSources = await Source.findAll();
           sourceIds = allSources
             .filter((source) => {
-              const normalizedSourceName = (source.name || '').trim().toLowerCase();
+              const normalizedSourceName = normalizeKey(source && source.name);
               return sourceNames.includes(normalizedSourceName);
             })
             .map((source) => source.id);
@@ -163,17 +164,17 @@ router.get('/search', async (req, res) => {
     // sourceNames parametresi varsa (Flutter'dan geliyor)
     if (req.query.sourceNames) {
       try {
-        const sourceNames = req.query.sourceNames
+        const sourceNames = canonicalizeLowerList(req.query.sourceNames
           .split(',')
           .map((name) => name.trim().toLowerCase())
-          .filter((name) => name.length > 0);
+          .filter((name) => name.length > 0));
         
         if (sourceNames.length > 0) {
           const Source = require('../models/Source');
           const allSources = await Source.findAll();
           sourceIds = allSources
             .filter((source) => {
-              const normalizedSourceName = (source.name || '').trim().toLowerCase();
+              const normalizedSourceName = normalizeKey(source && source.name);
               return sourceNames.includes(normalizedSourceName);
             })
             .map((source) => source.id);
@@ -274,17 +275,17 @@ router.get('/all', async (req, res) => {
     // sourceNames parametresi varsa (Flutter'dan geliyor)
     if (req.query.sourceNames) {
       try {
-        const sourceNames = req.query.sourceNames
+        const sourceNames = canonicalizeLowerList(req.query.sourceNames
           .split(',')
           .map((name) => name.trim().toLowerCase())
-          .filter((name) => name.length > 0);
+          .filter((name) => name.length > 0));
         
         if (sourceNames.length > 0) {
           const Source = require('../models/Source');
           const allSources = await Source.findAll();
           sourceIds = allSources
             .filter((source) => {
-              const normalizedSourceName = (source.name || '').trim().toLowerCase();
+              const normalizedSourceName = normalizeKey(source && source.name);
               return sourceNames.includes(normalizedSourceName);
             })
             .map((source) => source.id);
@@ -399,17 +400,17 @@ router.get('/low-value', async (req, res) => {
 
     // sourceNames parametresi varsa (Flutter'dan geliyor)
     if (req.query.sourceNames) {
-      const sourceNames = req.query.sourceNames
+      const sourceNames = canonicalizeLowerList(req.query.sourceNames
         .split(',')
         .map((name) => name.trim().toLowerCase())
-        .filter((name) => name.length > 0);
+        .filter((name) => name.length > 0));
       
       // Source name'lerden ID'lere çevir (case-insensitive)
       const Source = require('../models/Source');
       const allSources = await Source.findAll();
       sourceIds = allSources
         .filter((source) => {
-          const normalizedSourceName = (source.name || '').trim().toLowerCase();
+          const normalizedSourceName = normalizeKey(source && source.name);
           return sourceNames.includes(normalizedSourceName);
         })
         .map((source) => source.id);
@@ -470,17 +471,17 @@ router.get('/category', async (req, res) => {
 
     // sourceNames parametresi varsa (Flutter'dan geliyor)
     if (req.query.sourceNames) {
-      const sourceNames = req.query.sourceNames
+      const sourceNames = canonicalizeLowerList(req.query.sourceNames
         .split(',')
         .map((name) => name.trim().toLowerCase())
-        .filter((name) => name.length > 0);
+        .filter((name) => name.length > 0));
       
       // Source name'lerden ID'lere çevir (case-insensitive)
       const Source = require('../models/Source');
       const allSources = await Source.findAll();
       sourceIds = allSources
         .filter((source) => {
-          const normalizedSourceName = (source.name || '').trim().toLowerCase();
+          const normalizedSourceName = normalizeKey(source && source.name);
           return sourceNames.includes(normalizedSourceName);
         })
         .map((source) => source.id);
@@ -539,17 +540,17 @@ router.get('/light', async (req, res) => {
 
     // sourceNames parametresi varsa (Flutter'dan geliyor)
     if (req.query.sourceNames) {
-      const sourceNames = req.query.sourceNames
+      const sourceNames = canonicalizeLowerList(req.query.sourceNames
         .split(',')
         .map((name) => name.trim().toLowerCase())
-        .filter((name) => name.length > 0);
+        .filter((name) => name.length > 0));
       
       // Source name'lerden ID'lere çevir (case-insensitive)
       const Source = require('../models/Source');
       const allSources = await Source.findAll();
       sourceIds = allSources
         .filter((source) => {
-          const normalizedSourceName = (source.name || '').trim().toLowerCase();
+          const normalizedSourceName = normalizeKey(source && source.name);
           return sourceNames.includes(normalizedSourceName);
         })
         .map((source) => source.id);
@@ -609,16 +610,16 @@ router.get('/expiring-soon', async (req, res) => {
 
     // sourceNames parametresi varsa
     if (req.query.sourceNames) {
-      const sourceNames = req.query.sourceNames
+      const sourceNames = canonicalizeLowerList(req.query.sourceNames
         .split(',')
         .map((name) => name.trim().toLowerCase())
-        .filter((name) => name.length > 0);
+        .filter((name) => name.length > 0));
       
       const Source = require('../models/Source');
       const allSources = await Source.findAll();
       sourceIds = allSources
         .filter((source) => {
-          const normalizedSourceName = (source.name || '').trim().toLowerCase();
+          const normalizedSourceName = normalizeKey(source && source.name);
           return sourceNames.includes(normalizedSourceName);
         })
         .map((source) => source.id);
@@ -817,7 +818,7 @@ router.post('/:id/click', async (req, res) => {
 router.post('/', requireBotAuth, validateCampaignQuality, async (req, res) => {
   try {
     const {
-      sourceName,
+      sourceName: sourceNameRaw,
       title,
       description,
       detailText,
@@ -836,6 +837,8 @@ router.post('/', requireBotAuth, validateCampaignQuality, async (req, res) => {
       confidence_score: bodyConfidence,
       confidence_reasons: bodyReasons,
     } = req.body;
+    // Source aliases: accept upstream names (e.g. Bankkart) but persist under canonical source (e.g. Ziraat Bankası).
+    const sourceName = canonicalizeSourceName(sourceNameRaw);
     const confidence_score = bodyConfidence != null ? Number(bodyConfidence) : 50;
     const confidence_reasons = Array.isArray(bodyReasons) ? bodyReasons : ['fallback_default'];
 
