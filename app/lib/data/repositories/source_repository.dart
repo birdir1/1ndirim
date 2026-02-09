@@ -381,25 +381,6 @@ class SourceRepository {
         ],
       ),
       SourceModel(
-        id: 'turkishbank',
-        name: 'Turkish Bank',
-        type: 'bank',
-        icon: _getIconData('account_balance'),
-        color: const Color(0xFF38BDF8),
-        hasScraper: true,
-        planned: false,
-        segments: [
-          SourceSegment(
-            id: 'turkishbank_kredi_karti',
-            name: 'Turkish Bank Kredi Kartı',
-          ),
-          SourceSegment(
-            id: 'turkishbank_banka_karti',
-            name: 'Turkish Bank Banka Kartı',
-          ),
-        ],
-      ),
-      SourceModel(
         id: 'hsbc',
         name: 'HSBC Türkiye',
         type: 'bank',

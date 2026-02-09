@@ -180,7 +180,6 @@ function _isOfficialUrl(url) {
     'odeabank.com.tr',
     'icbc.com.tr',
     'burgan.com.tr',
-    'turkishbank.com',
     'hsbc.com.tr',
     'hayatfinans.com.tr',
     'tombank.com.tr',

@@ -25,8 +25,7 @@ Tüm banka ve operatör logolarını `assets/images/logos/` klasörüne ekleyin.
 16. ✅ `odeabank.svg` - OdeaBank
 17. ✅ `icbc.png` - ICBC Turkey Bank
 18. ✅ `burganbank.png` - Burgan Bank
-19. ✅ `turkishbank.png` - Turkish Bank
-20. ✅ `hsbc.png` - HSBC Türkiye
+19. ✅ `hsbc.png` - HSBC Türkiye
 
 ### KATILIM BANKALARI
 21. ✅ `kuveytturk.svg` - Kuveyt Türk
@@ -86,7 +85,6 @@ Tüm banka ve operatör logolarını `assets/images/logos/` klasörüne ekleyin.
 - ✅ OdeaBank (SVG)
 - ✅ ICBC Turkey Bank (PNG)
 - ✅ Burgan Bank (PNG)
-- ✅ Turkish Bank (PNG) - Güncellendi
 - ✅ HSBC Türkiye (PNG)
 - ✅ Kuveyt Türk (SVG)
 - ✅ Albaraka Türk (PNG) - Güncellendi

@@ -43,7 +43,6 @@ class BrandStyles {
     'odeabank': _style(const Color(0xFF1A1A1A)),
     'icbc': _style(const Color(0xFFC40E1F)),
     'burganbank': _style(const Color(0xFF006BA6)),
-    'turkishbank': _style(const Color(0xFFA0001E)),
     'hsbc': _style(const Color(0xFFDB0011)),
 
     // Katılım / dijital

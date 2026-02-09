@@ -22,7 +22,6 @@ const AlternatifBankScraper = require('./src/scrapers/alternatifbank-scraper');
 const OdeabankScraper = require('./src/scrapers/odeabank-scraper');
 const IcbcScraper = require('./src/scrapers/icbc-scraper');
 const BurganbankScraper = require('./src/scrapers/burganbank-scraper');
-const TurkishBankScraper = require('./src/scrapers/turkishbank-scraper');
 const HsbcScraper = require('./src/scrapers/hsbc-scraper');
 const HayatFinansScraper = require('./src/scrapers/hayatfinans-scraper');
 const TombankScraper = require('./src/scrapers/tombank-scraper');
@@ -35,7 +34,6 @@ const SCRAPERS = [
   new OdeabankScraper(),
   new IcbcScraper(),
   new BurganbankScraper(),
-  new TurkishBankScraper(),
   new HsbcScraper(),
   new HayatFinansScraper(),
   new TombankScraper(),
@@ -118,4 +116,3 @@ run().catch((e) => {
   console.error('runner crashed:', e);
   process.exit(1);
 });
-

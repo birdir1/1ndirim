@@ -37,7 +37,8 @@ function canonicalizeSourceNameLower(name) {
 
 function isHiddenSourceName(name) {
   const k = normalizeKey(name);
-  return k === 'bankkart';
+  // Hide sources that should never be selectable/visible in app/admin.
+  return k === 'bankkart' || k === 'turkish bank' || k === 'turkishbank';
 }
 
 function canonicalizeLowerList(namesLower) {
@@ -54,4 +55,3 @@ module.exports = {
   isHiddenSourceName,
   normalizeKey,
 };
-

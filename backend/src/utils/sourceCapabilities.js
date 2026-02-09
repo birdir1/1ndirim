@@ -55,7 +55,6 @@ const CAPABILITIES = {
   icbcturkeybank: { hasScraper: true },
   burqanbank: { hasScraper: true }, // typo guard
   burganbank: { hasScraper: true },
-  turkishbank: { hasScraper: true },
   hsbc: { hasScraper: true },
   hsbcturkiye: { hasScraper: true },
   hayatfinans: { hasScraper: true },

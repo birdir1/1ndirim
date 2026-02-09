@@ -54,7 +54,6 @@ class SourceLogoHelper {
       'tombank': 'assets/images/logos/tombank.svg',
       'tosla': 'assets/images/logos/tosla.svg',
       'turkcell': 'assets/images/logos/turkcell.png',
-      'turkishbank': 'assets/images/logos/turkishbank.png',
       'turkiyefinans': 'assets/images/logos/turkiyefinans.png',
       'turktelekom': 'assets/images/logos/turktelekom.svg',
       'türktelekom': 'assets/images/logos/turktelekom.svg',

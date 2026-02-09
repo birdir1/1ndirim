@@ -53,7 +53,6 @@ const AlternatifBankScraper = require('./scrapers/alternatifbank-scraper');
 const OdeabankScraper = require('./scrapers/odeabank-scraper');
 const IcbcScraper = require('./scrapers/icbc-scraper');
 const BurganbankScraper = require('./scrapers/burganbank-scraper');
-const TurkishBankScraper = require('./scrapers/turkishbank-scraper');
 const HsbcScraper = require('./scrapers/hsbc-scraper');
 const HayatFinansScraper = require('./scrapers/hayatfinans-scraper');
 const TombankScraper = require('./scrapers/tombank-scraper');
@@ -172,7 +171,6 @@ async function runScrapers() {
     new OdeabankScraper(),
     new IcbcScraper(),
     new BurganbankScraper(),
-    new TurkishBankScraper(),
     new HsbcScraper(),
     new HayatFinansScraper(),
     new TombankScraper(),
