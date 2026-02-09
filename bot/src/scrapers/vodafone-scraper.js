@@ -164,16 +164,15 @@ class VodafoneScraper extends BaseScraper {
 
       // Category detection (rule-based)
       const text = `${content.title} ${content.description}`.toLowerCase();
-      let category = 'telecom'; // Default for Vodafone
+      // Backend category allowlist does not include telecom/music/gaming; map to allowed values.
+      let category = 'other'; // Default for operators
 
       if (text.match(/netflix|youtube|prime|exxen|gain|tivibu|tv\+|blutv|mubi|disney|hbo/)) {
         category = 'entertainment';
       } else if (text.match(/steam|epic|nvidia|playstation|xbox|game pass|oyun|game/)) {
-        category = 'gaming';
+        category = 'entertainment';
       } else if (text.match(/spotify|apple music|youtube music|deezer|fizy|müzik|music/)) {
-        category = 'music';
-      } else if (text.match(/internet|hat|telefon|mobil|data|gb|paket/)) {
-        category = 'telecom';
+        category = 'entertainment';
       }
 
       // Sub-category detection
