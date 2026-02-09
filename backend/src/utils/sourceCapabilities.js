@@ -44,19 +44,22 @@ const CAPABILITIES = {
   tosla: { hasScraper: true },
   bkmexpress: { hasScraper: true },
 
-  // İstenilen yeni/eksik bankalar (şimdilik planlandı, scraper yok)
-  sekerbank: { hasScraper: false, planned: true },
-  fibabanka: { hasScraper: false, planned: true },
-  anadolubank: { hasScraper: false, planned: true },
-  alternatifbank: { hasScraper: false, planned: true },
-  odeabank: { hasScraper: false, planned: true },
-  icbc: { hasScraper: false, planned: true },
-  burqanbank: { hasScraper: false, planned: true }, // typo guard
-  burganbank: { hasScraper: false, planned: true },
-  turkishbank: { hasScraper: false, planned: true },
-  hsbc: { hasScraper: false, planned: true },
-  hayatfinans: { hasScraper: false, planned: true },
-  tombank: { hasScraper: false, planned: true, noCampaignPage: true },
+  // İstenilen bankalar: scrapers eklendi
+  sekerbank: { hasScraper: true },
+  fibabanka: { hasScraper: true },
+  anadolubank: { hasScraper: true },
+  alternatifbank: { hasScraper: true },
+  odeabank: { hasScraper: true },
+  // Aliases: normalization removes spaces, so keep exact normalized keys too.
+  icbc: { hasScraper: true },
+  icbcturkeybank: { hasScraper: true },
+  burqanbank: { hasScraper: true }, // typo guard
+  burganbank: { hasScraper: true },
+  turkishbank: { hasScraper: true },
+  hsbc: { hasScraper: true },
+  hsbcturkiye: { hasScraper: true },
+  hayatfinans: { hasScraper: true },
+  tombank: { hasScraper: true },
 };
 
 function getCapability(name) {

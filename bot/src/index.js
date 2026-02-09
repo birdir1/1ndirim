@@ -45,6 +45,18 @@ const PaparaScraper = require('./scrapers/papara-scraper');
 const PaycellScraper = require('./scrapers/paycell-scraper');
 const BKMExpressScraper = require('./scrapers/bkmexpress-scraper');
 const ToslaScraper = require('./scrapers/tosla-scraper');
+// New bank scrapers
+const SekerbankScraper = require('./scrapers/sekerbank-scraper');
+const FibabankaScraper = require('./scrapers/fibabanka-scraper');
+const AnadolubankScraper = require('./scrapers/anadolubank-scraper');
+const AlternatifBankScraper = require('./scrapers/alternatifbank-scraper');
+const OdeabankScraper = require('./scrapers/odeabank-scraper');
+const IcbcScraper = require('./scrapers/icbc-scraper');
+const BurganbankScraper = require('./scrapers/burganbank-scraper');
+const TurkishBankScraper = require('./scrapers/turkishbank-scraper');
+const HsbcScraper = require('./scrapers/hsbc-scraper');
+const HayatFinansScraper = require('./scrapers/hayatfinans-scraper');
+const TombankScraper = require('./scrapers/tombank-scraper');
 // FAZ 7: Fetch-based scrapers (SPA kaynaklar için)
 const TebFetchScraper = require('./scrapers/fetch/teb-fetch-scraper');
 const { startScheduler } = require('./scheduler');
@@ -149,6 +161,18 @@ async function runScrapers() {
     new PaycellScraper(), // PHASE 1: Digital wallet with sub-category detection
     new BKMExpressScraper(), // PHASE 1: Digital wallet with sub-category detection
     new ToslaScraper(), // PHASE 1: Digital wallet with sub-category detection
+    // Additional banks (Phase: expansion)
+    new SekerbankScraper(),
+    new FibabankaScraper(),
+    new AnadolubankScraper(),
+    new AlternatifBankScraper(),
+    new OdeabankScraper(),
+    new IcbcScraper(),
+    new BurganbankScraper(),
+    new TurkishBankScraper(),
+    new HsbcScraper(),
+    new HayatFinansScraper(),
+    new TombankScraper(),
   ];
 
   console.log(`\n🤖 Bot başlatıldı: ${scrapers.length} scraper çalıştırılacak\n`);
