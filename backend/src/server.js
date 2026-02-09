@@ -47,9 +47,22 @@ if (typeof trustProxyEnv === 'string' && trustProxyEnv.trim() !== '') {
 }
 
 // Rate Limiting - DDoS koruması
+// NOTE: Mobile apps can easily exceed 100 requests/15min due to preflights, retries, and multi-tab usage.
+// Keep the default higher in production, and allow overrides via env.
+const rateLimitWindowMs =
+  Number(process.env.RATE_LIMIT_WINDOW_MS) > 0
+    ? Number(process.env.RATE_LIMIT_WINDOW_MS)
+    : 15 * 60 * 1000;
+const rateLimitMax =
+  Number(process.env.RATE_LIMIT_MAX) > 0
+    ? Number(process.env.RATE_LIMIT_MAX)
+    : process.env.NODE_ENV === 'production'
+      ? 600
+      : 100;
+
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 dakika
-  max: 100, // IP başına maksimum 100 istek
+  windowMs: rateLimitWindowMs, // default 15 dakika
+  max: rateLimitMax, // default: prod 600 / dev 100
   message: {
     success: false,
     error: 'Çok fazla istek gönderdiniz. Lütfen 15 dakika sonra tekrar deneyin.',
@@ -99,6 +112,10 @@ app.use(express.urlencoded({ extended: true })); // URL encoded body parser
 
 // Global rate limiting (tüm API'ye, admin hariç)
 app.use((req, res, next) => {
+  // Do not rate-limit CORS preflights.
+  if (req.method === 'OPTIONS') return next();
+  // Health checks should not consume the public rate limit window.
+  if (req.path === '/api/health') return next();
   if (req.path.startsWith('/api/admin')) return next();
   // Bot ingestion runs bursty and is already protected by token + loopback/private IP.
   // Do not apply public rate limit to trusted bot requests.

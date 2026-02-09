@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import '../../core/config/api_config.dart';
+import '../../core/services/dio_client.dart';
 import '../../core/services/auth_service.dart';
 import '../models/price_tracking_model.dart';
 import '../models/price_history_model.dart';
@@ -10,12 +10,7 @@ class PriceTrackingApiDataSource {
   final AuthService _authService = AuthService.instance;
 
   PriceTrackingApiDataSource({Dio? dio})
-      : _dio = dio ??
-            Dio(BaseOptions(
-              baseUrl: ApiConfig.baseUrl,
-              connectTimeout: ApiConfig.connectTimeout,
-              receiveTimeout: ApiConfig.receiveTimeout,
-            ));
+      : _dio = dio ?? DioClient.instance;
 
   /// Auth header'ları alır
   Future<Map<String, String>> _getAuthHeaders() async {
@@ -38,7 +33,8 @@ class PriceTrackingApiDataSource {
     try {
       final headers = await _getAuthHeaders();
       final response = await _dio.post(
-        '/api/price-tracking/$campaignId',
+        // Base URL already contains `/api`
+        '/price-tracking/$campaignId',
         data: {
           'targetPrice': targetPrice,
           'notifyOnDrop': notifyOnDrop,
@@ -72,10 +68,18 @@ class PriceTrackingApiDataSource {
         'createdAt': data['createdAt'] ?? DateTime.now().toIso8601String(),
       });
     } on DioException catch (e) {
-      if (e.response?.statusCode == 401) {
+      final status = e.response?.statusCode;
+      if (status == 401) {
         throw Exception('Oturum süresi dolmuş. Lütfen tekrar giriş yapın.');
       }
-      throw Exception('Fiyat takibi eklenirken bir hata oluştu: ${e.message}');
+      if (status == 429) {
+        throw Exception('Çok fazla istek gönderildi. Lütfen biraz sonra tekrar deneyin.');
+      }
+      if (status != null && status >= 500) {
+        throw Exception('Sunucu hatası. Lütfen daha sonra tekrar deneyin.');
+      }
+      if (e.error is Exception) throw e.error as Exception;
+      throw Exception('Fiyat takibi eklenirken bir hata oluştu.');
     } catch (e) {
       throw Exception('Fiyat takibi eklenirken bir hata oluştu: ${e.toString()}');
     }
@@ -86,7 +90,7 @@ class PriceTrackingApiDataSource {
     try {
       final headers = await _getAuthHeaders();
       final response = await _dio.delete(
-        '/api/price-tracking/$campaignId',
+        '/price-tracking/$campaignId',
         options: Options(headers: headers),
       );
 
@@ -94,10 +98,18 @@ class PriceTrackingApiDataSource {
         throw Exception('Sunucu hatası (${response.statusCode})');
       }
     } on DioException catch (e) {
-      if (e.response?.statusCode == 401) {
+      final status = e.response?.statusCode;
+      if (status == 401) {
         throw Exception('Oturum süresi dolmuş. Lütfen tekrar giriş yapın.');
       }
-      throw Exception('Fiyat takibi kaldırılırken bir hata oluştu: ${e.message}');
+      if (status == 429) {
+        throw Exception('Çok fazla istek gönderildi. Lütfen biraz sonra tekrar deneyin.');
+      }
+      if (status != null && status >= 500) {
+        throw Exception('Sunucu hatası. Lütfen daha sonra tekrar deneyin.');
+      }
+      if (e.error is Exception) throw e.error as Exception;
+      throw Exception('Fiyat takibi kaldırılırken bir hata oluştu.');
     } catch (e) {
       throw Exception('Fiyat takibi kaldırılırken bir hata oluştu: ${e.toString()}');
     }
@@ -108,7 +120,7 @@ class PriceTrackingApiDataSource {
     try {
       final headers = await _getAuthHeaders();
       final response = await _dio.get(
-        '/api/price-tracking',
+        '/price-tracking',
         options: Options(headers: headers),
       );
 
@@ -129,10 +141,18 @@ class PriceTrackingApiDataSource {
           .map((item) => PriceTrackingModel.fromMap(item as Map<String, dynamic>))
           .toList();
     } on DioException catch (e) {
-      if (e.response?.statusCode == 401) {
+      final status = e.response?.statusCode;
+      if (status == 401) {
         throw Exception('Oturum süresi dolmuş. Lütfen tekrar giriş yapın.');
       }
-      throw Exception('Fiyat takibi getirilirken bir hata oluştu: ${e.message}');
+      if (status == 429) {
+        throw Exception('Çok fazla istek gönderildi. Lütfen biraz sonra tekrar deneyin.');
+      }
+      if (status != null && status >= 500) {
+        throw Exception('Sunucu hatası. Lütfen daha sonra tekrar deneyin.');
+      }
+      if (e.error is Exception) throw e.error as Exception;
+      throw Exception('Fiyat takibi getirilirken bir hata oluştu.');
     } catch (e) {
       throw Exception('Fiyat takibi getirilirken bir hata oluştu: ${e.toString()}');
     }
@@ -143,7 +163,7 @@ class PriceTrackingApiDataSource {
     try {
       final headers = await _getAuthHeaders();
       final response = await _dio.get(
-        '/api/price-tracking/$campaignId/history',
+        '/price-tracking/$campaignId/history',
         queryParameters: {'limit': limit},
         options: Options(headers: headers),
       );
@@ -165,10 +185,18 @@ class PriceTrackingApiDataSource {
           .map((item) => PriceHistoryModel.fromMap(item as Map<String, dynamic>))
           .toList();
     } on DioException catch (e) {
-      if (e.response?.statusCode == 401) {
+      final status = e.response?.statusCode;
+      if (status == 401) {
         throw Exception('Oturum süresi dolmuş. Lütfen tekrar giriş yapın.');
       }
-      throw Exception('Fiyat geçmişi getirilirken bir hata oluştu: ${e.message}');
+      if (status == 429) {
+        throw Exception('Çok fazla istek gönderildi. Lütfen biraz sonra tekrar deneyin.');
+      }
+      if (status != null && status >= 500) {
+        throw Exception('Sunucu hatası. Lütfen daha sonra tekrar deneyin.');
+      }
+      if (e.error is Exception) throw e.error as Exception;
+      throw Exception('Fiyat geçmişi getirilirken bir hata oluştu.');
     } catch (e) {
       throw Exception('Fiyat geçmişi getirilirken bir hata oluştu: ${e.toString()}');
     }

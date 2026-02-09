@@ -1,8 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import '../../core/config/api_config.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/services/dio_client.dart';
 import '../models/opportunity_model.dart';
 
 /// Favorite API Data Source
@@ -12,12 +12,7 @@ class FavoriteApiDataSource {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
 
   FavoriteApiDataSource({Dio? dio})
-      : _dio = dio ??
-            Dio(BaseOptions(
-              baseUrl: ApiConfig.baseUrl,
-              connectTimeout: ApiConfig.connectTimeout,
-              receiveTimeout: ApiConfig.receiveTimeout,
-            ));
+      : _dio = dio ?? DioClient.instance;
 
   /// Firebase token'ı alır
   Future<String?> _getAuthToken() async {
@@ -76,10 +71,19 @@ class FavoriteApiDataSource {
           .map((json) => _mapApiResponseToModel(json as Map<String, dynamic>))
           .toList();
     } on DioException catch (e) {
-      if (e.response?.statusCode == 401) {
+      final status = e.response?.statusCode;
+      if (status == 401) {
         throw Exception('Oturum süresi dolmuş. Lütfen yeniden giriş yapın.');
       }
-      throw Exception('Favoriler yüklenirken bir hata oluştu: ${e.message ?? "Bilinmeyen hata"}');
+      if (status == 429) {
+        throw Exception('Çok fazla istek gönderildi. Lütfen biraz sonra tekrar deneyin.');
+      }
+      if (status != null && status >= 500) {
+        throw Exception('Sunucu hatası. Lütfen daha sonra tekrar deneyin.');
+      }
+      // Prefer our interceptor-mapped exception (AppException) if present.
+      if (e.error is Exception) throw e.error as Exception;
+      throw Exception('Favoriler yüklenirken bir hata oluştu.');
     } catch (e) {
       if (e is Exception) {
         rethrow;
@@ -108,13 +112,21 @@ class FavoriteApiDataSource {
         throw Exception(response.data['error'] ?? 'Favoriye eklenirken bir hata oluştu');
       }
     } on DioException catch (e) {
-      if (e.response?.statusCode == 401) {
+      final status = e.response?.statusCode;
+      if (status == 401) {
         throw Exception('Oturum süresi dolmuş. Lütfen yeniden giriş yapın.');
       }
-      if (e.response?.statusCode == 409) {
+      if (status == 409) {
         throw Exception('Kampanya zaten favorilerinizde');
       }
-      throw Exception('Favoriye eklenirken bir hata oluştu: ${e.message ?? "Bilinmeyen hata"}');
+      if (status == 429) {
+        throw Exception('Çok fazla istek gönderildi. Lütfen biraz sonra tekrar deneyin.');
+      }
+      if (status != null && status >= 500) {
+        throw Exception('Sunucu hatası. Lütfen daha sonra tekrar deneyin.');
+      }
+      if (e.error is Exception) throw e.error as Exception;
+      throw Exception('Favoriye eklenirken bir hata oluştu.');
     } catch (e) {
       if (e is Exception) {
         rethrow;
@@ -143,13 +155,21 @@ class FavoriteApiDataSource {
         throw Exception(response.data['error'] ?? 'Favoriden çıkarılırken bir hata oluştu');
       }
     } on DioException catch (e) {
-      if (e.response?.statusCode == 401) {
+      final status = e.response?.statusCode;
+      if (status == 401) {
         throw Exception('Oturum süresi dolmuş. Lütfen yeniden giriş yapın.');
       }
-      if (e.response?.statusCode == 404) {
+      if (status == 404) {
         throw Exception('Favori bulunamadı');
       }
-      throw Exception('Favoriden çıkarılırken bir hata oluştu: ${e.message ?? "Bilinmeyen hata"}');
+      if (status == 429) {
+        throw Exception('Çok fazla istek gönderildi. Lütfen biraz sonra tekrar deneyin.');
+      }
+      if (status != null && status >= 500) {
+        throw Exception('Sunucu hatası. Lütfen daha sonra tekrar deneyin.');
+      }
+      if (e.error is Exception) throw e.error as Exception;
+      throw Exception('Favoriden çıkarılırken bir hata oluştu.');
     } catch (e) {
       if (e is Exception) {
         rethrow;
