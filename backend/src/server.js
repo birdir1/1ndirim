@@ -31,11 +31,11 @@ const PORT = process.env.PORT || 3000;
 // Behind a reverse proxy (nginx), `req.ip` must reflect the real client IP so rate limiting
 // does not treat all traffic as coming from the proxy itself.
 //
-// Default:
-// - production: trust 1 proxy hop (nginx)
-// - non-production: do not trust proxy headers
+// Default: trust proxy headers only when the direct peer is loopback.
+// This matches the common prod setup: nginx on the same host forwarding to Node over 127.0.0.1,
+// while still preventing direct external clients from spoofing X-Forwarded-*.
 //
-// Override with TRUST_PROXY (e.g. "1", "true", "false") if needed.
+// Override with TRUST_PROXY (e.g. "1", "true", "false", "loopback") if needed.
 const trustProxyEnv = process.env.TRUST_PROXY;
 if (typeof trustProxyEnv === 'string' && trustProxyEnv.trim() !== '') {
   const v = trustProxyEnv.trim().toLowerCase();
@@ -43,7 +43,7 @@ if (typeof trustProxyEnv === 'string' && trustProxyEnv.trim() !== '') {
   else if (v === 'false') app.set('trust proxy', false);
   else app.set('trust proxy', Number.isFinite(Number(v)) ? Number(v) : trustProxyEnv);
 } else {
-  app.set('trust proxy', process.env.NODE_ENV === 'production' ? 1 : false);
+  app.set('trust proxy', 'loopback');
 }
 
 // Rate Limiting - DDoS koruması
