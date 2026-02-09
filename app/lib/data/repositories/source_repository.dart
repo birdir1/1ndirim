@@ -43,7 +43,7 @@ class SourceRepository {
 
   /// Tüm kaynakları (segments ile) getirir
   static List<SourceModel> getAllSourcesWithSegments() {
-    return [
+    final sources = [
       // KAMU BANKALARI
       SourceModel(
         id: 'ziraat',
@@ -671,6 +671,9 @@ class SourceRepository {
         segments: [],
       ),
     ];
+
+    // Alt seçenekleri (segments) kapat
+    return sources.map((s) => s.copyWith(segments: [])).toList();
   }
 
   /// Tüm kaynakları (segments olmadan) getirir - onboarding için

@@ -86,12 +86,15 @@ class _SelectionPageState extends State<SelectionPage> {
     'vodafone',
     'turktelekom',
     'pttcell',
+    'bimcell',
   };
 
   List<SourceModel> get _banks {
     return _filteredSources
         .where(
-          (s) => s.type == 'bank' || (!_primaryOperatorIds.contains(s.id) && s.type == 'operator'),
+          (s) =>
+              s.type == 'bank' ||
+              (!_primaryOperatorIds.contains(s.id) && s.type == 'operator'),
         )
         .toList();
   }

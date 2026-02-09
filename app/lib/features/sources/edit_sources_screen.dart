@@ -312,12 +312,15 @@ class _EditSourcesScreenState extends State<EditSourcesScreen> {
     'vodafone',
     'turktelekom',
     'pttcell',
+    'bimcell',
   };
 
   List<SourceModel> get _banks {
     return _sources
         .where(
-          (s) => s.type == 'bank' || !_primaryOperatorIds.contains(s.id) && s.type == 'operator',
+          (s) =>
+              s.type == 'bank' ||
+              !_primaryOperatorIds.contains(s.id) && s.type == 'operator',
         )
         .toList();
   }
