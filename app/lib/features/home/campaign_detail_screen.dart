@@ -5,8 +5,10 @@ import 'package:share_plus/share_plus.dart';
 import 'package:video_player/video_player.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../core/theme/brand_styles.dart';
 import '../../core/config/api_config.dart';
 import '../../core/utils/source_logo_helper.dart';
+import '../../core/utils/date_formatter.dart';
 
 class CampaignDetailScreen extends StatefulWidget {
   final String title;
@@ -244,6 +246,8 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
   }
 
   Widget _buildCampaignSummary() {
+    final brand = BrandStyles.getStyle(widget.sourceName);
+
     return Column(
       children: [
         // Marka / Kampanya Görseli
@@ -255,12 +259,12 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
               color: Colors.white,
               shape: BoxShape.circle,
               border: Border.all(
-                color: widget.logoColor.withValues(alpha: 0.25),
+                color: brand.primary.withValues(alpha: 0.25),
                 width: 2,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: widget.logoColor.withValues(alpha: 0.12),
+                  color: brand.primary.withValues(alpha: 0.12),
                   blurRadius: 14,
                   offset: const Offset(0, 6),
                 ),
@@ -281,7 +285,9 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
         // Kampanya Başlığı
         Text(
           widget.title,
-          style: AppTextStyles.headline(isDark: false),
+          style: AppTextStyles.headline(
+            isDark: false,
+          ).copyWith(color: brand.primary),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 8),
@@ -292,22 +298,24 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
           style: AppTextStyles.bodySecondary(isDark: false),
           textAlign: TextAlign.center,
         ),
-        if (widget.primaryTag != null) ...[
+        if (widget.primaryTag != null &&
+            widget.primaryTag!.toLowerCase() != 'banka' &&
+            widget.primaryTag!.toLowerCase() != 'bankası' &&
+            widget.primaryTag!.toLowerCase() != 'bankasi' &&
+            widget.primaryTag!.toLowerCase() != 'operatör') ...[
           const SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
             decoration: BoxDecoration(
-              color: widget.logoColor.withValues(alpha: 0.08),
+              color: brand.primary.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: widget.logoColor.withValues(alpha: 0.15),
-              ),
+              border: Border.all(color: brand.primary.withValues(alpha: 0.15)),
             ),
             child: Text(
               widget.primaryTag!,
               style: AppTextStyles.caption(
                 isDark: false,
-              ).copyWith(color: widget.logoColor, fontWeight: FontWeight.w600),
+              ).copyWith(color: brand.primary, fontWeight: FontWeight.w600),
             ),
           ),
         ],
@@ -440,9 +448,10 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
   }
 
   Widget _buildValidity() {
+    final brand = BrandStyles.getStyle(widget.sourceName);
     final expiresText = widget.expiresAt?.isNotEmpty == true
-        ? 'Son tarih: ${widget.expiresAt}'
-        : 'Geçerlilik tarihi sağlanmadı';
+        ? formatDateTr(widget.expiresAt!)
+        : 'Sürekli kampanya';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -494,24 +503,7 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
               ),
             ),
 
-            // Kanal Çipi
-            if (widget.primaryTag != null)
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.primaryLight,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  widget.primaryTag!,
-                  style: AppTextStyles.bodySecondary(
-                    isDark: false,
-                  ).copyWith(fontSize: 13, color: AppColors.cardBackground),
-                ),
-              ),
+            // Gereksiz chipler kaldırıldı
           ],
         ),
       ],

@@ -12,6 +12,12 @@ const CacheService = require('../services/cacheService');
 const DataNormalizer = require('../services/DataNormalizer');
 const AIService = require('../services/AIService');
 const DuplicateDetector = require('../services/DuplicateDetector');
+const {
+  normalizeTitle,
+  normalizeDescription,
+  shouldDropCampaign,
+  fingerprint,
+} = require('../utils/campaignTextCleaner');
 
 /**
  * GET /campaigns
@@ -54,38 +60,70 @@ router.get('/', cacheMiddleware(CacheService.TTL.CAMPAIGNS_LIST), async (req, re
 
     const campaigns = await Campaign.findAll(sourceIds);
 
-    // Flutter uygulaması için format
-    const formattedCampaigns = campaigns.map((campaign) => ({
-      id: campaign.id,
-      title: campaign.title,
-      subtitle: campaign.description || `${campaign.source_name}`,
-      sourceName: campaign.source_name,
-      sourceId: campaign.source_id,
-      icon: campaign.icon_name || 'local_offer',
-      iconColor: campaign.icon_color || '#DC2626',
-      iconBgColor: campaign.icon_bg_color || '#FEE2E2',
-      tags: campaign.tags || [],
-      description: campaign.description,
-      detailText: campaign.detail_text,
-      originalUrl: campaign.original_url,
-      affiliateUrl: campaign.affiliate_url || null,
-      expiresAt: campaign.expires_at,
-      howToUse: campaign.how_to_use || [],
-      validityChannels: campaign.validity_channels || [],
-      status: campaign.status,
-      videoUrl: campaign.video_url,
-      videoThumbnailUrl: campaign.video_thumbnail_url,
-      videoDuration: campaign.video_duration,
-      currentPrice: campaign.current_price,
-      originalPrice: campaign.original_price,
-      discountPercentage: campaign.discount_percentage,
-      priceCurrency: campaign.price_currency,
-    }));
+    // Temizleme + format
+    const formattedCampaigns = [];
+    const seen = new Set();
+
+    for (const campaign of campaigns) {
+      const normalized = {
+        ...campaign,
+        title: normalizeTitle(campaign),
+        description: normalizeDescription(campaign),
+      };
+
+      if (shouldDropCampaign(normalized)) continue;
+
+      const fp = fingerprint(normalized);
+      if (seen.has(fp)) continue;
+      seen.add(fp);
+
+      formattedCampaigns.push({
+        id: campaign.id,
+        title: normalized.title,
+        subtitle: normalized.description || `${campaign.source_name}`,
+        sourceName: campaign.source_name,
+        sourceId: campaign.source_id,
+        icon: campaign.icon_name || 'local_offer',
+        iconColor: campaign.icon_color || '#DC2626',
+        iconBgColor: campaign.icon_bg_color || '#FEE2E2',
+        tags: campaign.tags || [],
+        description: normalized.description,
+        detailText: campaign.detail_text,
+        originalUrl: campaign.original_url,
+        affiliateUrl: campaign.affiliate_url || null,
+        expiresAt: campaign.expires_at,
+        howToUse: campaign.how_to_use || [],
+        validityChannels: campaign.validity_channels || [],
+        status: campaign.status,
+        videoUrl: campaign.video_url,
+        videoThumbnailUrl: campaign.video_thumbnail_url,
+        videoDuration: campaign.video_duration,
+        currentPrice: campaign.current_price,
+        originalPrice: campaign.original_price,
+        discountPercentage: campaign.discount_percentage,
+        priceCurrency: campaign.price_currency,
+      });
+    }
+
+    // Boş kaynak listesi (UI boş durum gösterebilsin)
+    let emptySources = [];
+    try {
+      const Source = require('../models/Source');
+      const allSources = await Source.findAll();
+      const filterIds = sourceIds || allSources.map((s) => s.id);
+      const hasCampaign = new Set(formattedCampaigns.map((c) => c.sourceId));
+      emptySources = allSources
+        .filter((s) => filterIds.includes(s.id) && !hasCampaign.has(s.id))
+        .map((s) => ({ id: s.id, name: s.name }));
+    } catch (_) {
+      emptySources = [];
+    }
 
     res.json({
       success: true,
       data: formattedCampaigns,
       count: formattedCampaigns.length,
+      emptySources,
     });
   } catch (error) {
     console.error('Campaigns list error:', error);
@@ -162,32 +200,47 @@ router.get('/search', async (req, res) => {
     const campaigns = await Campaign.search(searchTerm, sourceIds, filters);
 
     // Flutter uygulaması için format
-    const formattedCampaigns = campaigns.map((campaign) => ({
-      id: campaign.id,
-      title: campaign.title,
-      subtitle: campaign.description || `${campaign.source_name}`,
-      sourceName: campaign.source_name,
-      sourceId: campaign.source_id,
-      icon: campaign.icon_name || 'local_offer',
-      iconColor: campaign.icon_color || '#DC2626',
-      iconBgColor: campaign.icon_bg_color || '#FEE2E2',
-      tags: campaign.tags || [],
-      description: campaign.description,
-      detailText: campaign.detail_text,
-      originalUrl: campaign.original_url,
-      affiliateUrl: campaign.affiliate_url || null,
-      expiresAt: campaign.expires_at,
-      howToUse: campaign.how_to_use || [],
-      validityChannels: campaign.validity_channels || [],
-      status: campaign.status,
-      videoUrl: campaign.video_url,
-      videoThumbnailUrl: campaign.video_thumbnail_url,
-      videoDuration: campaign.video_duration,
-      currentPrice: campaign.current_price,
-      originalPrice: campaign.original_price,
-      discountPercentage: campaign.discount_percentage,
-      priceCurrency: campaign.price_currency,
-    }));
+    const formattedCampaigns = [];
+    const seen = new Set();
+
+    for (const campaign of campaigns) {
+      const normalized = {
+        ...campaign,
+        title: normalizeTitle(campaign),
+        description: normalizeDescription(campaign),
+      };
+      if (shouldDropCampaign(normalized)) continue;
+      const fp = fingerprint(normalized);
+      if (seen.has(fp)) continue;
+      seen.add(fp);
+
+      formattedCampaigns.push({
+        id: campaign.id,
+        title: normalized.title,
+        subtitle: normalized.description || `${campaign.source_name}`,
+        sourceName: campaign.source_name,
+        sourceId: campaign.source_id,
+        icon: campaign.icon_name || 'local_offer',
+        iconColor: campaign.icon_color || '#DC2626',
+        iconBgColor: campaign.icon_bg_color || '#FEE2E2',
+        tags: [],
+        description: normalized.description,
+        detailText: campaign.detail_text,
+        originalUrl: campaign.original_url,
+        affiliateUrl: campaign.affiliate_url || null,
+        expiresAt: campaign.expires_at,
+        howToUse: campaign.how_to_use || [],
+        validityChannels: campaign.validity_channels || [],
+        status: campaign.status,
+        videoUrl: campaign.video_url,
+        videoThumbnailUrl: campaign.video_thumbnail_url,
+        videoDuration: campaign.video_duration,
+        currentPrice: campaign.current_price,
+        originalPrice: campaign.original_price,
+        discountPercentage: campaign.discount_percentage,
+        priceCurrency: campaign.price_currency,
+      });
+    }
 
     res.json({
       success: true,
@@ -245,28 +298,42 @@ router.get('/all', async (req, res) => {
     // Tüm aktif kampanyaları getir (feed type'a bakmaz)
     const campaigns = await Campaign.findAllActive(sourceIds);
 
-    // Flutter uygulaması için format
-    const formattedCampaigns = campaigns.map((campaign) => ({
-      id: campaign.id,
-      title: campaign.title,
-      subtitle: campaign.description || `${campaign.source_name}`,
-      sourceName: campaign.source_name,
-      sourceId: campaign.source_id,
-      icon: campaign.icon_name || 'local_offer',
-      iconColor: campaign.icon_color || '#DC2626',
-      iconBgColor: campaign.icon_bg_color || '#FEE2E2',
-      tags: campaign.tags || [],
-      description: campaign.description,
-      detailText: campaign.detail_text,
-      originalUrl: campaign.original_url,
-      affiliateUrl: campaign.affiliate_url || null,
-      expiresAt: campaign.expires_at,
-      howToUse: campaign.how_to_use || [],
-      validityChannels: campaign.validity_channels || [],
-      status: campaign.status,
-      campaignType: campaign.campaign_type, // Feed type bilgisi
-      valueLevel: campaign.value_level, // Value level bilgisi
-    }));
+    const formattedCampaigns = [];
+    const seen = new Set();
+
+    for (const campaign of campaigns) {
+      const normalized = {
+        ...campaign,
+        title: normalizeTitle(campaign),
+        description: normalizeDescription(campaign),
+      };
+      if (shouldDropCampaign(normalized)) continue;
+      const fp = fingerprint(normalized);
+      if (seen.has(fp)) continue;
+      seen.add(fp);
+
+      formattedCampaigns.push({
+        id: campaign.id,
+        title: normalized.title,
+        subtitle: normalized.description || `${campaign.source_name}`,
+        sourceName: campaign.source_name,
+        sourceId: campaign.source_id,
+        icon: campaign.icon_name || 'local_offer',
+        iconColor: campaign.icon_color || '#DC2626',
+        iconBgColor: campaign.icon_bg_color || '#FEE2E2',
+        tags: [],
+        description: normalized.description,
+        detailText: campaign.detail_text,
+        originalUrl: campaign.original_url,
+        affiliateUrl: campaign.affiliate_url || null,
+        expiresAt: campaign.expires_at,
+        howToUse: campaign.how_to_use || [],
+        validityChannels: campaign.validity_channels || [],
+        status: campaign.status,
+        campaignType: campaign.campaign_type, // Feed type bilgisi
+        valueLevel: campaign.value_level, // Value level bilgisi
+      });
+    }
 
     res.json({
       success: true,
@@ -523,33 +590,47 @@ router.get('/expiring-soon', async (req, res) => {
 
     const campaigns = await Campaign.findExpiringSoon(days, sourceIds);
 
-    // Flutter uygulaması için format
-    const formattedCampaigns = campaigns.map((campaign) => ({
-      id: campaign.id,
-      title: campaign.title,
-      subtitle: campaign.description || `${campaign.source_name}`,
-      sourceName: campaign.source_name,
-      sourceId: campaign.source_id,
-      icon: campaign.icon_name || 'local_offer',
-      iconColor: campaign.icon_color || '#DC2626',
-      iconBgColor: campaign.icon_bg_color || '#FEE2E2',
-      tags: campaign.tags || [],
-      description: campaign.description,
-      detailText: campaign.detail_text,
-      originalUrl: campaign.original_url,
-      affiliateUrl: campaign.affiliate_url || null,
-      expiresAt: campaign.expires_at,
-      howToUse: campaign.how_to_use || [],
-      validityChannels: campaign.validity_channels || [],
-      status: campaign.status,
-      videoUrl: campaign.video_url,
-      videoThumbnailUrl: campaign.video_thumbnail_url,
-      videoDuration: campaign.video_duration,
-      currentPrice: campaign.current_price,
-      originalPrice: campaign.original_price,
-      discountPercentage: campaign.discount_percentage,
-      priceCurrency: campaign.price_currency,
-    }));
+    const formattedCampaigns = [];
+    const seen = new Set();
+
+    for (const campaign of campaigns) {
+      const normalized = {
+        ...campaign,
+        title: normalizeTitle(campaign),
+        description: normalizeDescription(campaign),
+      };
+      if (shouldDropCampaign(normalized)) continue;
+      const fp = fingerprint(normalized);
+      if (seen.has(fp)) continue;
+      seen.add(fp);
+
+      formattedCampaigns.push({
+        id: campaign.id,
+        title: normalized.title,
+        subtitle: normalized.description || `${campaign.source_name}`,
+        sourceName: campaign.source_name,
+        sourceId: campaign.source_id,
+        icon: campaign.icon_name || 'local_offer',
+        iconColor: campaign.icon_color || '#DC2626',
+        iconBgColor: campaign.icon_bg_color || '#FEE2E2',
+        tags: [],
+        description: normalized.description,
+        detailText: campaign.detail_text,
+        originalUrl: campaign.original_url,
+        affiliateUrl: campaign.affiliate_url || null,
+        expiresAt: campaign.expires_at,
+        howToUse: campaign.how_to_use || [],
+        validityChannels: campaign.validity_channels || [],
+        status: campaign.status,
+        videoUrl: campaign.video_url,
+        videoThumbnailUrl: campaign.video_thumbnail_url,
+        videoDuration: campaign.video_duration,
+        currentPrice: campaign.current_price,
+        originalPrice: campaign.original_price,
+        discountPercentage: campaign.discount_percentage,
+        priceCurrency: campaign.price_currency,
+      });
+    }
 
     res.json({
       success: true,
@@ -584,18 +665,28 @@ router.get('/:id', async (req, res) => {
       });
     }
 
+    const normalized = {
+      ...campaign,
+      title: normalizeTitle(campaign),
+      description: normalizeDescription(campaign),
+    };
+
+    if (shouldDropCampaign(normalized)) {
+      return res.status(404).json({ success: false, error: 'Kampanya bulunamadı' });
+    }
+
     // Flutter uygulaması için format
     const formattedCampaign = {
       id: campaign.id,
-      title: campaign.title,
-      subtitle: campaign.description || `${campaign.source_name}`,
+      title: normalized.title,
+      subtitle: normalized.description || `${campaign.source_name}`,
       sourceName: campaign.source_name,
       sourceId: campaign.source_id,
       icon: campaign.icon_name || 'local_offer',
       iconColor: campaign.icon_color || '#DC2626',
       iconBgColor: campaign.icon_bg_color || '#FEE2E2',
-      tags: campaign.tags || [],
-      description: campaign.description,
+      tags: [],
+      description: normalized.description,
       detailText: campaign.detail_text,
       originalUrl: campaign.original_url,
       affiliateUrl: campaign.affiliate_url || null,

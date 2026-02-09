@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/brand_styles.dart';
 import '../../../core/utils/page_transitions.dart';
 import '../../../core/utils/source_logo_helper.dart';
 import '../../../core/utils/network_result.dart';
@@ -145,12 +146,18 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
 
   @override
   Widget build(BuildContext context) {
-    final sourceColor = SourceLogoHelper.getLogoBackgroundColor(
-      widget.opportunity.sourceName,
-    );
+    final brandStyle = BrandStyles.getStyle(widget.opportunity.sourceName);
+    final sourceColor = brandStyle.primary;
+    final sourceBg = brandStyle.background;
     final normalized = TagNormalizer.normalize(widget.opportunity.tags);
     final primaryTag = normalized.primary;
-    final chipTags = normalized.secondary.take(3).toList();
+    final chipTags = <String>[]; // Tag'leri gösterme: backend filtreliyor
+    final hidePrimaryChip =
+        primaryTag == null ||
+        primaryTag.toLowerCase() == 'banka' ||
+        primaryTag.toLowerCase() == 'bankası' ||
+        primaryTag.toLowerCase() == 'bankasi' ||
+        primaryTag.toLowerCase() == 'operatör';
 
     return InkWell(
       onTap: () {
@@ -194,7 +201,7 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: sourceColor.withValues(alpha: 0.05),
+                color: sourceBg,
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(28),
                 ),
@@ -254,7 +261,7 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 4),
-                        if (primaryTag != null)
+                        if (!hidePrimaryChip && primaryTag != null)
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 10,
@@ -443,13 +450,7 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
                       fontWeight: FontWeight.w800,
                       letterSpacing: -0.5,
                       height: 1.3,
-                      color:
-                          widget.opportunity.title.contains('%') ||
-                              widget.opportunity.title.toLowerCase().contains(
-                                'indirim',
-                              )
-                          ? AppColors.discountRed
-                          : AppColors.textPrimaryLight,
+                      color: sourceColor,
                     ),
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
@@ -485,7 +486,7 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
                             .copyWith(
                               fontSize: 15,
                               height: 1.5,
-                              color: AppColors.textSecondaryLight,
+                              color: const Color(0xFF4A4A4A),
                             ),
                         maxLines: 3,
                         overflow: TextOverflow.ellipsis,
