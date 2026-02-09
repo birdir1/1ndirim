@@ -184,6 +184,29 @@ function normalizeDescription(campaign) {
   return desc;
 }
 
+function normalizeDetailText(campaign) {
+  let text = cleanText(campaign.detailText || campaign.detail_text || '');
+  if (!text) return '';
+
+  // Strip common wrapper prefixes (often from proxy readers / metadata dumps).
+  text = text
+    .replace(/\\btitle\\s*:\\s*\\S+/gi, ' ')
+    .replace(/\\burl\\s*source\\s*:\\s*\\S+/gi, ' ')
+    .replace(/\\bmarkdown\\s*content\\s*:\\s*/gi, ' ');
+
+  // Drop obvious asset filenames that add noise.
+  text = text.replace(/\\b\\S+\\.(png|jpe?g|webp)\\b/gi, ' ');
+
+  text = normalizeWhitespace(text);
+
+  // If still garbage / too short, hide it.
+  if (!text || text.length < 12) return '';
+  if (isGenericDescription(text)) return '';
+
+  // Avoid sending huge payloads to mobile.
+  return text.length > 800 ? `${text.slice(0, 797)}...` : text;
+}
+
 function shouldDropCampaign(campaign) {
   const title = normalizeTitle(campaign);
   const desc = normalizeDescription(campaign);
@@ -210,6 +233,7 @@ function fingerprint(campaign) {
 module.exports = {
   normalizeTitle,
   normalizeDescription,
+  normalizeDetailText,
   shouldDropCampaign,
   decodeHtmlEntities,
   fingerprint,
