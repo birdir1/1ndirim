@@ -6,6 +6,9 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
+    "lint": "npm run check:syntax",
+    "check:syntax": "find src -name '*.js' -print0 | xargs -0 -n1 node --check",
+    "test": "npm run check:syntax && NODE_ENV=test sh -c \"find test -name '*.test.js' -print0 | xargs -0 node --test\"",
     "seed": "node src/scripts/seed.js",
     "migrate": "node src/scripts/migrate.js",
     "backup": "node src/scripts/backup.js",
@@ -26,7 +29,7 @@
     "express": "^4.18.2",
     "express-rate-limit": "^8.2.1",
     "express-validator": "^7.3.1",
-    "firebase-admin": "^12.7.0",
+    "firebase-admin": "^13.6.1",
     "he": "^1.2.0",
     "helmet": "^7.1.0",
     "morgan": "^1.10.0",
@@ -36,6 +39,7 @@
     "redis": "^5.10.0"
   },
   "devDependencies": {
-    "nodemon": "^3.0.2"
+    "nodemon": "^3.0.2",
+    "supertest": "^7.1.4"
   }
 }

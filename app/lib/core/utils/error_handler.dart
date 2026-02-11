@@ -14,23 +14,19 @@ class AppException implements Exception {
 }
 
 class NetworkException extends AppException {
-  NetworkException(String message, {String? code, dynamic originalError})
-    : super(message, code: code, originalError: originalError);
+  NetworkException(super.message, {super.code, super.originalError});
 }
 
 class AuthException extends AppException {
-  AuthException(String message, {String? code, dynamic originalError})
-    : super(message, code: code, originalError: originalError);
+  AuthException(super.message, {super.code, super.originalError});
 }
 
 class ValidationException extends AppException {
-  ValidationException(String message, {String? code, dynamic originalError})
-    : super(message, code: code, originalError: originalError);
+  ValidationException(super.message, {super.code, super.originalError});
 }
 
 class ServerException extends AppException {
-  ServerException(String message, {String? code, dynamic originalError})
-    : super(message, code: code, originalError: originalError);
+  ServerException(super.message, {super.code, super.originalError});
 }
 
 /// Global error handler

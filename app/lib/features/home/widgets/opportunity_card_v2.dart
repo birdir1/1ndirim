@@ -255,7 +255,7 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 4),
-                        if (!hidePrimaryChip && primaryTag != null)
+                        if (!hidePrimaryChip)
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 10,

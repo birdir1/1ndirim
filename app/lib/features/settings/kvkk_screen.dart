@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../core/l10n/app_localizations.dart';
+import '../../core/widgets/screen_shell.dart';
+import '../../core/widgets/section_card.dart';
 
 /// KVKK Screen
 class KVKKScreen extends StatelessWidget {
@@ -8,37 +10,22 @@ class KVKKScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
-      appBar: AppBar(
-        backgroundColor: AppColors.backgroundLight,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios_new,
-            color: AppColors.textPrimaryLight,
-            size: 20,
-          ),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Text(
-          'KVKK',
-          style: AppTextStyles.title(isDark: false),
-        ),
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+    final l10n = AppLocalizations.of(context)!;
+    return ScreenShell(
+      title: l10n.kvkkPageTitle,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.only(bottom: 24, top: 8),
+        child: SectionCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Kişisel Verilerin Korunması Kanunu',
-                style: AppTextStyles.headline(isDark: false),
+                l10n.kvkkFullTitle,
+                style: AppTextStyles.subtitle(isDark: false),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               Text(
-                'Bu sayfa içerik sağlanacak.',
+                l10n.kvkkPlaceholder,
                 style: AppTextStyles.body(isDark: false),
               ),
             ],

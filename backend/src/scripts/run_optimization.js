@@ -97,7 +97,7 @@ async function runOptimization() {
     console.log('');
     
     // Index'leri listele
-    console.log('📋 OLUŞTURULAN INDEX'LER:');
+    console.log("📋 OLUŞTURULAN INDEX'LER:");
     console.log('');
     
     const indexResult = await client.query(`

@@ -24,18 +24,16 @@ class FilterChipItem extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Container(
-          constraints: const BoxConstraints(
-            minWidth: 60,
-            maxWidth: 140,
-          ),
-          height: 36,
+          constraints: const BoxConstraints(minWidth: 60, maxWidth: 140),
+          height: 44,
           padding: EdgeInsets.symmetric(
             horizontal: color != null ? 10 : 16,
             vertical: 6,
           ),
           decoration: BoxDecoration(
             color: isActive
-                ? AppColors.secondaryLight // #8CA9FF
+                ? AppColors
+                      .secondaryLight // #8CA9FF
                 : AppColors.cardBackground,
             borderRadius: BorderRadius.circular(18),
             boxShadow: [

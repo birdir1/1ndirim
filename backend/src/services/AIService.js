@@ -7,6 +7,7 @@
  */
 
 const OpenAI = require('openai');
+const isTest = process.env.NODE_ENV === 'test';
 
 class AIService {
   constructor() {
@@ -24,7 +25,9 @@ class AIService {
       this.enabled = true;
       console.log('✅ AI Service enabled (OpenAI)');
     } else {
-      console.warn('⚠️  AI Service disabled (no OPENAI_API_KEY)');
+      if (!isTest) {
+        console.warn('⚠️  AI Service disabled (no OPENAI_API_KEY)');
+      }
     }
   }
 

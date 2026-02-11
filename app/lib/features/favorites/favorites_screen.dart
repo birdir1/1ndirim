@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../core/theme/app_ui_tokens.dart';
 import '../../core/utils/network_result.dart';
 import '../../core/utils/source_logo_helper.dart';
 import '../../core/utils/page_transitions.dart';
@@ -11,8 +12,6 @@ import '../../data/repositories/favorite_repository.dart';
 import '../home/campaign_detail_screen.dart';
 import '../auth/login_screen.dart';
 import '../discovery/discovery_screen.dart';
-import '../home/home_screen.dart';
-import '../../core/utils/page_transitions.dart';
 
 /// Favoriler Sayfası
 /// Kullanıcının favori kampanyalarını gösterir
@@ -79,8 +78,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
         final l10n = AppLocalizations.of(context);
         setState(() {
           _favoritesResult = NetworkError.general(
-            l10n?.errorLoadingFavorites ??
-                'Favoriler yüklenirken bir hata oluştu',
+            l10n?.errorLoadingFavorites ?? 'Favoriler yüklenirken hata oluştu',
           );
           _isLoading = false;
         });
@@ -89,6 +87,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   }
 
   Future<void> _removeFavorite(OpportunityModel campaign) async {
+    final l10n = AppLocalizations.of(context)!;
     try {
       final result = await _favoriteRepository.removeFavorite(campaign.id);
       if (result is NetworkSuccess && mounted) {
@@ -96,8 +95,8 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
           _favorites.removeWhere((c) => c.id == campaign.id);
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Favorilerden kaldırıldı'),
+          SnackBar(
+            content: Text(l10n.favoritesRemoved),
             backgroundColor: AppColors.success,
             duration: Duration(seconds: 1),
           ),
@@ -106,7 +105,10 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Hata: $e'), backgroundColor: AppColors.error),
+          SnackBar(
+            content: Text('${l10n.error}: $e'),
+            backgroundColor: AppColors.error,
+          ),
         );
       }
     }
@@ -114,6 +116,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     // Kullanıcı giriş yapmamışsa login ekranına yönlendir
     if (_auth.currentUser == null) {
       return Scaffold(
@@ -123,8 +126,8 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
           elevation: 0,
           automaticallyImplyLeading: false,
           title: Text(
-            'Favoriler',
-            style: AppTextStyles.headline(isDark: false),
+            l10n.favorites,
+            style: AppTextStyles.pageTitle(isDark: false),
           ),
           centerTitle: true,
         ),
@@ -138,7 +141,10 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
         backgroundColor: AppColors.backgroundLight,
         elevation: 0,
         automaticallyImplyLeading: false,
-        title: Text('Favoriler', style: AppTextStyles.headline(isDark: false)),
+        title: Text(
+          l10n.favorites,
+          style: AppTextStyles.pageTitle(isDark: false),
+        ),
         centerTitle: true,
       ),
       body: RefreshIndicator(
@@ -150,6 +156,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   }
 
   Widget _buildLoginRequired() {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -171,13 +178,13 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
             ),
             const SizedBox(height: 24),
             Text(
-              'Kaydetmek için giriş yap',
+              l10n.favoritesLoginPromptTitle,
               style: AppTextStyles.title(isDark: false),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
             Text(
-              'Kampanyaları favoriye eklemek için giriş yap. Giriş yapmadan keşfetmeye devam edebilirsin.',
+              l10n.favoritesLoginPromptDesc,
               style: AppTextStyles.body(
                 isDark: false,
               ).copyWith(color: AppColors.textSecondaryLight),
@@ -201,7 +208,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: const Text('Giriş Yap'),
+              child: Text(l10n.login),
             ),
             const SizedBox(height: 12),
             OutlinedButton.icon(
@@ -215,7 +222,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
               },
               icon: const Icon(Icons.explore, color: AppColors.primaryLight),
               label: Text(
-                'Keşfet’e göz at',
+                l10n.exploreCampaigns,
                 style: AppTextStyles.button(color: AppColors.primaryLight),
               ),
               style: OutlinedButton.styleFrom(
@@ -239,6 +246,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   }
 
   Widget _buildBody() {
+    final l10n = AppLocalizations.of(context)!;
     if (_favoritesResult is NetworkLoading) {
       return const Center(
         child: CircularProgressIndicator(
@@ -261,15 +269,26 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-            child: Text(
-              'Kaydettiğin tüm fırsatlar burada.',
-              style: AppTextStyles.title(isDark: false).copyWith(fontSize: 20),
+            padding: const EdgeInsets.fromLTRB(
+              AppUiTokens.screenPadding,
+              12,
+              AppUiTokens.screenPadding,
+              12,
+            ),
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: AppUiTokens.elevatedSurface(),
+              child: Text(
+                l10n.favoritesHintSaved,
+                style: AppTextStyles.subtitle(isDark: false),
+              ),
             ),
           ),
           Expanded(
             child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppUiTokens.screenPadding,
+              ),
               itemCount: _favorites.length,
               itemBuilder: (context, index) {
                 final campaign = _favorites[index];
@@ -291,17 +310,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.shadowDark.withValues(alpha: 0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
+      decoration: AppUiTokens.elevatedSurface(),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
@@ -315,7 +324,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
               ),
             );
           },
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppUiTokens.cardRadius),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Row(
@@ -415,8 +424,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                     color: AppColors.primaryLight,
                     size: 28,
                   ),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
+                  tooltip: AppLocalizations.of(context)!.removeFromFavorites,
                 ),
               ],
             ),
@@ -427,6 +435,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   }
 
   Widget _buildEmptyState() {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -448,13 +457,13 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
             ),
             const SizedBox(height: 24),
             Text(
-              'Henüz favorin yok',
+              l10n.favoritesEmptyTitle,
               style: AppTextStyles.title(isDark: false),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
             Text(
-              'Beğendiğin fırsatları kalbe basarak buraya ekleyebilirsin.',
+              l10n.favoritesEmptyDesc,
               style: AppTextStyles.body(
                 isDark: false,
               ).copyWith(color: AppColors.textSecondaryLight),
@@ -467,6 +476,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   }
 
   Widget _buildErrorState(String message) {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -476,7 +486,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
             Icon(Icons.error_outline, size: 64, color: AppColors.error),
             const SizedBox(height: 16),
             Text(
-              'Bir Hata Oluştu',
+              l10n.errorOccurred,
               style: AppTextStyles.title(isDark: false),
               textAlign: TextAlign.center,
             ),
@@ -502,7 +512,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: const Text('Tekrar Dene'),
+              child: Text(l10n.retry),
             ),
           ],
         ),

@@ -87,11 +87,13 @@ const limiter = rateLimit({
   },
   handler: (req, res, next, options) => {
     const remaining = res.getHeader('RateLimit-Remaining');
-    console.warn(
-      `[RATE_LIMIT_HIT] ${req.method} ${req.path} key=${req.rateLimitKey || 'ip'} ip=${
-        req.ip
-      } remaining=${remaining}`,
-    );
+    if (process.env.NODE_ENV !== 'test') {
+      console.warn(
+        `[RATE_LIMIT_HIT] ${req.method} ${req.path} key=${req.rateLimitKey || 'ip'} ip=${
+          req.ip
+        } remaining=${remaining}`,
+      );
+    }
     return res.status(options.statusCode).json(
       options.message || {
         success: false,
@@ -142,7 +144,9 @@ app.use((req, res, next) => {
   if (req.path.startsWith('/api/admin')) return adminCors(req, res, next);
   return publicCors(req, res, next);
 });
-app.use(morgan('combined')); // Logging
+if (process.env.NODE_ENV !== 'test') {
+  app.use(morgan('combined')); // Logging
+}
 app.use(express.json()); // JSON body parser
 app.use(express.urlencoded({ extended: true })); // URL encoded body parser
 
@@ -220,36 +224,40 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`🚀 1ndirim Backend API çalışıyor: http://localhost:${PORT}`);
-  console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
-  console.log(`📋 Campaigns: http://localhost:${PORT}/api/campaigns`);
-  console.log(`🏦 Sources: http://localhost:${PORT}/api/sources`);
-  console.log(`⭐ Favorites: http://localhost:${PORT}/api/favorites`);
-  console.log(`👤 Users: http://localhost:${PORT}/api/users`);
-  console.log(`💬 Comments: http://localhost:${PORT}/api/comments`);
-  console.log(`⭐ Ratings: http://localhost:${PORT}/api/ratings`);
-  console.log(`👥 Community: http://localhost:${PORT}/api/community`);
-  console.log(`💰 Price Tracking: http://localhost:${PORT}/api/price-tracking`);
-  console.log(`📝 Blog: http://localhost:${PORT}/api/blog`);
-  console.log(`🎁 Referrals: http://localhost:${PORT}/api/referrals`);
-  console.log(`⭐ Premium: http://localhost:${PORT}/api/premium`);
+const startServer = () =>
+  app.listen(PORT, () => {
+    console.log(`🚀 1ndirim Backend API çalışıyor: http://localhost:${PORT}`);
+    console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
+    console.log(`📋 Campaigns: http://localhost:${PORT}/api/campaigns`);
+    console.log(`🏦 Sources: http://localhost:${PORT}/api/sources`);
+    console.log(`⭐ Favorites: http://localhost:${PORT}/api/favorites`);
+    console.log(`👤 Users: http://localhost:${PORT}/api/users`);
+    console.log(`💬 Comments: http://localhost:${PORT}/api/comments`);
+    console.log(`⭐ Ratings: http://localhost:${PORT}/api/ratings`);
+    console.log(`👥 Community: http://localhost:${PORT}/api/community`);
+    console.log(`💰 Price Tracking: http://localhost:${PORT}/api/price-tracking`);
+    console.log(`📝 Blog: http://localhost:${PORT}/api/blog`);
+    console.log(`🎁 Referrals: http://localhost:${PORT}/api/referrals`);
+    console.log(`⭐ Premium: http://localhost:${PORT}/api/premium`);
 
-  // Cron job: Sadece CRON_ONLY env yoksa çalıştır (production'da ayrı worker)
-  if (!process.env.CRON_ONLY) {
-    cron.schedule('0 * * * *', async () => {
-      console.log('⏰ Cron job çalışıyor: Süresi bitmiş kampanyalar kontrol ediliyor...');
-      try {
-        await deactivateExpiredCampaigns();
-      } catch (error) {
-        console.error('❌ Cron job hatası:', error);
-      }
-    });
-    console.log('⏰ Cron job aktif: Her saat başı süresi bitmiş kampanyalar pasifleştirilecek');
-  } else {
-    console.log('⏰ Cron job devre dışı (CRON_ONLY=true, ayrı worker kullanılıyor)');
-  }
-});
+    // Cron job: Sadece CRON_ONLY env yoksa çalıştır (production'da ayrı worker)
+    if (!process.env.CRON_ONLY) {
+      cron.schedule('0 * * * *', async () => {
+        console.log('⏰ Cron job çalışıyor: Süresi bitmiş kampanyalar kontrol ediliyor...');
+        try {
+          await deactivateExpiredCampaigns();
+        } catch (error) {
+          console.error('❌ Cron job hatası:', error);
+        }
+      });
+      console.log('⏰ Cron job aktif: Her saat başı süresi bitmiş kampanyalar pasifleştirilecek');
+    } else {
+      console.log('⏰ Cron job devre dışı (CRON_ONLY=true, ayrı worker kullanılıyor)');
+    }
+  });
+
+if (require.main === module) {
+  startServer();
+}
 
 module.exports = app;

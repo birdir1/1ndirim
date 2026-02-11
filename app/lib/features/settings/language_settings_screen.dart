@@ -4,6 +4,8 @@ import '../../core/providers/locale_provider.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../core/widgets/screen_shell.dart';
+import '../../core/widgets/section_card.dart';
 
 /// Dil Ayarları Ekranı
 class LanguageSettingsScreen extends StatelessWidget {
@@ -14,30 +16,11 @@ class LanguageSettingsScreen extends StatelessWidget {
     final localeProvider = Provider.of<LocaleProvider>(context);
     final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final backgroundColor = isDark
-        ? AppColors.backgroundDark
-        : AppColors.backgroundLight;
-    final textColor = isDark
-        ? AppColors.textPrimaryDark
-        : AppColors.textPrimaryLight;
 
-    return Scaffold(
-      backgroundColor: backgroundColor,
-      appBar: AppBar(
-        backgroundColor: backgroundColor,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: textColor),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Text(
-          l10n.languageSettings,
-          style: AppTextStyles.headline(isDark: isDark),
-        ),
-        centerTitle: false,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
+    return ScreenShell(
+      title: l10n.languageSettings,
+      child: ListView(
+        padding: const EdgeInsets.only(bottom: 20),
         children: [
           Text(
             l10n.selectLanguage,
@@ -57,35 +40,13 @@ class LanguageSettingsScreen extends StatelessWidget {
             final primaryColor = isDark
                 ? AppColors.primaryDark
                 : AppColors.primaryLight;
-            final cardColor = isDark
-                ? AppColors.surfaceDark
-                : AppColors.cardBackground;
             final surfaceColor = isDark
                 ? AppColors.backgroundDark
                 : AppColors.surfaceLight;
 
-            return Container(
+            return SectionCard(
               margin: const EdgeInsets.only(bottom: 12),
-              decoration: BoxDecoration(
-                color: cardColor,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: isSelected
-                      ? primaryColor
-                      : (isDark
-                                ? AppColors.textSecondaryDark
-                                : AppColors.textSecondaryLight)
-                            .withValues(alpha: 0.1),
-                  width: isSelected ? 2 : 1,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.shadowDark.withValues(alpha: 0.05),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
+              padding: EdgeInsets.zero,
               child: ListTile(
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 20,
@@ -120,7 +81,11 @@ class LanguageSettingsScreen extends StatelessWidget {
                     fontWeight: isSelected
                         ? FontWeight.bold
                         : FontWeight.normal,
-                    color: isSelected ? primaryColor : textColor,
+                    color: isSelected
+                        ? primaryColor
+                        : (isDark
+                              ? AppColors.textPrimaryDark
+                              : AppColors.textPrimaryLight),
                   ),
                 ),
                 trailing: isSelected
@@ -138,7 +103,9 @@ class LanguageSettingsScreen extends StatelessWidget {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('Dil değiştirildi: $languageName'),
+                          content: Text(
+                            '${l10n.languageChanged}: $languageName',
+                          ),
                           backgroundColor: AppColors.success,
                           duration: const Duration(seconds: 2),
                         ),

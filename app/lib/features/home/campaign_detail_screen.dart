@@ -750,7 +750,9 @@ $shareUrl
 1ndirim ile keşfet''';
 
       // Native share sheet'i aç
-      await Share.share(shareText, subject: widget.title);
+      await SharePlus.instance.share(
+        ShareParams(text: shareText, subject: widget.title),
+      );
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

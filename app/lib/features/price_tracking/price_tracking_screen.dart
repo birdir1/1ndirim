@@ -11,6 +11,10 @@ import '../../data/models/opportunity_model.dart';
 import '../../data/repositories/price_tracking_repository.dart';
 import '../../data/repositories/opportunity_repository.dart';
 import '../../core/widgets/empty_state.dart';
+import '../../core/widgets/screen_shell.dart';
+import '../../core/theme/app_ui_tokens.dart';
+import '../../core/widgets/section_card.dart';
+import '../../core/l10n/app_localizations.dart';
 import '../home/campaign_detail_screen.dart';
 
 /// Fiyat Takibi Ekranı
@@ -79,13 +83,14 @@ class _PriceTrackingScreenState extends State<PriceTrackingScreen> {
   }
 
   Future<void> _removeTracking(String campaignId) async {
+    final l10n = AppLocalizations.of(context)!;
     final result = await _repository.removePriceTracking(campaignId);
 
     if (mounted) {
       if (result is NetworkSuccess) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Fiyat takibi durduruldu'),
+          SnackBar(
+            content: Text(l10n.priceTrackingStopped),
             backgroundColor: AppColors.success,
           ),
         );
@@ -102,6 +107,7 @@ class _PriceTrackingScreenState extends State<PriceTrackingScreen> {
   }
 
   Future<void> _navigateToCampaignDetail(String campaignId) async {
+    final l10n = AppLocalizations.of(context)!;
     // Kampanya detayını yükle
     final opportunityRepo = OpportunityRepository.instance;
     final result = await opportunityRepo.getOpportunityById(campaignId);
@@ -118,7 +124,7 @@ class _PriceTrackingScreenState extends State<PriceTrackingScreen> {
     } else if (result is NetworkError<OpportunityModel>) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Kampanya detayı yüklenemedi: ${result.message}'),
+          content: Text('${l10n.priceTrackingDetailError}: ${result.message}'),
           backgroundColor: AppColors.error,
         ),
       );
@@ -127,29 +133,18 @@ class _PriceTrackingScreenState extends State<PriceTrackingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
-      appBar: AppBar(
-        backgroundColor: AppColors.backgroundLight,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimaryLight),
-          onPressed: () => Navigator.of(context).pop(),
+    final l10n = AppLocalizations.of(context)!;
+    return ScreenShell(
+      title: l10n.priceTracking,
+      padding: EdgeInsets.zero,
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.refresh, color: AppColors.textPrimaryLight),
+          onPressed: _loadPriceTracking,
+          tooltip: l10n.refresh,
         ),
-        title: Text(
-          'Fiyat Takibi',
-          style: AppTextStyles.sectionTitle(isDark: false),
-        ),
-        centerTitle: false,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh, color: AppColors.textPrimaryLight),
-            onPressed: _loadPriceTracking,
-            tooltip: 'Yenile',
-          ),
-        ],
-      ),
-      body: _isLoading
+      ],
+      child: _isLoading
           ? const Center(
               child: CircularProgressIndicator(color: AppColors.primaryLight),
             )
@@ -162,6 +157,7 @@ class _PriceTrackingScreenState extends State<PriceTrackingScreen> {
   }
 
   Widget _buildContent() {
+    final l10n = AppLocalizations.of(context)!;
     if (_trackingResult is NetworkError) {
       return Center(
         child: Column(
@@ -182,7 +178,7 @@ class _PriceTrackingScreenState extends State<PriceTrackingScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primaryLight,
               ),
-              child: const Text('Tekrar Dene'),
+              child: Text(l10n.retry),
             ),
           ],
         ),
@@ -199,13 +195,13 @@ class _PriceTrackingScreenState extends State<PriceTrackingScreen> {
     if (tracking.isEmpty) {
       return AppEmptyState(
         icon: Icons.track_changes,
-        title: 'Takip edilen kampanya yok',
-        description: 'Kampanya detayından fiyat takibini başlatabilirsiniz',
+        title: l10n.noTrackedCampaigns,
+        description: l10n.trackPrice,
       );
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(AppUiTokens.screenPadding),
       itemCount: tracking.length,
       itemBuilder: (context, index) {
         final item = tracking[index];
@@ -237,258 +233,252 @@ class _PriceTrackingScreenState extends State<PriceTrackingScreen> {
             '${priceChange.toStringAsFixed(2)} ${tracking.priceCurrency}';
         priceChangeColor = AppColors.success;
       } else {
-        priceChangeText = 'Değişmedi';
+        priceChangeText = AppLocalizations.of(context)!.priceUnchanged;
         priceChangeColor = AppColors.textSecondaryLight;
       }
     }
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.shadowDark.withValues(alpha: 0.1),
-            blurRadius: 12,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        tracking.campaignTitle,
-                        style: AppTextStyles.body(
-                          isDark: false,
-                        ).copyWith(fontWeight: FontWeight.bold),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+      margin: const EdgeInsets.only(bottom: AppUiTokens.itemGap),
+      child: SectionCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          tracking.campaignTitle,
+                          style: AppTextStyles.body(
+                            isDark: false,
+                          ).copyWith(fontWeight: FontWeight.bold),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          tracking.sourceName,
+                          style: AppTextStyles.caption(
+                            isDark: false,
+                          ).copyWith(color: AppColors.textSecondaryLight),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, size: 20),
+                    color: AppColors.error,
+                    onPressed: () => _removeTracking(tracking.campaignId),
+                    tooltip: AppLocalizations.of(context)!.stopTracking,
+                  ),
+                ],
+              ),
+            ),
+
+            // Fiyat Bilgileri
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _buildPriceInfo(
+                      label: AppLocalizations.of(context)!.currentPrice,
+                      value: tracking.currentPrice != null
+                          ? '${tracking.currentPrice!.toStringAsFixed(2)} ${tracking.priceCurrency}'
+                          : AppLocalizations.of(context)!.priceUnspecified,
+                      color: AppColors.primaryLight,
+                    ),
+                  ),
+                  if (tracking.originalPrice != null)
+                    Expanded(
+                      child: _buildPriceInfo(
+                        label: AppLocalizations.of(context)!.originalPrice,
+                        value:
+                            '${tracking.originalPrice!.toStringAsFixed(2)} ${tracking.priceCurrency}',
+                        color: AppColors.textSecondaryLight,
                       ),
-                      const SizedBox(height: 4),
+                    ),
+                  if (tracking.discountPercentage != null)
+                    Expanded(
+                      child: _buildPriceInfo(
+                        label: AppLocalizations.of(context)!.discount,
+                        value:
+                            '%${tracking.discountPercentage!.toStringAsFixed(0)}',
+                        color: AppColors.success,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+
+            // Fiyat Değişikliği
+            if (priceChangeText != null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: priceChangeColor!.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        priceChange! > 0
+                            ? Icons.trending_up
+                            : Icons.trending_down,
+                        size: 16,
+                        color: priceChangeColor,
+                      ),
+                      const SizedBox(width: 8),
                       Text(
-                        tracking.sourceName,
-                        style: AppTextStyles.caption(
-                          isDark: false,
-                        ).copyWith(color: AppColors.textSecondaryLight),
+                        priceChangeText,
+                        style: AppTextStyles.caption(isDark: false).copyWith(
+                          color: priceChangeColor,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ],
                   ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.close, size: 20),
-                  color: AppColors.error,
-                  onPressed: () => _removeTracking(tracking.campaignId),
-                  tooltip: 'Takibi durdur',
-                ),
-              ],
-            ),
-          ),
+              ),
 
-          // Fiyat Bilgileri
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: _buildPriceInfo(
-                    label: 'Güncel Fiyat',
-                    value: tracking.currentPrice != null
-                        ? '${tracking.currentPrice!.toStringAsFixed(2)} ${tracking.priceCurrency}'
-                        : 'Belirtilmemiş',
-                    color: AppColors.primaryLight,
-                  ),
-                ),
-                if (tracking.originalPrice != null)
-                  Expanded(
-                    child: _buildPriceInfo(
-                      label: 'Orijinal Fiyat',
-                      value:
-                          '${tracking.originalPrice!.toStringAsFixed(2)} ${tracking.priceCurrency}',
-                      color: AppColors.textSecondaryLight,
-                    ),
-                  ),
-                if (tracking.discountPercentage != null)
-                  Expanded(
-                    child: _buildPriceInfo(
-                      label: 'İndirim',
-                      value:
-                          '%${tracking.discountPercentage!.toStringAsFixed(0)}',
-                      color: AppColors.success,
-                    ),
-                  ),
-              ],
-            ),
-          ),
-
-          // Fiyat Değişikliği
-          if (priceChangeText != null)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: priceChangeColor!.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
+            // Hedef Fiyat
+            if (tracking.targetPrice != null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                 child: Row(
                   children: [
-                    Icon(
-                      priceChange! > 0
-                          ? Icons.trending_up
-                          : Icons.trending_down,
-                      size: 16,
-                      color: priceChangeColor,
-                    ),
+                    Icon(Icons.flag, size: 16, color: AppColors.warning),
                     const SizedBox(width: 8),
                     Text(
-                      priceChangeText,
-                      style: AppTextStyles.caption(isDark: false).copyWith(
-                        color: priceChangeColor,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      '${AppLocalizations.of(context)!.priceTargetPrefix}: ${tracking.targetPrice!.toStringAsFixed(2)} ${tracking.priceCurrency}',
+                      style: AppTextStyles.caption(
+                        isDark: false,
+                      ).copyWith(color: AppColors.warning),
                     ),
                   ],
                 ),
               ),
-            ),
 
-          // Hedef Fiyat
-          if (tracking.targetPrice != null)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-              child: Row(
-                children: [
-                  Icon(Icons.flag, size: 16, color: AppColors.warning),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Hedef: ${tracking.targetPrice!.toStringAsFixed(2)} ${tracking.priceCurrency}',
-                    style: AppTextStyles.caption(
-                      isDark: false,
-                    ).copyWith(color: AppColors.warning),
-                  ),
-                ],
-              ),
-            ),
+            const SizedBox(height: 12),
 
-          const SizedBox(height: 12),
-
-          // Fiyat Geçmişi
-          if (isLoadingHistory)
-            const Padding(
-              padding: EdgeInsets.all(16),
-              child: Center(
-                child: SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: AppColors.primaryLight,
-                  ),
-                ),
-              ),
-            )
-          else if (history.isEmpty)
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text(
-                'Henüz fiyat geçmişi yok',
-                style: AppTextStyles.caption(
-                  isDark: false,
-                ).copyWith(color: AppColors.textSecondaryLight),
-                textAlign: TextAlign.center,
-              ),
-            )
-          else
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppColors.surfaceLight,
-                borderRadius: const BorderRadius.vertical(
-                  bottom: Radius.circular(20),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Fiyat Geçmişi',
-                    style: AppTextStyles.caption(isDark: false).copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimaryLight,
+            // Fiyat Geçmişi
+            if (isLoadingHistory)
+              const Padding(
+                padding: EdgeInsets.all(16),
+                child: Center(
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppColors.primaryLight,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  ...history
-                      .take(5)
-                      .map(
-                        (h) => Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                DateFormat(
-                                  'dd.MM.yyyy HH:mm',
-                                  'tr_TR',
-                                ).format(h.recordedAt),
-                                style: AppTextStyles.caption(
-                                  isDark: false,
-                                ).copyWith(color: AppColors.textSecondaryLight),
-                              ),
-                              Text(
-                                '${h.price.toStringAsFixed(2)} ${h.currency}',
-                                style: AppTextStyles.caption(isDark: false)
-                                    .copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.textPrimaryLight,
-                                    ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                ],
-              ),
-            ),
-
-          // Detay Butonu
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () => _navigateToCampaignDetail(tracking.campaignId),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primaryLight,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                ),
+              )
+            else if (history.isEmpty)
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  AppLocalizations.of(context)!.noPriceHistory,
+                  style: AppTextStyles.caption(
+                    isDark: false,
+                  ).copyWith(color: AppColors.textSecondaryLight),
+                  textAlign: TextAlign.center,
+                ),
+              )
+            else
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceLight,
+                  borderRadius: const BorderRadius.vertical(
+                    bottom: Radius.circular(20),
                   ),
                 ),
-                child: Text(
-                  'Kampanya Detayı',
-                  style: AppTextStyles.body(
-                    isDark: false,
-                  ).copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      AppLocalizations.of(context)!.priceHistory,
+                      style: AppTextStyles.caption(isDark: false).copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimaryLight,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    ...history
+                        .take(5)
+                        .map(
+                          (h) => Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  DateFormat(
+                                    'dd.MM.yyyy HH:mm',
+                                    'tr_TR',
+                                  ).format(h.recordedAt),
+                                  style: AppTextStyles.caption(isDark: false)
+                                      .copyWith(
+                                        color: AppColors.textSecondaryLight,
+                                      ),
+                                ),
+                                Text(
+                                  '${h.price.toStringAsFixed(2)} ${h.currency}',
+                                  style: AppTextStyles.caption(isDark: false)
+                                      .copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.textPrimaryLight,
+                                      ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                  ],
+                ),
+              ),
+
+            // Detay Butonu
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () =>
+                      _navigateToCampaignDetail(tracking.campaignId),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryLight,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Text(
+                    AppLocalizations.of(context)!.campaignDetail,
+                    style: AppTextStyles.body(isDark: false).copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

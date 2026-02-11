@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config/api_config.dart';
 import 'dio_error_interceptor.dart';
@@ -66,15 +67,17 @@ class DioClient {
     // Add error interceptor
     dio.interceptors.add(DioErrorInterceptor());
 
-    // Add logging interceptor in debug mode
-    dio.interceptors.add(
-      LogInterceptor(
-        requestBody: true,
-        responseBody: true,
-        error: true,
-        logPrint: (obj) => print(obj),
-      ),
-    );
+    // Verbose network logs only in debug builds.
+    if (kDebugMode) {
+      dio.interceptors.add(
+        LogInterceptor(
+          requestBody: true,
+          responseBody: true,
+          error: true,
+          logPrint: (obj) => debugPrint('$obj'),
+        ),
+      );
+    }
   }
 
   /// Get configured Dio instance

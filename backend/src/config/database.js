@@ -1,14 +1,24 @@
 const { Pool } = require('pg');
 require('dotenv').config();
 
+const isProduction = process.env.NODE_ENV === 'production';
+const requiredInProd = (name, fallback) => {
+  const value = process.env[name];
+  if (typeof value === 'string' && value.trim() !== '') return value;
+  if (isProduction) {
+    throw new Error(`Missing required environment variable: ${name}`);
+  }
+  return fallback;
+};
+
 // Connection pool configuration
 // Optimized for production performance
 const pool = new Pool({
-  host: process.env.DB_HOST || 'localhost',
-  port: process.env.DB_PORT || 5432,
-  database: process.env.DB_NAME || 'indirim_db',
-  user: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASSWORD || 'postgres',
+  host: requiredInProd('DB_HOST', 'localhost'),
+  port: Number(requiredInProd('DB_PORT', 5432)),
+  database: requiredInProd('DB_NAME', 'indirim_db'),
+  user: requiredInProd('DB_USER', 'postgres'),
+  password: requiredInProd('DB_PASSWORD', 'postgres'),
   
   // Connection pool settings
   max: parseInt(process.env.DB_POOL_MAX) || 20, // Maximum number of clients in the pool

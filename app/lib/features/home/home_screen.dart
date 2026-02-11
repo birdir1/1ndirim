@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../core/theme/app_ui_tokens.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/utils/page_transitions.dart';
 import '../../core/utils/network_result.dart';
@@ -344,7 +345,7 @@ class _HomeScreenState extends State<HomeScreen> {
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 24),
+        padding: const EdgeInsets.symmetric(horizontal: AppUiTokens.screenPadding),
         itemCount: _filters.length,
         itemBuilder: (context, index) {
           final filter = _filters[index];
@@ -506,7 +507,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
           // Ana Kampanyalar Listesi
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(24, 4, 24, 80),
+            padding: const EdgeInsets.fromLTRB(
+              AppUiTokens.screenPadding,
+              4,
+              AppUiTokens.screenPadding,
+              80,
+            ),
             sliver: SliverList(
               delegate: SliverChildBuilderDelegate((context, index) {
                 final opportunity = filtered[index];
@@ -534,7 +540,12 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     return Container(
-      margin: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+      margin: const EdgeInsets.fromLTRB(
+        AppUiTokens.screenPadding,
+        0,
+        AppUiTokens.screenPadding,
+        16,
+      ),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppColors.warning.withValues(alpha: 0.1),
@@ -594,7 +605,12 @@ class _HomeScreenState extends State<HomeScreen> {
   /// Loading skeleton gösterir
   Widget _buildLoadingSkeleton() {
     return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(24, 4, 24, 80),
+      padding: const EdgeInsets.fromLTRB(
+        AppUiTokens.screenPadding,
+        4,
+        AppUiTokens.screenPadding,
+        80,
+      ),
       itemCount: 3,
       itemBuilder: (context, index) {
         return RepaintBoundary(

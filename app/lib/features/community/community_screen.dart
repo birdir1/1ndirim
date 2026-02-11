@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../core/theme/app_ui_tokens.dart';
+import '../../core/l10n/app_localizations.dart';
 import '../../core/utils/network_result.dart';
 import '../../data/models/leaderboard_model.dart';
 import '../../data/models/community_stats_model.dart';
 import '../../data/repositories/community_repository.dart';
 import '../../core/widgets/empty_state.dart';
+import '../../core/widgets/screen_shell.dart';
+import '../../core/widgets/section_card.dart';
 
 /// Topluluk Ekranı - Leaderboard ve Topluluk İstatistikleri
 class CommunityScreen extends StatefulWidget {
@@ -48,25 +52,17 @@ class _CommunityScreenState extends State<CommunityScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
-      appBar: AppBar(
-        backgroundColor: AppColors.backgroundLight,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimaryLight),
-          onPressed: () => Navigator.of(context).pop(),
+    final l10n = AppLocalizations.of(context)!;
+    return ScreenShell(
+      title: l10n.community,
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.refresh, color: AppColors.textPrimaryLight),
+          onPressed: _loadData,
+          tooltip: l10n.refresh,
         ),
-        title: Text('Topluluk', style: AppTextStyles.headline(isDark: false)),
-        centerTitle: false,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh, color: AppColors.textPrimaryLight),
-            onPressed: _loadData,
-          ),
-        ],
-      ),
-      body: _isLoading
+      ],
+      child: _isLoading
           ? const Center(
               child: CircularProgressIndicator(color: AppColors.primaryLight),
             )
@@ -75,12 +71,12 @@ class _CommunityScreenState extends State<CommunityScreen> {
               color: AppColors.primaryLight,
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.only(bottom: 24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildCommunityStats(),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: AppUiTokens.sectionGap),
                     _buildLeaderboard(),
                   ],
                 ),
@@ -91,13 +87,8 @@ class _CommunityScreenState extends State<CommunityScreen> {
 
   Widget _buildCommunityStats() {
     if (_statsResult is NetworkError) {
-      return Container(
+      return SectionCard(
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.warning.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
-        ),
         child: Row(
           children: [
             Icon(Icons.info_outline, color: AppColors.warning, size: 20),
@@ -285,13 +276,8 @@ class _CommunityScreenState extends State<CommunityScreen> {
 
   Widget _buildLeaderboard() {
     if (_leaderboardResult is NetworkError) {
-      return Container(
+      return SectionCard(
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.warning.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
-        ),
         child: Row(
           children: [
             Icon(Icons.info_outline, color: AppColors.warning, size: 20),

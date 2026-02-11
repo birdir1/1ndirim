@@ -1,5 +1,6 @@
 const redis = require('redis');
 require('dotenv').config();
+const isRedisDisabled = process.env.NODE_ENV === 'test' || process.env.REDIS_DISABLED === 'true';
 
 // Redis client configuration
 const redisClient = redis.createClient({
@@ -40,15 +41,17 @@ redisClient.on('end', () => {
   console.log('⏹️  Redis: Connection closed');
 });
 
-// Connect to Redis
-(async () => {
-  try {
-    await redisClient.connect();
-  } catch (error) {
-    console.error('❌ Redis connection failed:', error);
-    console.log('⚠️  Application will continue without cache');
-  }
-})();
+// Connect to Redis unless explicitly disabled (e.g. in tests/CI).
+if (!isRedisDisabled) {
+  (async () => {
+    try {
+      await redisClient.connect();
+    } catch (error) {
+      console.error('❌ Redis connection failed:', error);
+      console.log('⚠️  Application will continue without cache');
+    }
+  })();
+}
 
 // Graceful shutdown
 process.on('SIGINT', async () => {

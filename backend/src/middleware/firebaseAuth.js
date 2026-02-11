@@ -1,4 +1,5 @@
 const admin = require('firebase-admin');
+const isTest = process.env.NODE_ENV === 'test';
 
 /**
  * Firebase Admin SDK initialization
@@ -25,7 +26,9 @@ try {
       });
       console.log('✅ Firebase Admin SDK başlatıldı:', serviceAccountPath);
     } else {
-      console.warn('⚠️ Firebase service account dosyası bulunamadı:', serviceAccountPath);
+      if (!isTest) {
+        console.warn('⚠️ Firebase service account dosyası bulunamadı:', serviceAccountPath);
+      }
     }
   } else if (process.env.FIREBASE_SERVICE_ACCOUNT) {
     // Service account JSON string
@@ -42,11 +45,15 @@ try {
     });
     console.log('✅ Firebase Admin SDK başlatıldı (FIREBASE_SERVICE_ACCOUNT)');
   } else {
-    console.warn('⚠️ Firebase Admin SDK yapılandırılmamış. Authentication middleware çalışmayacak.');
+    if (!isTest) {
+      console.warn('⚠️ Firebase Admin SDK yapılandırılmamış. Authentication middleware çalışmayacak.');
+    }
   }
 } catch (error) {
-  console.warn('⚠️ Firebase Admin SDK başlatılamadı:', error.message);
-  console.warn('⚠️ Authentication middleware devre dışı kalacak.');
+  if (!isTest) {
+    console.warn('⚠️ Firebase Admin SDK başlatılamadı:', error.message);
+    console.warn('⚠️ Authentication middleware devre dışı kalacak.');
+  }
 }
 
 /**

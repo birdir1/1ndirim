@@ -75,7 +75,7 @@ class BrandStyles {
 
   static BrandStyle _style(Color primary) {
     // Arka plan için daha açık, yumuşak ton
-    return BrandStyle(primary: primary, background: primary.withOpacity(0.08));
+    return BrandStyle(primary: primary, background: primary.withValues(alpha: 0.08));
   }
 
   static String _normalize(String name) {

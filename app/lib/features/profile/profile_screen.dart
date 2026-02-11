@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../core/theme/app_ui_tokens.dart';
 import '../../core/services/preferences_service.dart';
 import '../../core/utils/page_transitions.dart';
+import '../../core/widgets/section_card.dart';
+import '../../core/l10n/app_localizations.dart';
 import 'widgets/profile_header.dart';
 import 'widgets/profile_menu_item.dart';
 import 'widgets/sources_section.dart';
@@ -66,12 +69,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } catch (e) {
       // Hata durumunda geri al
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         setState(() {
           _newOpportunitiesEnabled = !value;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Ayarlar kaydedilirken bir hata oluştu'),
+          SnackBar(
+            content: Text(l10n.profileSettingsSaveError),
             backgroundColor: AppColors.error,
           ),
         );
@@ -90,12 +94,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } catch (e) {
       // Hata durumunda geri al
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         setState(() {
           _expiringOpportunitiesEnabled = !value;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Ayarlar kaydedilirken bir hata oluştu'),
+          SnackBar(
+            content: Text(l10n.profileSettingsSaveError),
             backgroundColor: AppColors.error,
           ),
         );
@@ -105,6 +110,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
       body: SafeArea(
@@ -113,7 +119,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
+                  horizontal: AppUiTokens.screenPadding,
                   vertical: 0,
                 ),
                 child: Column(
@@ -122,7 +128,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     const ProfileHeader(),
                     const SizedBox(height: 32),
                     const SourcesSection(),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: AppUiTokens.sectionGap),
                     NotificationsSection(
                       newOpportunitiesEnabled: _newOpportunitiesEnabled,
                       expiringOpportunitiesEnabled:
@@ -133,92 +139,91 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       onExpiringChanged: _updateNotificationExpiring,
                     ),
                     const SizedBox(height: 12),
-                    Column(
-                      children: [
-                        ProfileMenuItem(
-                          icon: Icons.trending_down,
-                          title: 'Fiyat Takibi',
-                          subtitle: 'Kampanya fiyatlarını takip et',
-                          onTap: () {
-                            Navigator.of(context).push(
-                              SlidePageRoute(
-                                child: const PriceTrackingScreen(),
-                                direction: SlideDirection.right,
-                              ),
-                            );
-                          },
-                        ),
-                        ProfileMenuItem(
-                          icon: Icons.article,
-                          title: 'Blog & Rehberler',
-                          onTap: () {
-                            Navigator.of(context).push(
-                              SlidePageRoute(
-                                child: const BlogScreen(),
-                                direction: SlideDirection.right,
-                              ),
-                            );
-                          },
-                        ),
-                        ProfileMenuItem(
-                          icon: Icons.help_outline,
-                          title: 'Nasıl çalışır?',
-                          onTap: () {
-                            Navigator.of(context).push(
-                              SlidePageRoute(
-                                child: const HowItWorksScreen(),
-                                direction: SlideDirection.right,
-                              ),
-                            );
-                          },
-                        ),
-                        ProfileMenuItem(
-                          icon: Icons.lock_outline,
-                          title: 'Gizlilik ve KVKK',
-                          onTap: () {
-                            Navigator.of(context).push(
-                              SlidePageRoute(
-                                child: const KVKKScreen(),
-                                direction: SlideDirection.right,
-                              ),
-                            );
-                          },
-                        ),
-                        ProfileMenuItem(
-                          icon: Icons.description_outlined,
-                          title: 'Kullanım şartları',
-                          onTap: () {
-                            Navigator.of(context).push(
-                              SlidePageRoute(
-                                child: const TermsOfUseScreen(),
-                                direction: SlideDirection.right,
-                              ),
-                            );
-                          },
-                        ),
-                      ],
+                    SectionCard(
+                      child: Column(
+                        children: [
+                          ProfileMenuItem(
+                            icon: Icons.trending_down,
+                            title: l10n.priceTracking,
+                            subtitle: l10n.profileTrackSubtitle,
+                            onTap: () {
+                              Navigator.of(context).push(
+                                SlidePageRoute(
+                                  child: const PriceTrackingScreen(),
+                                  direction: SlideDirection.right,
+                                ),
+                              );
+                            },
+                          ),
+                          ProfileMenuItem(
+                            icon: Icons.article,
+                            title: l10n.blogTitle,
+                            onTap: () {
+                              Navigator.of(context).push(
+                                SlidePageRoute(
+                                  child: const BlogScreen(),
+                                  direction: SlideDirection.right,
+                                ),
+                              );
+                            },
+                          ),
+                          ProfileMenuItem(
+                            icon: Icons.help_outline,
+                            title: l10n.howItWorksShort,
+                            onTap: () {
+                              Navigator.of(context).push(
+                                SlidePageRoute(
+                                  child: const HowItWorksScreen(),
+                                  direction: SlideDirection.right,
+                                ),
+                              );
+                            },
+                          ),
+                          ProfileMenuItem(
+                            icon: Icons.lock_outline,
+                            title: l10n.privacyKvkk,
+                            onTap: () {
+                              Navigator.of(context).push(
+                                SlidePageRoute(
+                                  child: const KVKKScreen(),
+                                  direction: SlideDirection.right,
+                                ),
+                              );
+                            },
+                          ),
+                          ProfileMenuItem(
+                            icon: Icons.description_outlined,
+                            title: l10n.terms,
+                            onTap: () {
+                              Navigator.of(context).push(
+                                SlidePageRoute(
+                                  child: const TermsOfUseScreen(),
+                                  direction: SlideDirection.right,
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
                     ),
                     const SizedBox(height: 32),
 
                     // Hesaptan Çıkış Butonu
-                    Container(
+                    SizedBox(
                       width: double.infinity,
-                      margin: const EdgeInsets.symmetric(horizontal: 20),
                       child: ElevatedButton.icon(
                         onPressed: () async {
                           // Onay dialogu göster
                           final shouldLogout = await showDialog<bool>(
                             context: context,
                             builder: (context) => AlertDialog(
-                              title: const Text('Hesaptan Çıkış'),
-                              content: const Text(
-                                'Hesaptan çıkmak istediğinizden emin misiniz?',
-                              ),
+                              title: Text(l10n.profileLogoutTitle),
+                              content: Text(l10n.profileLogoutConfirm),
                               actions: [
                                 TextButton(
                                   onPressed: () =>
                                       Navigator.of(context).pop(false),
-                                  child: const Text('İptal'),
+                                  child: Text(l10n.cancel),
                                 ),
                                 TextButton(
                                   onPressed: () =>
@@ -226,7 +231,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   style: TextButton.styleFrom(
                                     foregroundColor: AppColors.error,
                                   ),
-                                  child: const Text('Çıkış Yap'),
+                                  child: Text(l10n.logout),
                                 ),
                               ],
                             ),
@@ -248,8 +253,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 );
 
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Başarıyla çıkış yapıldı'),
+                                  SnackBar(
+                                    content: Text(l10n.profileLogoutSuccess),
                                     backgroundColor: AppColors.success,
                                   ),
                                 );
@@ -259,7 +264,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                     content: Text(
-                                      'Çıkış yapılırken hata oluştu: $e',
+                                      '${l10n.profileLogoutError}: $e',
                                     ),
                                     backgroundColor: AppColors.error,
                                   ),
@@ -269,7 +274,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           }
                         },
                         icon: const Icon(Icons.logout),
-                        label: const Text('Hesaptan Çıkış Yap'),
+                        label: Text(l10n.logout),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.error,
                           foregroundColor: Colors.white,
@@ -297,7 +302,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'birdir1 tarafından geliştirilmiştir',
+                          l10n.developedBy,
                           style: AppTextStyles.small(isDark: false).copyWith(
                             fontSize: 10,
                             color: AppColors.textSecondaryLight.withValues(

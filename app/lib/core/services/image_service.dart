@@ -5,10 +5,6 @@ import 'package:flutter/material.dart';
 ///
 /// Centralized image loading with caching, lazy loading, and optimization
 class ImageService {
-  /// Cache configuration
-  static const Duration _cacheDuration = Duration(days: 7);
-  static const int _maxCacheSize = 100; // MB
-
   /// Default placeholder
   static Widget defaultPlaceholder({double? width, double? height}) {
     return Container(
@@ -182,12 +178,12 @@ class LazyImageListView extends StatelessWidget {
   final EdgeInsets? padding;
 
   const LazyImageListView({
-    Key? key,
+    super.key,
     required this.itemCount,
     required this.itemBuilder,
     this.controller,
     this.padding,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -215,7 +211,7 @@ class LazyImageGridView extends StatelessWidget {
   final EdgeInsets? padding;
 
   const LazyImageGridView({
-    Key? key,
+    super.key,
     required this.itemCount,
     required this.itemBuilder,
     this.crossAxisCount = 2,
@@ -223,7 +219,7 @@ class LazyImageGridView extends StatelessWidget {
     this.crossAxisSpacing = 8.0,
     this.controller,
     this.padding,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

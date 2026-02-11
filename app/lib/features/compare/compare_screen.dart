@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../core/theme/app_ui_tokens.dart';
+import '../../core/l10n/app_localizations.dart';
 import '../../core/utils/page_transitions.dart';
 import '../../core/utils/source_logo_helper.dart';
+import '../../core/widgets/screen_shell.dart';
+import '../../core/widgets/section_card.dart';
 import '../../data/models/opportunity_model.dart';
 import '../home/campaign_detail_screen.dart';
 
@@ -42,47 +46,29 @@ class _CompareScreenState extends State<CompareScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
-      appBar: AppBar(
-        backgroundColor: AppColors.backgroundLight,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimaryLight),
-          onPressed: () {
-            if (Navigator.of(context).canPop()) {
-              Navigator.of(context).pop();
-            }
-          },
-        ),
-        title: Text(
-          'Kampanya Karşılaştırma',
-          style: AppTextStyles.headline(isDark: false),
-        ),
-        centerTitle: false,
-        actions: [
-          if (_selectedCampaigns.isNotEmpty)
-            IconButton(
-              icon: const Icon(
-                Icons.clear_all,
-                color: AppColors.textPrimaryLight,
-              ),
-              onPressed: _clearAll,
-              tooltip: 'Tümünü temizle',
+    final l10n = AppLocalizations.of(context)!;
+    return ScreenShell(
+      title: l10n.compareCampaigns,
+      actions: [
+        if (_selectedCampaigns.isNotEmpty)
+          IconButton(
+            icon: const Icon(
+              Icons.clear_all,
+              color: AppColors.textPrimaryLight,
             ),
-        ],
-      ),
-      body: _selectedCampaigns.isEmpty
+            onPressed: _clearAll,
+            tooltip: l10n.clearAll,
+          ),
+      ],
+      child: _selectedCampaigns.isEmpty
           ? _buildEmptyState()
           : SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.only(bottom: 24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Bilgi kartı
                   _buildInfoCard(),
-                  const SizedBox(height: 20),
-                  // Karşılaştırma tablosu
+                  const SizedBox(height: AppUiTokens.sectionGap),
                   _buildComparisonTable(),
                 ],
               ),
@@ -91,6 +77,7 @@ class _CompareScreenState extends State<CompareScreen> {
   }
 
   Widget _buildEmptyState() {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -102,14 +89,14 @@ class _CompareScreenState extends State<CompareScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            'Karşılaştırılacak kampanya yok',
+            l10n.noData,
             style: AppTextStyles.headline(
               isDark: false,
             ).copyWith(color: AppColors.textPrimaryLight),
           ),
           const SizedBox(height: 8),
           Text(
-            'En az $minCompareCount, en fazla $maxCompareCount kampanyayı karşılaştırabilirsiniz',
+            '${l10n.minCompare} / ${l10n.maxCompare}',
             style: AppTextStyles.body(
               isDark: false,
             ).copyWith(color: AppColors.textSecondaryLight),
@@ -121,16 +108,8 @@ class _CompareScreenState extends State<CompareScreen> {
   }
 
   Widget _buildInfoCard() {
-    return Container(
+    return SectionCard(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.primaryLight.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppColors.primaryLight.withValues(alpha: 0.3),
-          width: 1,
-        ),
-      ),
       child: Row(
         children: [
           Icon(Icons.info_outline, color: AppColors.primaryLight, size: 20),
@@ -149,18 +128,8 @@ class _CompareScreenState extends State<CompareScreen> {
   }
 
   Widget _buildComparisonTable() {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.shadowDark.withValues(alpha: 0.1),
-            blurRadius: 12,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
+    return SectionCard(
+      padding: EdgeInsets.zero,
       child: Column(
         children: [
           // Başlık satırı

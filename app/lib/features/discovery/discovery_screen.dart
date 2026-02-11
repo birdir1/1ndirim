@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../core/theme/app_ui_tokens.dart';
 import '../../core/utils/page_transitions.dart';
 import '../../core/utils/network_result.dart';
+import '../../core/l10n/app_localizations.dart';
 import '../../data/models/opportunity_model.dart';
 import '../../data/repositories/opportunity_repository.dart';
 import '../home/campaign_detail_screen.dart';
@@ -72,13 +74,11 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
         });
       }
     } catch (e) {
-      if (mounted) {
-        setState(() {
-          _campaignsResult = NetworkError.general(
-            'Kampanyalar yüklenirken bir hata oluştu',
-          );
-        });
-      }
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
+      setState(() {
+        _campaignsResult = NetworkError.general(l10n.errorLoading);
+      });
     }
   }
 
@@ -148,45 +148,56 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   }
 
   Widget _buildHeader() {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 12),
+      padding: const EdgeInsets.fromLTRB(
+        AppUiTokens.screenPadding,
+        AppUiTokens.sectionGap,
+        AppUiTokens.screenPadding,
+        12,
+      ),
       child: Column(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Herkes İçin Fırsatlar',
-                      style: AppTextStyles.headline(
-                        isDark: false,
-                      ).copyWith(fontSize: 24),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Operatör, banka veya cüzdan fark etmeden',
-                      style: AppTextStyles.caption(isDark: false).copyWith(
-                        color: AppColors.textSecondaryLight,
-                        fontSize: 13,
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: AppUiTokens.elevatedSurface(),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.discoveryTitle,
+                        style: AppTextStyles.headline(
+                          isDark: false,
+                        ).copyWith(fontSize: 24),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 4),
+                      Text(
+                        l10n.discoverySubtitle,
+                        style: AppTextStyles.caption(isDark: false).copyWith(
+                          color: AppColors.textSecondaryLight,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              IconButton(
-                icon: Icon(
-                  Icons.search,
-                  color: AppColors.textSecondaryLight,
-                  size: 26,
+                IconButton(
+                  icon: Icon(
+                    Icons.search,
+                    color: AppColors.textSecondaryLight,
+                    size: 26,
+                  ),
+                  tooltip: l10n.search,
+                  onPressed: () {
+                    // Future: Search functionality
+                  },
                 ),
-                onPressed: () {
-                  // Future: Search functionality
-                },
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
@@ -199,7 +210,9 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 24),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppUiTokens.screenPadding,
+        ),
         itemCount: _categories.length,
         itemBuilder: (context, index) {
           final category = _categories[index];
@@ -219,6 +232,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   }
 
   Widget _buildContent() {
+    final l10n = AppLocalizations.of(context)!;
     if (_campaignsResult is NetworkLoading) {
       return const Center(
         child: CircularProgressIndicator(
@@ -252,12 +266,12 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Sizin İçin Seçtiklerimiz',
+                      l10n.discoveryCuratedForYou,
                       style: AppTextStyles.sectionTitle(isDark: false),
                     ),
                     if (filtered.length > 5)
                       Text(
-                        'Tümü',
+                        l10n.viewAll,
                         style: AppTextStyles.caption(isDark: false).copyWith(
                           color: AppColors.primaryLight,
                           fontWeight: FontWeight.w600,
@@ -302,6 +316,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   }
 
   Widget _buildEditorsPick() {
+    final l10n = AppLocalizations.of(context)!;
     if (_featuredCampaign == null) return const SizedBox.shrink();
 
     return Padding(
@@ -312,7 +327,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
           Row(
             children: [
               Text(
-                'Editör Seçimi',
+                l10n.discoveryEditorsPick,
                 style: AppTextStyles.sectionTitle(isDark: false),
               ),
               const SizedBox(width: 6),
@@ -339,6 +354,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   }
 
   Widget _buildEmptyCategory() {
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.all(48),
       child: Column(
@@ -359,13 +375,13 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
           ),
           const SizedBox(height: 20),
           Text(
-            'Şu an bu kategoride kampanya yok',
+            l10n.discoveryEmptyCategoryTitle,
             style: AppTextStyles.title(isDark: false).copyWith(fontSize: 18),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
           Text(
-            'Diğer kategorilere göz atabilir veya yenilemeyi deneyebilirsin.',
+            l10n.discoveryEmptyCategoryDesc,
             style: AppTextStyles.body(
               isDark: false,
             ).copyWith(color: AppColors.textSecondaryLight, fontSize: 14),
@@ -375,7 +391,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
           ElevatedButton.icon(
             onPressed: _loadDiscoveryCampaigns,
             icon: const Icon(Icons.refresh),
-            label: const Text('Yenile'),
+            label: Text(l10n.refresh),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primaryLight,
               foregroundColor: Colors.white,
@@ -390,6 +406,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   }
 
   Widget _buildErrorState(String message) {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -399,7 +416,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
             Icon(Icons.error_outline, size: 64, color: AppColors.error),
             const SizedBox(height: 16),
             Text(
-              'Bir Hata Oluştu',
+              l10n.errorOccurred,
               style: AppTextStyles.title(isDark: false),
               textAlign: TextAlign.center,
             ),
@@ -425,7 +442,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: const Text('Tekrar Dene'),
+              child: Text(l10n.retry),
             ),
           ],
         ),

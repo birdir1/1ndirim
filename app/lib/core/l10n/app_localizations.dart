@@ -186,6 +186,54 @@ class AppLocalizations {
       'language_settings': 'Dil Ayarları',
       'select_language': 'Dil Seçin',
 
+      // Additional UX/UI strings
+      'how_it_works_title': 'Nasıl Çalışır?',
+      'how_it_works_step1_title': 'Kaynaklarını Seç',
+      'how_it_works_step1_desc':
+          'Hangi banka ve operatörlere sahipsen sadece onları seçmen yeterli. Kart bilgisi veya şifre istemiyoruz.',
+      'how_it_works_step2_title': 'Kampanyaları Gör',
+      'how_it_works_step2_desc':
+          'Seçtiklerine göre geçerli olan kampanyaları otomatik olarak listeleriz. Aramana gerek yok.',
+      'how_it_works_step3_title': 'Fırsatları Kullan',
+      'how_it_works_step3_desc':
+          'Kampanyaları görüntüle ve kartınla alışveriş yaparak fırsatlardan yararlan.',
+      'discovery_title': 'Herkes İçin Fırsatlar',
+      'discovery_subtitle': 'Operatör, banka veya cüzdan fark etmeden',
+      'discovery_editors_pick': 'Editör Seçimi',
+      'discovery_curated_for_you': 'Sizin İçin Seçtiklerimiz',
+      'discovery_empty_category_title': 'Şu an bu kategoride kampanya yok',
+      'discovery_empty_category_desc':
+          'Diğer kategorilere göz atabilir veya yenilemeyi deneyebilirsin.',
+      'favorites_login_prompt_title': 'Kaydetmek için giriş yap',
+      'favorites_login_prompt_desc':
+          'Kampanyaları favoriye eklemek için giriş yap. Giriş yapmadan keşfetmeye devam edebilirsin.',
+      'favorites_hint_saved': 'Kaydettiğin tüm fırsatlar burada.',
+      'favorites_removed': 'Favorilerden kaldırıldı',
+      'favorites_empty_title': 'Henüz favorin yok',
+      'favorites_empty_desc':
+          'Beğendiğin fırsatları kalbe basarak buraya ekleyebilirsin.',
+      'profile_settings_save_error': 'Ayarlar kaydedilirken bir hata oluştu',
+      'profile_logout_title': 'Hesaptan Çıkış',
+      'profile_logout_confirm': 'Hesaptan çıkmak istediğinizden emin misiniz?',
+      'profile_logout_success': 'Başarıyla çıkış yapıldı',
+      'profile_logout_error': 'Çıkış yapılırken hata oluştu',
+      'price_tracking_stopped': 'Fiyat takibi durduruldu',
+      'price_tracking_detail_error': 'Kampanya detayı yüklenemedi',
+      'price_unchanged': 'Değişmedi',
+      'no_price_history': 'Henüz fiyat geçmişi yok',
+      'campaign_detail': 'Kampanya Detayı',
+      'share_error': 'Paylaşım hatası',
+      'price_unspecified': 'Belirtilmemiş',
+      'price_target_prefix': 'Hedef',
+      'profile_track_subtitle': 'Kampanya fiyatlarını takip et',
+      'how_it_works_short': 'Nasıl çalışır?',
+      'privacy_kvkk': 'Gizlilik ve KVKK',
+      'developed_by': 'birdir1 tarafından geliştirilmiştir',
+      'kvkk_page_title': 'KVKK',
+      'kvkk_full_title': 'Kişisel Verilerin Korunması Kanunu',
+      'kvkk_placeholder': 'Bu sayfa içerik sağlanacak.',
+      'language_changed': 'Dil değiştirildi',
+
       // Hata Mesajları
       'error_loading': 'Yüklenirken hata oluştu',
       'error_saving': 'Kaydedilirken hata oluştu',
@@ -364,6 +412,55 @@ class AppLocalizations {
       'notification_settings': 'Notification Settings',
       'language_settings': 'Language Settings',
       'select_language': 'Select Language',
+
+      // Additional UX/UI strings
+      'how_it_works_title': 'How It Works?',
+      'how_it_works_step1_title': 'Select Your Sources',
+      'how_it_works_step1_desc':
+          'Just select the banks and operators you have. We do not ask for card details or passwords.',
+      'how_it_works_step2_title': 'See Campaigns',
+      'how_it_works_step2_desc':
+          'We automatically list campaigns that are valid for your selections. No need to search manually.',
+      'how_it_works_step3_title': 'Use Offers',
+      'how_it_works_step3_desc':
+          'View campaigns and benefit from offers while shopping with your card.',
+      'discovery_title': 'Offers For Everyone',
+      'discovery_subtitle': 'Regardless of operator, bank, or wallet',
+      'discovery_editors_pick': 'Editor\'s Pick',
+      'discovery_curated_for_you': 'Picked For You',
+      'discovery_empty_category_title':
+          'No campaign in this category right now',
+      'discovery_empty_category_desc':
+          'You can check other categories or try refreshing.',
+      'favorites_login_prompt_title': 'Sign in to save',
+      'favorites_login_prompt_desc':
+          'Sign in to favorite campaigns. You can continue exploring without signing in.',
+      'favorites_hint_saved': 'All offers you saved are here.',
+      'favorites_removed': 'Removed from favorites',
+      'favorites_empty_title': 'No favorites yet',
+      'favorites_empty_desc':
+          'Tap the heart icon on offers you like to add them here.',
+      'profile_settings_save_error': 'An error occurred while saving settings',
+      'profile_logout_title': 'Sign Out',
+      'profile_logout_confirm': 'Are you sure you want to sign out?',
+      'profile_logout_success': 'Signed out successfully',
+      'profile_logout_error': 'An error occurred while signing out',
+      'price_tracking_stopped': 'Price tracking stopped',
+      'price_tracking_detail_error': 'Campaign detail could not be loaded',
+      'price_unchanged': 'Unchanged',
+      'no_price_history': 'No price history yet',
+      'campaign_detail': 'Campaign Detail',
+      'share_error': 'Share error',
+      'price_unspecified': 'Not specified',
+      'price_target_prefix': 'Target',
+      'profile_track_subtitle': 'Track campaign prices',
+      'how_it_works_short': 'How it works?',
+      'privacy_kvkk': 'Privacy & KVKK',
+      'developed_by': 'Developed by birdir1',
+      'kvkk_page_title': 'KVKK',
+      'kvkk_full_title': 'Personal Data Protection Law',
+      'kvkk_placeholder': 'Content will be provided on this page.',
+      'language_changed': 'Language changed',
 
       // Error Messages
       'error_loading': 'Error loading',
@@ -552,6 +649,54 @@ class AppLocalizations {
   String get notificationSettings => translate('notification_settings');
   String get languageSettings => translate('language_settings');
   String get selectLanguage => translate('select_language');
+
+  // Additional UX/UI strings
+  String get howItWorksTitle => translate('how_it_works_title');
+  String get howItWorksStep1Title => translate('how_it_works_step1_title');
+  String get howItWorksStep1Desc => translate('how_it_works_step1_desc');
+  String get howItWorksStep2Title => translate('how_it_works_step2_title');
+  String get howItWorksStep2Desc => translate('how_it_works_step2_desc');
+  String get howItWorksStep3Title => translate('how_it_works_step3_title');
+  String get howItWorksStep3Desc => translate('how_it_works_step3_desc');
+  String get discoveryTitle => translate('discovery_title');
+  String get discoverySubtitle => translate('discovery_subtitle');
+  String get discoveryEditorsPick => translate('discovery_editors_pick');
+  String get discoveryCuratedForYou => translate('discovery_curated_for_you');
+  String get discoveryEmptyCategoryTitle =>
+      translate('discovery_empty_category_title');
+  String get discoveryEmptyCategoryDesc =>
+      translate('discovery_empty_category_desc');
+  String get favoritesLoginPromptTitle =>
+      translate('favorites_login_prompt_title');
+  String get favoritesLoginPromptDesc =>
+      translate('favorites_login_prompt_desc');
+  String get favoritesHintSaved => translate('favorites_hint_saved');
+  String get favoritesRemoved => translate('favorites_removed');
+  String get favoritesEmptyTitle => translate('favorites_empty_title');
+  String get favoritesEmptyDesc => translate('favorites_empty_desc');
+  String get profileSettingsSaveError =>
+      translate('profile_settings_save_error');
+  String get profileLogoutTitle => translate('profile_logout_title');
+  String get profileLogoutConfirm => translate('profile_logout_confirm');
+  String get profileLogoutSuccess => translate('profile_logout_success');
+  String get profileLogoutError => translate('profile_logout_error');
+  String get priceTrackingStopped => translate('price_tracking_stopped');
+  String get priceTrackingDetailError =>
+      translate('price_tracking_detail_error');
+  String get priceUnchanged => translate('price_unchanged');
+  String get noPriceHistory => translate('no_price_history');
+  String get campaignDetail => translate('campaign_detail');
+  String get shareError => translate('share_error');
+  String get priceUnspecified => translate('price_unspecified');
+  String get priceTargetPrefix => translate('price_target_prefix');
+  String get profileTrackSubtitle => translate('profile_track_subtitle');
+  String get howItWorksShort => translate('how_it_works_short');
+  String get privacyKvkk => translate('privacy_kvkk');
+  String get developedBy => translate('developed_by');
+  String get kvkkPageTitle => translate('kvkk_page_title');
+  String get kvkkFullTitle => translate('kvkk_full_title');
+  String get kvkkPlaceholder => translate('kvkk_placeholder');
+  String get languageChanged => translate('language_changed');
 
   // Error Messages
   String get errorLoading => translate('error_loading');
