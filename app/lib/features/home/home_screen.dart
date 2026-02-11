@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
@@ -45,6 +47,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Map<String, bool> _favoriteMap = {};
   String? _favoriteMapKey;
+  Timer? _favoritePrefetchDebounce;
+  int _favoritePrefetchRequestId = 0;
 
   @override
   void initState() {
@@ -98,7 +102,15 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _prefetchFavoritesForVisible() async {
+    _favoritePrefetchDebounce?.cancel();
+    _favoritePrefetchDebounce = Timer(const Duration(milliseconds: 300), () {
+      _prefetchFavoritesForVisibleNow();
+    });
+  }
+
+  Future<void> _prefetchFavoritesForVisibleNow() async {
     if (!mounted) return;
+    final requestId = ++_favoritePrefetchRequestId;
     if (_auth.currentUser == null) {
       // Not logged in: keep UI consistent without hitting the API.
       if (_favoriteMap.isNotEmpty) {
@@ -140,10 +152,17 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final map = await _favoriteRepository.checkFavorites(ids);
     if (!mounted) return;
+    if (requestId != _favoritePrefetchRequestId) return;
     setState(() {
       _favoriteMap = map;
       _favoriteMapKey = desiredKey;
     });
+  }
+
+  @override
+  void dispose() {
+    _favoritePrefetchDebounce?.cancel();
+    super.dispose();
   }
 
   /// Repository'den fırsatları yükler

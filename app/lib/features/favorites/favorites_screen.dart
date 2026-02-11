@@ -25,12 +25,14 @@ class FavoritesScreen extends StatefulWidget {
 class _FavoritesScreenState extends State<FavoritesScreen> {
   final FavoriteRepository _favoriteRepository = FavoriteRepository.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  static const Duration _minReloadInterval = Duration(seconds: 2);
 
   NetworkResult<List<OpportunityModel>> _favoritesResult =
       const NetworkLoading();
   List<OpportunityModel> _favorites = [];
   bool _isLoading = false;
   bool _didInitialize = false;
+  DateTime? _lastLoadStartedAt;
 
   @override
   void initState() {
@@ -55,6 +57,14 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
   Future<void> _loadFavorites({bool force = false}) async {
     if (!mounted || (_isLoading && !force)) return;
+    if (!force && _lastLoadStartedAt != null) {
+      final elapsed = DateTime.now().difference(_lastLoadStartedAt!);
+      if (elapsed < _minReloadInterval) {
+        return;
+      }
+    }
+
+    _lastLoadStartedAt = DateTime.now();
 
     setState(() {
       _isLoading = true;
@@ -62,7 +72,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     });
 
     try {
-      final result = await _favoriteRepository.getFavorites();
+      final result = await _favoriteRepository.getFavorites(force: force);
 
       if (mounted) {
         setState(() {
