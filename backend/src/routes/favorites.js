@@ -2,8 +2,9 @@ const express = require('express');
 const router = express.Router();
 const UserFavorite = require('../models/UserFavorite');
 const Campaign = require('../models/Campaign');
+const GamificationService = require('../services/gamificationService');
 const { firebaseAuth, optionalFirebaseAuth } = require('../middleware/firebaseAuth');
-const { validateFavoriteAdd } = require('../middleware/validation');
+const { validateFavorite } = require('../middleware/validation');
 
 /**
  * GET /favorites
@@ -63,7 +64,7 @@ router.get('/', firebaseAuth, async (req, res) => {
  * POST /favorites/:campaignId
  * Kampanyayı favorilere ekler
  */
-router.post('/:campaignId', firebaseAuth, validateFavoriteAdd, async (req, res) => {
+router.post('/:campaignId', firebaseAuth, validateFavorite, async (req, res) => {
   try {
     const userId = req.user.uid;
     const { campaignId } = req.params;
@@ -126,7 +127,7 @@ router.post('/:campaignId', firebaseAuth, validateFavoriteAdd, async (req, res) 
  * DELETE /favorites/:campaignId
  * Kampanyayı favorilerden çıkarır
  */
-router.delete('/:campaignId', firebaseAuth, validateFavoriteAdd, async (req, res) => {
+router.delete('/:campaignId', firebaseAuth, validateFavorite, async (req, res) => {
   try {
     const userId = req.user.uid;
     const { campaignId } = req.params;
@@ -158,7 +159,7 @@ router.delete('/:campaignId', firebaseAuth, validateFavoriteAdd, async (req, res
  * GET /favorites/check/:campaignId
  * Kampanyanın favori olup olmadığını kontrol eder
  */
-router.get('/check/:campaignId', firebaseAuth, validateFavoriteAdd, async (req, res) => {
+router.get('/check/:campaignId', firebaseAuth, validateFavorite, async (req, res) => {
   try {
     const userId = req.user.uid;
     const { campaignId } = req.params;
@@ -199,11 +200,18 @@ router.post('/batch-check', firebaseAuth, async (req, res) => {
       });
     }
 
-    const favoriteIds = await UserFavorite.getFavoriteCampaignIds(userId, campaignIds);
+    const uuidRegex =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    const normalizedCampaignIds = campaignIds
+      .map((id) => (typeof id === 'string' ? id.trim() : ''))
+      .filter((id) => id.length > 0);
+    const validCampaignIds = normalizedCampaignIds.filter((id) => uuidRegex.test(id));
+
+    const favoriteIds = await UserFavorite.getFavoriteCampaignIds(userId, validCampaignIds);
     
     // Map formatında döndür
     const favoriteMap = {};
-    campaignIds.forEach(id => {
+    normalizedCampaignIds.forEach(id => {
       favoriteMap[id] = favoriteIds.has(id);
     });
 

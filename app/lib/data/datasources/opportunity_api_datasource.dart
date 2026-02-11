@@ -213,6 +213,10 @@ class OpportunityApiDataSource {
     List<String> sourceNames,
   ) async {
     try {
+      debugPrint(
+        '[CAMPAIGNS_ALL_REQUEST] ${DateTime.now().toIso8601String()} sources=${sourceNames.join(',')}',
+      );
+
       // Backend'de sourceNames parametresi ile filtreleme
       // TÜM kampanyaları getirmek için /all endpoint'ini kullan
       // Defensive: selected sources can be large; do not fetch thousands of items at once.

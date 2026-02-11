@@ -10,6 +10,9 @@ import '../models/opportunity_model.dart';
 class FavoriteApiDataSource {
   final Dio _dio;
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+  static final RegExp _uuidRegex = RegExp(
+    r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$',
+  );
 
   FavoriteApiDataSource({Dio? dio})
       : _dio = dio ?? DioClient.instance;
@@ -204,11 +207,25 @@ class FavoriteApiDataSource {
   /// Birden fazla kampanyanın favori durumunu kontrol eder
   Future<Map<String, bool>> checkFavorites(List<String> campaignIds) async {
     try {
+      final normalizedCampaignIds = campaignIds
+          .map((id) => id.trim())
+          .where((id) => id.isNotEmpty)
+          .toList();
+      final validCampaignIds = normalizedCampaignIds
+          .where((id) => _uuidRegex.hasMatch(id))
+          .toList();
+
+      if (validCampaignIds.isEmpty) {
+        return {
+          for (final id in normalizedCampaignIds) id: false,
+        };
+      }
+
       final options = await _getAuthOptions();
       final response = await _dio.post(
         '/favorites/batch-check',
         options: options,
-        data: {'campaignIds': campaignIds},
+        data: {'campaignIds': validCampaignIds},
       );
 
       if (response.statusCode != 200) {
@@ -220,7 +237,10 @@ class FavoriteApiDataSource {
       }
 
       final Map<String, dynamic> favoriteMap = response.data['data'];
-      return favoriteMap.map((key, value) => MapEntry(key, value == true));
+      final apiMap = favoriteMap.map((key, value) => MapEntry(key, value == true));
+      return {
+        for (final id in normalizedCampaignIds) id: apiMap[id] ?? false,
+      };
     } catch (e) {
       return {};
     }

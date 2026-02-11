@@ -60,9 +60,45 @@ const rateLimitMax =
       ? 600
       : 100;
 
+const getClientRateLimitKey = (req) => {
+  // 1) Firebase auth middleware kullanıcıyı doğruladıysa UID bazlı anahtar kullan.
+  if (req.user && req.user.uid) return `uid:${req.user.uid}`;
+
+  // 2) Mobil uygulamanın gönderdiği kalıcı cihaz kimliği (Dio interceptor ile eklenecek).
+  const deviceId =
+    req.headers['x-device-id'] ||
+    req.headers['x-client-id'] ||
+    req.headers['x-user-id'];
+  if (deviceId) return `device:${deviceId}`;
+
+  // 3) Son çare IP bazlı sınır.
+  return `ip:${req.ip}`;
+};
+
 const limiter = rateLimit({
   windowMs: rateLimitWindowMs, // default 15 dakika
   max: rateLimitMax, // default: prod 600 / dev 100
+  statusCode: 429,
+  keyGenerator: (req /* , res */) => {
+    const key = getClientRateLimitKey(req);
+    // Handler içinde loglamak için sakla
+    req.rateLimitKey = key;
+    return key;
+  },
+  handler: (req, res, next, options) => {
+    const remaining = res.getHeader('RateLimit-Remaining');
+    console.warn(
+      `[RATE_LIMIT_HIT] ${req.method} ${req.path} key=${req.rateLimitKey || 'ip'} ip=${
+        req.ip
+      } remaining=${remaining}`,
+    );
+    return res.status(options.statusCode).json(
+      options.message || {
+        success: false,
+        error: 'Çok fazla istek gönderdiniz. Lütfen 15 dakika sonra tekrar deneyin.',
+      },
+    );
+  },
   message: {
     success: false,
     error: 'Çok fazla istek gönderdiniz. Lütfen 15 dakika sonra tekrar deneyin.',

@@ -46,16 +46,17 @@ const validateSearch = [
 ];
 
 /**
- * Favorite add validation
+ * Favorite validation (body veya param kampanya ID)
  */
-const validateFavoriteAdd = [
-  body('campaignId')
+const validateFavorite = [
+  param('campaignId')
+    .optional()
     .isUUID()
     .withMessage('Geçersiz kampanya ID formatı'),
-  body('userId')
-    .isString()
-    .notEmpty()
-    .withMessage('Kullanıcı ID gerekli'),
+  body('campaignId')
+    .optional()
+    .isUUID()
+    .withMessage('Geçersiz kampanya ID formatı'),
   validate,
 ];
 
@@ -113,7 +114,7 @@ module.exports = {
   validate,
   validateCampaignId,
   validateSearch,
-  validateFavoriteAdd,
+  validateFavorite,
   validateFCMToken,
   validateComment,
   validateRating,

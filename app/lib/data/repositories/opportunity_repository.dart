@@ -12,6 +12,9 @@ class OpportunityRepository {
   // Mock datasource (fallback veya test için)
   final OpportunityMockDataSource _mockDataSource;
 
+  // Aynı anda yinelenen istekleri önlemek için in-flight cache
+  final Map<String, Future<List<OpportunityModel>>> _inFlightBySourceKey = {};
+
   // API kullanımını kontrol eder (şimdilik true, backend hazır olduğunda)
   static const bool _useApi = true;
 
@@ -53,9 +56,27 @@ class OpportunityRepository {
       if (sourceNames.isEmpty) {
         return const NetworkSuccess([]);
       }
-      final opportunities = await _dataSource.getOpportunitiesBySources(
-        sourceNames,
-      );
+      final sortedSources = List<String>.from(sourceNames)..sort();
+      final cacheKey = sortedSources.join('|');
+
+      // Hâlihazırda aynı kaynak listesi için istek varsa onu kullan.
+      if (_inFlightBySourceKey.containsKey(cacheKey)) {
+        final cachedFuture = _inFlightBySourceKey[cacheKey]!;
+        final cachedResult = await cachedFuture;
+        return NetworkSuccess(cachedResult);
+      }
+
+      final future = _dataSource.getOpportunitiesBySources(sortedSources);
+      _inFlightBySourceKey[cacheKey] = future;
+
+      List<OpportunityModel> opportunities;
+      try {
+        opportunities = await future;
+      } finally {
+        // Tamamlandığında cache'ten temizle
+        _inFlightBySourceKey.remove(cacheKey);
+      }
+
       return NetworkSuccess(opportunities);
     } catch (e) {
       // Exception mesajını extract et
