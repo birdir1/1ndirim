@@ -40,14 +40,14 @@ class BrandStyles {
     'fibabanka': _style(const Color(0xFF0072BC)),
     'anadolubank': _style(const Color(0xFF6E2F8A)),
     'alternatifbank': _style(const Color(0xFFA51E5B)),
-    'odeabank': _style(const Color(0xFF1A1A1A)),
+    'odeabank': _style(const Color(0xFF262626)), // koyu gri ama daha sıcak
     'icbc': _style(const Color(0xFFC40E1F)),
     'burganbank': _style(const Color(0xFF006BA6)),
     'hsbc': _style(const Color(0xFFDB0011)),
 
     // Katılım / dijital
     'kuveytturk': _style(const Color(0xFF0A9F6D)),
-    'albarakaturk': _style(const Color(0xFFF58220)),
+    'albarakaturk': _style(const Color(0xFFE64A19)), // markanın turuncu/kırmızı tonu
     'turkiyefinans': _style(const Color(0xFF00A3E0)),
     'vakifkatilim': _style(const Color(0xFF7A1B71)),
     'ziraatkatilim': _style(const Color(0xFFA32638)),

@@ -10,6 +10,8 @@ class OpportunityModel {
   final Color iconColor;
   final Color iconBgColor;
   final List<String> tags;
+  final String? detailText; // Uzun açıklama
+  final String? description; // Kısa açıklama / özet
   final String? affiliateUrl; // YENİ
   final String? originalUrl; // YENİ
   final String? expiresAt; // Kampanya bitiş tarihi (ISO 8601 formatında)
@@ -33,6 +35,8 @@ class OpportunityModel {
     required this.iconColor,
     required this.iconBgColor,
     required this.tags,
+    this.detailText,
+    this.description,
     this.affiliateUrl, // YENİ
     this.originalUrl, // YENİ
     this.expiresAt,
@@ -59,6 +63,8 @@ class OpportunityModel {
       iconColor: map['iconColor'] as Color,
       iconBgColor: map['iconBgColor'] as Color,
       tags: (map['tags'] as List).map((e) => e.toString()).toList(),
+      detailText: map['detailText'] as String?,
+      description: map['description'] as String?,
       affiliateUrl: map['affiliateUrl'] as String?, // YENİ
       originalUrl: map['originalUrl'] as String?, // YENİ
       expiresAt: map['expiresAt'] as String?,
@@ -98,6 +104,8 @@ class OpportunityModel {
       'iconColor': iconColor,
       'iconBgColor': iconBgColor,
       'tags': tags,
+      'detailText': detailText,
+      'description': description,
     };
   }
 }

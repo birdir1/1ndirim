@@ -35,7 +35,13 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
   bool _isFavorite = false;
   bool _isLoading = false;
   final FavoriteRepository _favoriteRepository = FavoriteRepository.instance;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  FirebaseAuth? get _auth {
+    try {
+      return FirebaseAuth.instance;
+    } catch (_) {
+      return null;
+    }
+  }
 
   @override
   void initState() {
@@ -49,14 +55,15 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
   void didUpdateWidget(covariant OpportunityCardV2 oldWidget) {
     super.didUpdateWidget(oldWidget);
     // Parent may update the initial favorite state after batch-check completes.
-    if (widget.isFavorite != null && widget.isFavorite != oldWidget.isFavorite) {
+    if (widget.isFavorite != null &&
+        widget.isFavorite != oldWidget.isFavorite) {
       _isFavorite = widget.isFavorite!;
     }
   }
 
   Future<void> _toggleFavorite() async {
     // Kullanıcı giriş yapmamışsa işlem yapma
-    if (_auth.currentUser == null) {
+    if (_auth?.currentUser == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Favori eklemek için giriş yapmanız gerekiyor'),
@@ -136,6 +143,38 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
         );
       }
     }
+  }
+
+  String _cleanText(String input) {
+    var out = input.trim();
+    out = out.replaceAll(
+      RegExp(r'^0[0-9\.]*\s*TL[^A-Za-z0-9]?', caseSensitive: false),
+      '',
+    );
+    out = out.replaceAll(RegExp(r'[_\\-][0-9]{2,4}x[0-9]{2,4}', caseSensitive: false), ' ');
+    out = out.replaceAll(RegExp(r'\\.(jpg|jpeg|png|gif|webp)(\\?.*)?$', caseSensitive: false), '');
+    out = out.replaceAll(RegExp(r'[\\-_]+'), ' ');
+    if (RegExp(r'https?://', caseSensitive: false).hasMatch(out) ||
+        RegExp(r'[a-z0-9]+_[a-z0-9]+', caseSensitive: false).hasMatch(out) ||
+        RegExp(r'\\.com\\b', caseSensitive: false).hasMatch(out)) {
+      return '';
+    }
+    if (RegExp(r'çerez', caseSensitive: false).hasMatch(out) ||
+        RegExp(r'kampanya bulunam', caseSensitive: false).hasMatch(out) ||
+        RegExp(r'sitemizden en iyi şekilde faydalan', caseSensitive: false)
+            .hasMatch(out) ||
+        RegExp(r'©', caseSensitive: false).hasMatch(out) ||
+        RegExp(r'vakıfbank', caseSensitive: false).hasMatch(out) ||
+        RegExp(r'vakifbank', caseSensitive: false).hasMatch(out) ||
+        RegExp(r'kisisel verilerin', caseSensitive: false).hasMatch(out) ||
+        RegExp(r'kvkk', caseSensitive: false).hasMatch(out)) {
+      return '';
+    }
+    out = out.replaceAll(RegExp(r'\s+'), ' ').trim();
+    if (out.isNotEmpty) {
+      out = out[0].toUpperCase() + out.substring(1);
+    }
+    return out;
   }
 
   @override
@@ -383,7 +422,7 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
                       ),
                       const SizedBox(width: 8),
                       // Favori Butonu
-                      if (_auth.currentUser != null)
+                      if (_auth?.currentUser != null)
                         GestureDetector(
                           onTap: _toggleFavorite,
                           child: Container(
@@ -438,7 +477,7 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
                 children: [
                   // Title - Çok Büyük ve Belirgin
                   Text(
-                    widget.opportunity.title,
+                    _cleanText(widget.opportunity.title),
                     style: AppTextStyles.cardTitle(isDark: false).copyWith(
                       fontSize: 20,
                       fontWeight: FontWeight.w800,
@@ -454,7 +493,34 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
                   // Subtitle - Eğer anlamsız veya çok kısaysa tags'den göster
                   Builder(
                     builder: (context) {
-                      String displayText = widget.opportunity.subtitle;
+                      final cleanedTitle = _cleanText(widget.opportunity.title);
+                      String displayText = _cleanText(
+                        widget.opportunity.detailText ??
+                            widget.opportunity.description ??
+                            widget.opportunity.subtitle,
+                      );
+
+                      // Eğer subtitle başlıkla aynı/benzerse gösterme
+                      if (displayText.isNotEmpty &&
+                          cleanedTitle.isNotEmpty &&
+                          displayText.toLowerCase() ==
+                              cleanedTitle.toLowerCase()) {
+                        displayText = '';
+                      }
+
+                      // "detaylar" tek başına ise gösterme
+                      if (RegExp(r'^detaylar?$', caseSensitive: false)
+                          .hasMatch(displayText)) {
+                        displayText = '';
+                      }
+
+                      // Kaynak adıyla aynı veya çok kısa ise gösterme
+                      if (displayText.isNotEmpty &&
+                          (displayText.toLowerCase() ==
+                              widget.opportunity.sourceName.toLowerCase() ||
+                              displayText.length < 8)) {
+                        displayText = '';
+                      }
 
                       // Eğer subtitle boş, çok kısa veya anlamsızsa tags'den al
                       if (displayText.isEmpty ||

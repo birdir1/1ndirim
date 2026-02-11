@@ -47,12 +47,27 @@ class CampaignDetailScreen extends StatefulWidget {
     required dynamic opportunity,
     String? primaryTag,
   }) {
+    final detail = (opportunity.detailText is String &&
+            (opportunity.detailText as String).trim().isNotEmpty)
+        ? (opportunity.detailText as String)
+        : (opportunity.description is String &&
+                (opportunity.description as String).trim().isNotEmpty)
+            ? (opportunity.description as String)
+            : (opportunity.subtitle?.isNotEmpty == true
+                ? opportunity.subtitle
+                : opportunity.title);
+
+    final summary = (opportunity.description is String &&
+            (opportunity.description as String).trim().isNotEmpty)
+        ? (opportunity.description as String)
+        : (opportunity.subtitle?.isNotEmpty == true
+            ? opportunity.subtitle
+            : opportunity.title);
+
     return CampaignDetailScreen(
       title: opportunity.title,
-      description: opportunity.subtitle,
-      detailText: opportunity.subtitle?.isNotEmpty == true
-          ? opportunity.subtitle
-          : opportunity.title,
+      description: summary,
+      detailText: detail,
       logoColor: opportunity.iconColor,
       sourceName: opportunity.sourceName,
       primaryTag: primaryTag,
@@ -86,6 +101,52 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
   void dispose() {
     _videoController?.dispose();
     super.dispose();
+  }
+
+  /// Clean placeholder-like strings (e.g., "000 TL ...") that come from incomplete data.
+  String _sanitizeText(String input) {
+    var out = input.trim();
+    // Remove leading "0... TL" tokens (000 TL, 0.000 TL, etc.)
+    out = out.replaceAll(
+      RegExp(r'^0[0-9\.]*\s*TL[^A-Za-z0-9]?', caseSensitive: false),
+      '',
+    );
+    // Strip image filename artefacts
+    out = out.replaceAll(RegExp(r'[_\\-][0-9]{2,4}x[0-9]{2,4}', caseSensitive: false), ' ');
+    out = out.replaceAll(RegExp(r'\\.(jpg|jpeg|png|gif|webp)(\\?.*)?$', caseSensitive: false), '');
+    out = out.replaceAll(RegExp(r'[\\-_]+'), ' ');
+    if (RegExp(r'https?://', caseSensitive: false).hasMatch(out) ||
+        RegExp(r'[a-z0-9]+_[a-z0-9]+', caseSensitive: false).hasMatch(out) ||
+        RegExp(r'\\.com\\b', caseSensitive: false).hasMatch(out)) {
+      return '';
+    }
+    // Remove leading bağlaç/ek kalıntıları
+    out = out.replaceFirst(RegExp(r'^(nda|nde|nda\s+|nde\s+|ve\s+|ile\s+|da\s+|de\s+)', caseSensitive: false), '');
+    // Strip common noise sentences (cookie notices, kampanya yok mesajları)
+    final noisePatterns = [
+      RegExp(r'çerez', caseSensitive: false),
+      RegExp(r'cookie', caseSensitive: false),
+      RegExp(r'kampanya bulunam', caseSensitive: false),
+      RegExp(r'kriterlerde bir kampanya bulunamamıştır', caseSensitive: false),
+      RegExp(r'sitemizden en iyi şekilde faydalan', caseSensitive: false),
+      RegExp(r'©', caseSensitive: false),
+      RegExp(r'copyright', caseSensitive: false),
+      RegExp(r'vakıfbank', caseSensitive: false),
+      RegExp(r'vakifbank', caseSensitive: false),
+      RegExp(r'mtv kampanyasi', caseSensitive: false),
+      RegExp(r'kisisel verilerin', caseSensitive: false),
+      RegExp(r'kvkk', caseSensitive: false),
+    ];
+    for (final p in noisePatterns) {
+      if (p.hasMatch(out)) return '';
+    }
+    // Collapse multiple spaces.
+    out = out.replaceAll(RegExp(r'\\s+'), ' ');
+    out = out.replaceAll(RegExp(r'\s{2,}'), ' ').trim();
+    if (out.isNotEmpty) {
+      out = out[0].toUpperCase() + out.substring(1);
+    }
+    return out.isEmpty ? input.trim() : out;
   }
 
   /// Video player'ı başlat
@@ -226,6 +287,15 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
         t.contains('customer service');
   }
 
+  bool _isNoiseText(String text) {
+    final t = text.toLowerCase();
+    return t.contains('çerez') ||
+        t.contains('cookie') ||
+        t.contains('kampanya bulunam') ||
+        t.contains('kriterlerde bir kampanya') ||
+        t.contains('sitemizden en iyi şekilde faydalan');
+  }
+
   Widget _buildCampaignSummary() {
     final brand = BrandStyles.getStyle(widget.sourceName);
 
@@ -271,14 +341,6 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
           ).copyWith(color: brand.primary),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 8),
-
-        // Alt Başlık
-        Text(
-          widget.description,
-          style: AppTextStyles.bodySecondary(isDark: false),
-          textAlign: TextAlign.center,
-        ),
         if (widget.primaryTag != null &&
             widget.primaryTag!.toLowerCase() != 'banka' &&
             widget.primaryTag!.toLowerCase() != 'bankası' &&
@@ -306,15 +368,26 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
 
   Widget _buildCampaignDetails() {
     // detailText'i satırlara böl
-    final details = widget.detailText
+    final details = _sanitizeText(widget.detailText)
         .split('\n')
         .where((line) => line.trim().isNotEmpty)
         .where((line) => !_isCustomerServiceText(line))
+        .where((line) =>
+            line.toLowerCase() != widget.sourceName.toLowerCase() &&
+            line.toLowerCase() != widget.title.toLowerCase())
+        .where((line) => !_isNoiseText(line))
         .toList();
     if (details.isEmpty) {
-      details.add(
+      final fallback = _sanitizeText(
         widget.description.isNotEmpty ? widget.description : widget.title,
       );
+      if (fallback.isNotEmpty &&
+          fallback.toLowerCase() != widget.sourceName.toLowerCase()) {
+        details.add(fallback);
+      }
+    }
+    if (details.isEmpty) {
+      details.add('Kampanya detayları yakında güncellenecek.');
     }
 
     return Column(
@@ -740,10 +813,12 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
       final shareUrl = widget.affiliateUrl ?? widget.originalUrl;
 
       // Paylaşım metni oluştur
-      final shareText =
-          '''${widget.title}
+      final shareBody = _sanitizeText(
+        widget.detailText.isNotEmpty ? widget.detailText : widget.description,
+      );
+      final shareText = '''${widget.title}
 
-${widget.description}
+$shareBody
 
 $shareUrl
 

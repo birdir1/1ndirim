@@ -20,23 +20,53 @@ class OpportunityCardEnhanced extends StatelessWidget {
     this.imageUrl,
   });
 
+  String _clean(String input) {
+    var out = input.trim();
+    out = out.replaceAll(
+      RegExp(r'^0[0-9\.]*\s*TL[^A-Za-z0-9]?', caseSensitive: false),
+      '',
+    );
+    out = out.replaceAll(RegExp(r'[_\\-][0-9]{2,4}x[0-9]{2,4}', caseSensitive: false), ' ');
+    out = out.replaceAll(RegExp(r'\\.(jpg|jpeg|png|gif|webp)(\\?.*)?$', caseSensitive: false), '');
+    out = out.replaceAll(RegExp(r'[\\-_]+'), ' ');
+    if (RegExp(r'https?://', caseSensitive: false).hasMatch(out) ||
+        RegExp(r'[a-z0-9]+_[a-z0-9]+', caseSensitive: false).hasMatch(out) ||
+        RegExp(r'\\.com\\b', caseSensitive: false).hasMatch(out)) {
+      return '';
+    }
+    if (RegExp(r'çerez', caseSensitive: false).hasMatch(out) ||
+        RegExp(r'kampanya bulunam', caseSensitive: false).hasMatch(out) ||
+        RegExp(r'sitemizden en iyi şekilde faydalan', caseSensitive: false)
+            .hasMatch(out) ||
+        RegExp(r'©', caseSensitive: false).hasMatch(out) ||
+        RegExp(r'vakıfbank', caseSensitive: false).hasMatch(out) ||
+        RegExp(r'vakifbank', caseSensitive: false).hasMatch(out) ||
+        RegExp(r'kisisel verilerin', caseSensitive: false).hasMatch(out) ||
+        RegExp(r'kvkk', caseSensitive: false).hasMatch(out)) {
+      return '';
+    }
+    out = out.replaceAll(RegExp(r'\s+'), ' ').trim();
+    return out;
+  }
+
   @override
   Widget build(BuildContext context) {
     final normalized = TagNormalizer.normalize(opportunity.tags);
+    final subtitleRaw = opportunity.detailText ?? opportunity.description;
+    final subtitle = _clean(subtitleRaw ?? opportunity.subtitle);
+    final titleClean = _clean(opportunity.title);
+    final showSubtitle = subtitle.isNotEmpty &&
+        subtitle.toLowerCase() != titleClean.toLowerCase() &&
+        subtitle.toLowerCase() != opportunity.sourceName.toLowerCase() &&
+        subtitle.length >= 8 &&
+        !RegExp(r'^detaylar?$', caseSensitive: false).hasMatch(subtitle);
     return InkWell(
       onTap: () {
         Navigator.of(context).push(
           SlidePageRoute(
-            child: CampaignDetailScreen(
-              title: opportunity.title,
-              description: opportunity.subtitle,
-              detailText: 'Bu kampanyayı kullanmak için ilgili kartınızla alışveriş yapmanız yeterli.',
-              logoColor: opportunity.iconColor,
-              sourceName: opportunity.sourceName,
+            child: CampaignDetailScreen.fromOpportunity(
+              opportunity: opportunity,
               primaryTag: normalized.primary,
-              affiliateUrl: opportunity.affiliateUrl,
-              campaignId: opportunity.id,
-              originalUrl: opportunity.originalUrl ?? '',
             ),
             direction: SlideDirection.right,
           ),
@@ -159,7 +189,7 @@ class OpportunityCardEnhanced extends StatelessWidget {
                 children: [
                   // Title
                   Text(
-                    opportunity.title,
+                    _clean(opportunity.title),
                     style: AppTextStyles.cardTitle(isDark: false).copyWith(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
@@ -175,9 +205,9 @@ class OpportunityCardEnhanced extends StatelessWidget {
                   const SizedBox(height: 8),
                   
                   // Subtitle
-                  if (opportunity.subtitle.isNotEmpty)
+                  if (showSubtitle)
                     Text(
-                      opportunity.subtitle,
+                      subtitle,
                       style: AppTextStyles.cardSubtitle(isDark: false).copyWith(
                         fontSize: 14,
                         height: 1.4,

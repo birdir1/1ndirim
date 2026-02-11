@@ -483,6 +483,8 @@ class OpportunityApiDataSource {
         if (normalized.primary != null) normalized.primary!,
         ...normalized.secondary,
       ],
+      detailText: json['detailText'] as String?,
+      description: json['description'] as String?,
       affiliateUrl: json['affiliateUrl'] as String?, // YENİ
       originalUrl: json['originalUrl'] as String?, // YENİ
       expiresAt: json['expiresAt'] as String?,
