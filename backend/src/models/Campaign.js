@@ -562,6 +562,12 @@ class Campaign {
       iconColor,
       iconBgColor,
       tags,
+      sourceUrl,
+      rawContent,
+      normalizedContent,
+      isValid,
+      needsReview,
+      invalidReason,
       originalUrl,
       affiliateUrl, // YENİ
       expiresAt,
@@ -595,7 +601,8 @@ class Campaign {
       'icon_color', 'icon_bg_color', 'tags', 'original_url', 'affiliate_url', 'expires_at',
       'how_to_use', 'validity_channels', 'status', 'is_active',
       'campaign_type', 'show_in_light_feed', 'show_in_category_feed', 'value_level', // FAZ 7.3, FAZ 7.2, FAZ 7.5
-      'category', 'sub_category', 'discount_percentage', 'is_personalized', 'scraped_at', 'data_hash' // NEW
+      'category', 'sub_category', 'discount_percentage', 'is_personalized', 'scraped_at', 'data_hash', // NEW
+      'source_url', 'raw_content', 'normalized_content', 'is_valid', 'needs_review', 'invalid_reason'
       // created_at ve updated_at DEFAULT NOW() ile otomatik set ediliyor
     ];
     
@@ -608,6 +615,12 @@ class Campaign {
       iconColor || '#DC2626',
       iconBgColor || '#FEE2E2',
       tagsJson,
+      sourceUrl || originalUrl || null,
+      rawContent || null,
+      normalizedContent ? JSON.stringify(normalizedContent) : JSON.stringify({}),
+      typeof isValid === 'boolean' ? isValid : true,
+      typeof needsReview === 'boolean' ? needsReview : false,
+      invalidReason || null,
       originalUrl,
       affiliateUrl || null, // YENİ
       expiresAt,
@@ -663,6 +676,12 @@ class Campaign {
       validityChannels: 'validity_channels',
       detailText: 'detail_text',
       originalUrl: 'original_url',
+      sourceUrl: 'source_url',
+      rawContent: 'raw_content',
+      normalizedContent: 'normalized_content',
+      isValid: 'is_valid',
+      needsReview: 'needs_review',
+      invalidReason: 'invalid_reason',
       expiresAt: 'expires_at',
       startsAt: 'starts_at',
       iconName: 'icon_name',
@@ -672,7 +691,7 @@ class Campaign {
     };
 
     // JSONB alanlar: explicit stringify
-    const jsonbFields = ['tags', 'how_to_use', 'validity_channels'];
+    const jsonbFields = ['tags', 'how_to_use', 'validity_channels', 'normalized_content'];
 
     Object.keys(updates).forEach((key) => {
       // Canonical field name (DB kolon ismi)

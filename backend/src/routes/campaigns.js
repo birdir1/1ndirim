@@ -12,6 +12,7 @@ const CacheService = require('../services/cacheService');
 const DataNormalizer = require('../services/DataNormalizer');
 const AIService = require('../services/AIService');
 const DuplicateDetector = require('../services/DuplicateDetector');
+const { normalizeCampaignText } = require('../services/campaignNormalizer');
 const {
   normalizeTitle,
   normalizeDescription,
@@ -74,10 +75,11 @@ router.get('/', cacheMiddleware(CacheService.TTL.CAMPAIGNS_LIST), async (req, re
     const seen = new Set();
 
     for (const campaign of campaigns) {
+      const normalizedContent = campaign.normalized_content || {};
       const normalized = {
         ...campaign,
-        title: normalizeTitle(campaign),
-        description: normalizeDescription(campaign),
+        title: normalizedContent.title || normalizeTitle(campaign),
+        description: normalizedContent.shortDescription || normalizeDescription(campaign),
       };
 
       if (shouldDropCampaign(normalized)) continue;
@@ -89,7 +91,7 @@ router.get('/', cacheMiddleware(CacheService.TTL.CAMPAIGNS_LIST), async (req, re
       formattedCampaigns.push({
         id: campaign.id,
         title: normalized.title,
-        subtitle: normalized.description || `${campaign.source_name}`,
+        subtitle: normalized.description || normalizedContent.subtitle || `${campaign.source_name}`,
         sourceName: campaign.source_name,
         sourceId: campaign.source_id,
         icon: campaign.icon_name || 'local_offer',
@@ -97,8 +99,23 @@ router.get('/', cacheMiddleware(CacheService.TTL.CAMPAIGNS_LIST), async (req, re
         iconBgColor: campaign.icon_bg_color || '#FEE2E2',
         tags: campaign.tags || [],
         description: normalized.description,
-        detailText: normalizeDetailText(campaign),
+        detailText: normalizedContent.detailText || normalizeDetailText(campaign),
         originalUrl: campaign.original_url,
+        sourceUrl: campaign.source_url || campaign.original_url,
+        content: {
+          title: normalizedContent.title || normalized.title,
+          subtitle: normalizedContent.subtitle || '',
+          shortDescription: normalizedContent.shortDescription || normalized.description,
+          detailText: normalizedContent.detailText || normalizeDetailText(campaign),
+          validUntil: normalizedContent.validUntil || campaign.expires_at,
+          minSpend: normalizedContent.minSpend || '',
+          discountAmount: normalizedContent.discountAmount || '',
+          discountRate: normalizedContent.discountRate || '',
+          tags: normalizedContent.tags || campaign.tags || [],
+        },
+        isValid: campaign.is_valid,
+        needsReview: campaign.needs_review,
+        invalidReason: campaign.invalid_reason,
         affiliateUrl: campaign.affiliate_url || null,
         expiresAt: campaign.expires_at,
         howToUse: campaign.how_to_use || [],
@@ -1015,21 +1032,56 @@ router.post('/', requireBotAuth, validateCampaignQuality, async (req, res) => {
       });
     }
 
+    // Normalize raw content (LLM destekli)
+    let normalizedContentResult = null;
+    try {
+      normalizedContentResult = await normalizeCampaignText({
+        bankName: sourceName,
+        rawHtml: req.body.rawHtml || req.body.html,
+        rawText: detailText || description || title,
+        sourceUrl: campaignUrl,
+      });
+    } catch (normErr) {
+      console.warn('Campaign normalization failed, falling back to raw:', normErr.message);
+    }
+
+    const normalizedPayload = normalizedContentResult || {
+      normalizedContent: {},
+      rawContent: req.body.rawText || detailText || description || title,
+      sourceUrl: campaignUrl,
+      isValid: true,
+      needsReview: false,
+      invalidReason: null,
+    };
+
+    const normalizedContent = normalizedPayload.normalizedContent || {};
+    const finalTitle = (normalizedContent.title || title || '').trim();
+    const finalDescription = (normalizedContent.shortDescription || description || '').trim();
+    const finalDetailText = (normalizedContent.detailText || detailText || description || title || '').trim();
+    const persistedTitle = finalTitle || trimmedTitle;
+    const titleForDuplicate = persistedTitle;
+
     // Duplicate kontrolü (startDate dahil)
-    const duplicate = await Campaign.findDuplicate(campaignUrl, sourceId, trimmedTitle, startsAt, expiresAt);
+    const duplicate = await Campaign.findDuplicate(campaignUrl, sourceId, titleForDuplicate, startsAt, expiresAt);
 
 	    if (duplicate) {
 	      // Duplicate varsa güncelle (PUT davranışı)
 	      // Canonical field names (DB kolon isimleri)
 	      const updates = {
-	        title: trimmedTitle,
-	        description: (description || '').trim() || duplicate.description || '',
-	        detail_text: (detailText || '').trim() || duplicate.detail_text || '',
+	        title: persistedTitle,
+	        description: finalDescription || duplicate.description || '',
+	        detail_text: finalDetailText || duplicate.detail_text || '',
 	        original_url: campaignUrl,
 	        affiliate_url: affiliateUrl || null, // YENİ
 	        expires_at: expiresAt,
 	        status: 'active',
 	        is_active: true,
+          source_url: normalizedPayload.sourceUrl || campaignUrl,
+          raw_content: normalizedPayload.rawContent || null,
+          normalized_content: normalizedContent || {},
+          is_valid: normalizedPayload.isValid,
+          needs_review: normalizedPayload.needsReview,
+          invalid_reason: normalizedPayload.invalidReason,
 	      };
 
 	      // Discover wiring: persist category when provided (or keep existing).
@@ -1105,14 +1157,20 @@ router.post('/', requireBotAuth, validateCampaignQuality, async (req, res) => {
 
 	    const campaignData = {
 	      sourceId,
-	      title: trimmedTitle,
-	      description: (description || '').trim(),
-	      detailText: (detailText || '').trim(),
+	      title: persistedTitle,
+	      description: finalDescription,
+	      detailText: finalDetailText,
 	      iconName: 'local_offer',
 	      iconColor: '#DC2626',
 	      iconBgColor: '#FEE2E2',
 	      tags: Array.isArray(tags) ? tags : [],
 	      originalUrl: campaignUrl,
+        sourceUrl: normalizedPayload.sourceUrl || campaignUrl,
+        rawContent: normalizedPayload.rawContent || null,
+        normalizedContent,
+        isValid: normalizedPayload.isValid,
+        needsReview: normalizedPayload.needsReview,
+        invalidReason: normalizedPayload.invalidReason,
 	      affiliateUrl: affiliateUrl || null, // YENİ
 	      expiresAt,
 	      howToUse: Array.isArray(howToUse) ? howToUse : [],
