@@ -49,6 +49,21 @@ class OpportunityCardEnhanced extends StatelessWidget {
     return out;
   }
 
+  String _pickBetterTitle(String rawTitle, String detail) {
+    final title = _clean(rawTitle);
+    final fallback = _clean(detail);
+    final looksIncomplete = title.length < 25 || RegExp(r"\d$").hasMatch(title);
+    if (looksIncomplete && fallback.isNotEmpty && fallback.length > title.length) {
+      final firstLine = fallback.split(RegExp(r"[\.!?\n]")).firstWhere(
+        (e) => e.trim().isNotEmpty,
+        orElse: () => fallback,
+      );
+      final normalized = _clean(firstLine);
+      if (normalized.isNotEmpty) return normalized;
+    }
+    return title.isNotEmpty ? title : (fallback.isNotEmpty ? fallback : rawTitle);
+  }
+
   @override
   Widget build(BuildContext context) {
     final normalized = TagNormalizer.normalize(opportunity.tags);
@@ -189,7 +204,10 @@ class OpportunityCardEnhanced extends StatelessWidget {
                 children: [
                   // Title
                   Text(
-                    _clean(opportunity.title),
+                    _pickBetterTitle(
+                      opportunity.title,
+                      opportunity.detailText ?? opportunity.description ?? opportunity.subtitle,
+                    ),
                     style: AppTextStyles.cardTitle(isDark: false).copyWith(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,

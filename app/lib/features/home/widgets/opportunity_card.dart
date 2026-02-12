@@ -47,12 +47,27 @@ class OpportunityCard extends StatelessWidget {
     return out;
   }
 
+  String _pickBetterTitle(String rawTitle, String detail) {
+    final title = _clean(rawTitle);
+    final fallback = _clean(detail);
+    final looksIncomplete = title.length < 25 || RegExp(r'\\d$').hasMatch(title);
+    if (looksIncomplete && fallback.isNotEmpty && fallback.length > title.length) {
+      final firstLine = fallback.split(RegExp(r'[\\.!?\\n]')).firstWhere(
+        (e) => e.trim().isNotEmpty,
+        orElse: () => fallback,
+      );
+      final normalized = firstLine.trim();
+      if (normalized.isNotEmpty) return normalized;
+    }
+    return title.isNotEmpty ? title : (fallback.isNotEmpty ? fallback : rawTitle);
+  }
+
   @override
   Widget build(BuildContext context) {
     final normalized = TagNormalizer.normalize(opportunity.tags);
     final subtitleRaw = opportunity.detailText ?? opportunity.description;
     final subtitle = _clean(subtitleRaw ?? opportunity.subtitle);
-    final title = _clean(opportunity.title);
+    final title = _pickBetterTitle(opportunity.title, subtitleRaw ?? opportunity.subtitle);
     final shouldShowSubtitle = subtitle.isNotEmpty &&
         subtitle.toLowerCase() != title.toLowerCase() &&
         subtitle.toLowerCase() != opportunity.sourceName.toLowerCase() &&

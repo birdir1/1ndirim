@@ -64,8 +64,13 @@ class CampaignDetailScreen extends StatefulWidget {
             ? opportunity.subtitle
             : opportunity.title);
 
+    final displayTitle = _CampaignDetailScreenState()._pickBetterTitle(
+      opportunity.title,
+      detail,
+    );
+
     return CampaignDetailScreen(
-      title: opportunity.title,
+      title: displayTitle,
       description: summary,
       detailText: detail,
       logoColor: opportunity.iconColor,
@@ -147,6 +152,20 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
       out = out[0].toUpperCase() + out.substring(1);
     }
     return out.isEmpty ? input.trim() : out;
+  }
+
+  String _pickBetterTitle(String rawTitle, String fallbackDetail) {
+    final cleanedTitle = _sanitizeText(rawTitle);
+    final cleanedDetail = _sanitizeText(fallbackDetail);
+    final looksIncomplete = cleanedTitle.length < 25 || RegExp(r'\\d$').hasMatch(cleanedTitle);
+    if (looksIncomplete && cleanedDetail.isNotEmpty && cleanedDetail.length > cleanedTitle.length) {
+      final firstLine = cleanedDetail.split(RegExp(r'[\\.!?\\n]')).firstWhere(
+        (e) => e.trim().isNotEmpty,
+        orElse: () => cleanedDetail,
+      );
+      return firstLine.trim();
+    }
+    return cleanedTitle.isNotEmpty ? cleanedTitle : (cleanedDetail.isNotEmpty ? cleanedDetail : rawTitle);
   }
 
   /// Video player'ı başlat

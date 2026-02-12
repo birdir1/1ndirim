@@ -177,6 +177,21 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
     return out;
   }
 
+  String _pickBetterTitle(String rawTitle, String detail) {
+    final title = _cleanText(rawTitle);
+    final fallback = _cleanText(detail);
+    final looksIncomplete = title.length < 25 || RegExp(r"\d$").hasMatch(title);
+    if (looksIncomplete && fallback.isNotEmpty && fallback.length > title.length) {
+      final firstLine = fallback.split(RegExp(r"[\.!?\n]")).firstWhere(
+        (e) => e.trim().isNotEmpty,
+        orElse: () => fallback,
+      );
+      final normalized = _cleanText(firstLine);
+      if (normalized.isNotEmpty) return normalized;
+    }
+    return title.isNotEmpty ? title : (fallback.isNotEmpty ? fallback : rawTitle);
+  }
+
   @override
   Widget build(BuildContext context) {
     final brandStyle = BrandStyles.getStyle(widget.opportunity.sourceName);
@@ -477,7 +492,12 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
                 children: [
                   // Title - Çok Büyük ve Belirgin
                   Text(
-                    _cleanText(widget.opportunity.title),
+                    _pickBetterTitle(
+                      widget.opportunity.title,
+                      widget.opportunity.detailText ??
+                          widget.opportunity.description ??
+                          widget.opportunity.subtitle,
+                    ),
                     style: AppTextStyles.cardTitle(isDark: false).copyWith(
                       fontSize: 20,
                       fontWeight: FontWeight.w800,
