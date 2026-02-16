@@ -37,7 +37,13 @@ class _CalendarScreenState extends State<CalendarScreen> {
   final OpportunityRepository _opportunityRepository =
       OpportunityRepository.instance;
   final FavoriteRepository _favoriteRepository = FavoriteRepository.instance;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  FirebaseAuth? get _auth {
+    try {
+      return FirebaseAuth.instance;
+    } catch (_) {
+      return null;
+    }
+  }
 
   Map<String, bool> _favoriteMap = {};
   String? _favoriteMapKey;
@@ -118,7 +124,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   Future<void> _prefetchFavorites() async {
     if (!mounted) return;
-    if (_auth.currentUser == null) {
+    if (_auth?.currentUser == null) {
       if (_favoriteMap.isNotEmpty) {
         setState(() {
           _favoriteMap = {};

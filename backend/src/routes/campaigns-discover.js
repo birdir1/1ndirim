@@ -62,6 +62,12 @@ const FALLBACK_CATEGORIES = [
   },
 ];
 
+function parseClampedInt(value, { min, max, defaultValue }) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return defaultValue;
+  return Math.max(min, Math.min(max, Math.floor(parsed)));
+}
+
 function mapDbCategoryToContract(cat) {
   return {
     id: cat.name,
@@ -104,12 +110,24 @@ async function getCategoryByIdWithFallback(categoryId) {
  */
 router.get('/discover', cacheMiddleware(CacheService.TTL.CAMPAIGNS_LIST), async (req, res) => {
   try {
+    const perCategoryLimit = parseClampedInt(req.query.limit, {
+      min: 1,
+      max: 50,
+      defaultValue: 20,
+    });
     const categories = await getActiveCategoriesWithFallback();
     const result = [];
 
     for (const category of categories) {
       // Get campaigns for this category with fallback
-      const { campaigns, isEmpty } = await Campaign.findByCategoryWithFallback(category.id, 20);
+      const { campaigns, isEmpty } = await Campaign.findByCategoryWithFallback(
+        category.id,
+        perCategoryLimit,
+        0,
+      );
+      const totalCount = await Campaign.countByCategory(category.id, {
+        includeExpired: isEmpty,
+      });
 
       // Format campaigns for Flutter
       const formattedCampaigns = campaigns.map((campaign) => ({
@@ -144,6 +162,8 @@ router.get('/discover', cacheMiddleware(CacheService.TTL.CAMPAIGNS_LIST), async 
         minCampaigns: category.minCampaigns,
         campaigns: formattedCampaigns,
         count: formattedCampaigns.length,
+        totalCount,
+        hasMore: totalCount > formattedCampaigns.length,
         isEmpty,
         fallbackMessage: isEmpty ? category.fallbackMessage : null,
       });
@@ -153,6 +173,9 @@ router.get('/discover', cacheMiddleware(CacheService.TTL.CAMPAIGNS_LIST), async 
       success: true,
       data: result,
       totalCategories: result.length,
+      pagination: {
+        perCategoryLimit,
+      },
     });
   } catch (error) {
     console.error('Discover campaigns error:', error);
@@ -173,6 +196,16 @@ router.get('/discover', cacheMiddleware(CacheService.TTL.CAMPAIGNS_LIST), async 
 router.get('/discover/:category', cacheMiddleware(CacheService.TTL.CAMPAIGNS_LIST), async (req, res) => {
   try {
     const { category } = req.params;
+    const limit = parseClampedInt(req.query.limit, {
+      min: 1,
+      max: 100,
+      defaultValue: 20,
+    });
+    const offset = parseClampedInt(req.query.offset, {
+      min: 0,
+      max: 10000,
+      defaultValue: 0,
+    });
 
     // Validate category
     const categoryConfig = await getCategoryByIdWithFallback(category);
@@ -185,7 +218,15 @@ router.get('/discover/:category', cacheMiddleware(CacheService.TTL.CAMPAIGNS_LIS
     }
 
     // Get campaigns with fallback
-    const { campaigns, isEmpty } = await Campaign.findByCategoryWithFallback(category, 50);
+    const { campaigns, isEmpty } = await Campaign.findByCategoryWithFallback(
+      category,
+      limit,
+      offset,
+    );
+    const totalCount = await Campaign.countByCategory(category, {
+      includeExpired: isEmpty,
+    });
+    const hasMore = offset + campaigns.length < totalCount;
 
     // Format campaigns for Flutter
     const formattedCampaigns = campaigns.map((campaign) => ({
@@ -218,8 +259,14 @@ router.get('/discover/:category', cacheMiddleware(CacheService.TTL.CAMPAIGNS_LIS
         category: categoryConfig,
         campaigns: formattedCampaigns,
         count: formattedCampaigns.length,
+        totalCount,
+        hasMore,
         isEmpty,
         fallbackMessage: isEmpty ? categoryConfig.fallbackMessage : null,
+        pagination: {
+          limit,
+          offset,
+        },
       },
     });
   } catch (error) {

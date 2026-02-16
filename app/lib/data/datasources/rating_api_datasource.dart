@@ -7,7 +7,13 @@ import '../models/rating_model.dart';
 /// Backend API'den puanlama işlemlerini yönetir
 class RatingApiDataSource {
   final Dio _dio;
-  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+  FirebaseAuth? get _firebaseAuth {
+    try {
+      return FirebaseAuth.instance;
+    } catch (_) {
+      return null;
+    }
+  }
 
   RatingApiDataSource({Dio? dio})
       : _dio = dio ??
@@ -20,7 +26,7 @@ class RatingApiDataSource {
   /// Firebase token'ı alır
   Future<String?> _getAuthToken() async {
     try {
-      final user = _firebaseAuth.currentUser;
+      final user = _firebaseAuth?.currentUser;
       if (user == null) {
         return null;
       }

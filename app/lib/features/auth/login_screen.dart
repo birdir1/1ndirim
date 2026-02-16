@@ -1,9 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/services/preferences_service.dart';
 import '../../core/services/auth_service.dart';
+import '../../core/l10n/app_localizations.dart';
 import '../../features/main_shell/main_shell.dart';
 import '../../features/onboarding/onboarding_screen.dart';
 
@@ -18,19 +20,6 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
-  late TextEditingController _referralCodeController;
-
-  @override
-  void initState() {
-    super.initState();
-    _referralCodeController = TextEditingController();
-  }
-
-  @override
-  void dispose() {
-    _referralCodeController.dispose();
-    super.dispose();
-  }
 
   /// Google Sign-In handler
   Future<void> _handleGoogleSignIn() async {
@@ -123,8 +112,98 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  /// Apple Sign-In handler
+  Future<void> _handleAppleSignIn() async {
+    if (_isLoading) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final authService = AuthService.instance;
+      final result = await authService.signInWithApple();
+
+      if (!mounted) return;
+
+      if (result == null) {
+        // Kullanıcı iptal etti
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+
+      final prefsService = PreferencesService.instance;
+      if (result.name != null && result.name!.isNotEmpty) {
+        await prefsService.setUserName(result.name!);
+      }
+
+      if (!mounted) return;
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      if (widget.onAuthComplete != null) {
+        widget.onAuthComplete!();
+      } else {
+        final onboardingComplete = await prefsService.isOnboardingComplete();
+        if (!mounted) return;
+
+        if (onboardingComplete) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const MainShell()),
+          );
+        } else {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => OnboardingScreen(
+                onComplete: () {
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(builder: (context) => const MainShell()),
+                  );
+                },
+              ),
+            ),
+          );
+        }
+      }
+    } on AuthException catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.message),
+            backgroundColor: AppColors.error,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Apple ile giriş yapılırken bir hata oluştu: ${e.toString()}',
+            ),
+            backgroundColor: AppColors.error,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       backgroundColor: AppColors.backgroundLight, // #FFF2C6
       body: SafeArea(
@@ -160,7 +239,7 @@ class _LoginScreenState extends State<LoginScreen> {
               // Title
               Center(
                 child: Text(
-                  'Bir İndirim',
+                  l10n.loginWelcomeTitle,
                   style: AppTextStyles.title(isDark: false),
                 ),
               ),
@@ -169,29 +248,27 @@ class _LoginScreenState extends State<LoginScreen> {
               // Subtitle
               Center(
                 child: Text(
-                  'Aslında hakkın olan fakat bilmediğin fırsatlarını görmeye hazır mısın?',
+                  l10n.loginWelcomeSubtitle,
                   style: AppTextStyles.bodySecondary(isDark: false),
                   textAlign: TextAlign.center,
                 ),
               ),
               const SizedBox(height: 32),
 
-              // Apple Login Button
-              // NOT: Apple Sign-In için ücretli Apple Developer Program gerekiyor ($99/yıl)
-              // Personal Team ile çalışmaz. Şimdilik gizli.
-              // Apple Developer Program'a kaydolduktan sonra aşağıdaki yorumu kaldırın:
-              /*
-                if (Platform.isIOS)
-                  SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: OutlinedButton(
-                      onPressed: _isLoading ? null : _handleAppleSignIn,
+              // Apple Login Button (sadece iOS)
+              if (Platform.isIOS)
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: OutlinedButton(
+                    onPressed: _isLoading ? null : _handleAppleSignIn,
                     style: OutlinedButton.styleFrom(
                       backgroundColor: AppColors.cardBackground,
                       foregroundColor: AppColors.textPrimaryLight,
                       side: BorderSide(
-                        color: AppColors.textSecondaryLight.withValues(alpha: 0.2),
+                        color: AppColors.textSecondaryLight.withValues(
+                          alpha: 0.2,
+                        ),
                         width: 1,
                       ),
                       shape: RoundedRectangleBorder(
@@ -201,18 +278,23 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.apple, size: 24, color: AppColors.textPrimaryLight),
+                        const Icon(
+                          Icons.apple,
+                          size: 24,
+                          color: AppColors.textPrimaryLight,
+                        ),
                         const SizedBox(width: 12),
                         Text(
-                          'Apple ile Giriş Yap',
-                          style: AppTextStyles.button(color: AppColors.textPrimaryLight),
+                          l10n.loginWithApple,
+                          style: AppTextStyles.button(
+                            color: AppColors.textPrimaryLight,
+                          ),
                         ),
                       ],
                     ),
                   ),
-                  ),
-                if (Platform.isIOS) const SizedBox(height: 12),
-                */
+                ),
+              if (Platform.isIOS) const SizedBox(height: 12),
 
               // Google Login Button
               SizedBox(
@@ -236,25 +318,26 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      CachedNetworkImage(
-                        imageUrl: 'https://www.google.com/favicon.ico',
+                      Container(
                         width: 24,
                         height: 24,
-                        fit: BoxFit.contain,
-                        placeholder: (context, url) => const SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        errorWidget: (context, url, error) => const Icon(
-                          Icons.error_outline,
-                          size: 24,
-                          color: AppColors.textSecondaryLight,
+                        child: const Text(
+                          'G',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF4285F4),
+                          ),
                         ),
                       ),
                       const SizedBox(width: 12),
                       Text(
-                        'Google ile Giriş Yap',
+                        l10n.loginWithGoogle,
                         style: AppTextStyles.button(
                           color: AppColors.textPrimaryLight,
                         ),
@@ -268,7 +351,7 @@ class _LoginScreenState extends State<LoginScreen> {
               // Footer Text
               Center(
                 child: Text(
-                  'Verilerin şifrelenmiş olarak korunur.',
+                  l10n.loginPrivacyNote,
                   style: AppTextStyles.caption(
                     isDark: false,
                   ).copyWith(fontSize: 12, color: AppColors.textSecondaryLight),

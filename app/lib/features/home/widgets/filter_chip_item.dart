@@ -21,58 +21,63 @@ class FilterChipItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(right: 10),
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
-          constraints: const BoxConstraints(minWidth: 60, maxWidth: 140),
-          height: 44,
-          padding: EdgeInsets.symmetric(
-            horizontal: color != null ? 10 : 16,
-            vertical: 6,
-          ),
-          decoration: BoxDecoration(
-            color: isActive
-                ? AppColors
-                      .secondaryLight // #8CA9FF
-                : AppColors.cardBackground,
-            borderRadius: BorderRadius.circular(18),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.shadowMedium,
-                blurRadius: 4,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (color != null) ...[
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: color,
-                    shape: BoxShape.circle,
-                  ),
+      child: Semantics(
+        button: true,
+        selected: isActive,
+        label: isActive ? '$name filtresi, seçili' : '$name filtresi',
+        child: InkWell(
+          onTap: onTap,
+          child: Container(
+            constraints: const BoxConstraints(minWidth: 60, maxWidth: 140),
+            height: 44,
+            padding: EdgeInsets.symmetric(
+              horizontal: color != null ? 10 : 16,
+              vertical: 6,
+            ),
+            decoration: BoxDecoration(
+              color: isActive
+                  ? AppColors
+                        .secondaryLight // #8CA9FF
+                  : AppColors.cardBackground,
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.shadowMedium,
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
                 ),
-                const SizedBox(width: 6),
               ],
-              Flexible(
-                child: Text(
-                  name,
-                  style: AppTextStyles.cardSubtitle(isDark: false).copyWith(
-                    fontSize: 12,
-                    fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
-                    color: isActive
-                        ? AppColors.cardBackground
-                        : AppColors.textPrimaryLight,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (color != null) ...[
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: color,
+                      shape: BoxShape.circle,
+                    ),
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                  const SizedBox(width: 6),
+                ],
+                Flexible(
+                  child: Text(
+                    name,
+                    style: AppTextStyles.cardSubtitle(isDark: false).copyWith(
+                      fontSize: 12,
+                      fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+                      color: isActive
+                          ? AppColors.cardBackground
+                          : AppColors.textPrimaryLight,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

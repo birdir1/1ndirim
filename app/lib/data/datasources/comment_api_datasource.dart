@@ -7,7 +7,13 @@ import '../models/comment_model.dart';
 /// Backend API'den yorum işlemlerini yönetir
 class CommentApiDataSource {
   final Dio _dio;
-  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+  FirebaseAuth? get _firebaseAuth {
+    try {
+      return FirebaseAuth.instance;
+    } catch (_) {
+      return null;
+    }
+  }
 
   CommentApiDataSource({Dio? dio})
       : _dio = dio ??
@@ -20,7 +26,7 @@ class CommentApiDataSource {
   /// Firebase token'ı alır
   Future<String?> _getAuthToken() async {
     try {
-      final user = _firebaseAuth.currentUser;
+      final user = _firebaseAuth?.currentUser;
       if (user == null) {
         return null;
       }

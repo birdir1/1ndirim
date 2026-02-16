@@ -10,6 +10,8 @@ const CacheService = require('../services/cacheService');
  */
 function cacheMiddleware(ttl = 300) {
   return async (req, res, next) => {
+    const logEnabled = process.env.CACHE_DEBUG === 'true';
+
     // Only cache GET requests
     if (req.method !== 'GET') {
       return next();
@@ -29,12 +31,12 @@ function cacheMiddleware(ttl = 300) {
       
       if (cachedData) {
         // Cache hit
-        console.log(`✅ Cache HIT: ${cacheKey}`);
+        if (logEnabled) console.log(`✅ Cache HIT: ${cacheKey}`);
         return res.json(cachedData);
       }
 
       // Cache miss - continue to handler
-      console.log(`❌ Cache MISS: ${cacheKey}`);
+      if (logEnabled) console.log(`❌ Cache MISS: ${cacheKey}`);
 
       // Override res.json to cache the response
       const originalJson = res.json.bind(res);

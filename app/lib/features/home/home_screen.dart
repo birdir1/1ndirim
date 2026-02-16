@@ -43,12 +43,19 @@ class _HomeScreenState extends State<HomeScreen> {
   final OpportunityRepository _opportunityRepository =
       OpportunityRepository.instance;
   final FavoriteRepository _favoriteRepository = FavoriteRepository.instance;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  FirebaseAuth? get _auth {
+    try {
+      return FirebaseAuth.instance;
+    } catch (_) {
+      return null;
+    }
+  }
 
   Map<String, bool> _favoriteMap = {};
   String? _favoriteMapKey;
   Timer? _favoritePrefetchDebounce;
   int _favoritePrefetchRequestId = 0;
+  final ScrollController _contentScrollController = ScrollController();
 
   @override
   void initState() {
@@ -111,7 +118,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _prefetchFavoritesForVisibleNow() async {
     if (!mounted) return;
     final requestId = ++_favoritePrefetchRequestId;
-    if (_auth.currentUser == null) {
+    if (_auth?.currentUser == null) {
       // Not logged in: keep UI consistent without hitting the API.
       if (_favoriteMap.isNotEmpty) {
         setState(() {
@@ -162,7 +169,15 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     _favoritePrefetchDebounce?.cancel();
+    _contentScrollController.dispose();
     super.dispose();
+  }
+
+  void _resetContentScrollToTop() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_contentScrollController.hasClients) return;
+      _contentScrollController.jumpTo(0);
+    });
   }
 
   /// Repository'den fırsatları yükler
@@ -286,6 +301,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (_selectedFilter != 'Tümü' &&
         !_filters.any((f) => f['name'] == _selectedFilter)) {
       _selectedFilter = 'Tümü';
+      _resetContentScrollToTop();
     }
 
     // Drop per-source cache entries that are no longer selectable.
@@ -374,11 +390,15 @@ class _HomeScreenState extends State<HomeScreen> {
               color: filter['color'] as Color?,
               isActive: _selectedFilter == filter['name'],
               onTap: () {
+                final nextFilter = filter['name'] as String;
+                if (nextFilter == _selectedFilter) return;
+
                 setState(() {
-                  _selectedFilter = filter['name'] as String;
+                  _selectedFilter = nextFilter;
                   _cachedFilteredOpportunities = null; // Cache'i temizle
                   _cachedFilterKey = null;
                 });
+                _resetContentScrollToTop();
                 if (_selectedFilter != 'Tümü') {
                   _loadOpportunitiesForSource(_selectedFilter);
                 } else {
@@ -513,12 +533,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     _cachedFilteredOpportunities = null;
                     _cachedFilterKey = null;
                   });
+                  _resetContentScrollToTop();
                 }
               : null,
         );
       }
 
       return CustomScrollView(
+        controller: _contentScrollController,
         slivers: [
           // Yakında Bitecek Bölümü
           if (_expiringSoonOpportunities.isNotEmpty)
@@ -558,65 +580,74 @@ class _HomeScreenState extends State<HomeScreen> {
       return const SizedBox.shrink();
     }
 
-    return Container(
-      margin: const EdgeInsets.fromLTRB(
-        AppUiTokens.screenPadding,
-        0,
-        AppUiTokens.screenPadding,
-        16,
-      ),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.warning.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: AppColors.warning.withValues(alpha: 0.3),
-          width: 1,
+    return Semantics(
+      container: true,
+      label:
+          'Yakında bitecek ${_expiringSoonOpportunities.length} kampanya listesi',
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(
+          AppUiTokens.screenPadding,
+          0,
+          AppUiTokens.screenPadding,
+          16,
         ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.access_time, color: AppColors.warning, size: 20),
-              const SizedBox(width: 8),
-              Text(
-                'Yakında Bitecek',
-                style: AppTextStyles.body(isDark: false).copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.warning,
-                ),
-              ),
-              const Spacer(),
-              Text(
-                '${_expiringSoonOpportunities.length} kampanya',
-                style: AppTextStyles.caption(
-                  isDark: false,
-                ).copyWith(color: AppColors.textSecondaryLight),
-              ),
-            ],
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: AppColors.warning.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: AppColors.warning.withValues(alpha: 0.3),
+            width: 1,
           ),
-          const SizedBox(height: 12),
-          SizedBox(
-            height: 120,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: _expiringSoonOpportunities.length,
-              itemBuilder: (context, index) {
-                final opportunity = _expiringSoonOpportunities[index];
-                return Container(
-                  width: 280,
-                  margin: const EdgeInsets.only(right: 12),
-                  child: OpportunityCardV2(
-                    opportunity: opportunity,
-                    isFavorite: _favoriteMap[opportunity.id],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.access_time, color: AppColors.warning, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  'Yakında Bitecek',
+                  style: AppTextStyles.body(isDark: false).copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.warning,
                   ),
-                );
-              },
+                ),
+                const Spacer(),
+                Text(
+                  '${_expiringSoonOpportunities.length} kampanya',
+                  style: AppTextStyles.caption(
+                    isDark: false,
+                  ).copyWith(color: AppColors.textSecondaryLight),
+                ),
+              ],
             ),
-          ),
-        ],
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 120,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: _expiringSoonOpportunities.length,
+                itemBuilder: (context, index) {
+                  final opportunity = _expiringSoonOpportunities[index];
+                  return Semantics(
+                    label:
+                        'Yakında bitecek kart ${index + 1} / ${_expiringSoonOpportunities.length}',
+                    child: Container(
+                      width: 280,
+                      margin: const EdgeInsets.only(right: 12),
+                      child: OpportunityCardV2(
+                        opportunity: opportunity,
+                        isFavorite: _favoriteMap[opportunity.id],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

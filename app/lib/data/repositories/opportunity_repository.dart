@@ -1,5 +1,6 @@
 import '../datasources/opportunity_api_datasource.dart';
 import '../datasources/opportunity_mock_datasource.dart';
+import '../models/discovery_models.dart';
 import '../models/opportunity_model.dart';
 import '../../core/utils/network_result.dart';
 
@@ -151,6 +152,44 @@ class OpportunityRepository {
           ? e.toString().replaceFirst('Exception: ', '')
           : 'Kampanyalar yüklenirken bir hata oluştu';
 
+      return NetworkError.general(errorMessage, error: e);
+    }
+  }
+
+  /// Keşfet kategorilerini backend'den getirir.
+  Future<NetworkResult<DiscoveryCategoriesResult>> getDiscoveryCategories({
+    int limit = 20,
+  }) async {
+    try {
+      final categories = await _apiDataSource.getDiscoveryCategories(
+        limit: limit,
+      );
+      return NetworkSuccess(categories);
+    } catch (e) {
+      final errorMessage = e is Exception
+          ? e.toString().replaceFirst('Exception: ', '')
+          : 'Keşfet verileri yüklenirken bir hata oluştu';
+      return NetworkError.general(errorMessage, error: e);
+    }
+  }
+
+  /// Keşfet ekranında tek kategoriyi sayfalı getirir.
+  Future<NetworkResult<DiscoveryCategoryPageResult>> getDiscoveryByCategory({
+    required String categoryId,
+    int limit = 20,
+    int offset = 0,
+  }) async {
+    try {
+      final page = await _apiDataSource.getDiscoveryByCategory(
+        categoryId: categoryId,
+        limit: limit,
+        offset: offset,
+      );
+      return NetworkSuccess(page);
+    } catch (e) {
+      final errorMessage = e is Exception
+          ? e.toString().replaceFirst('Exception: ', '')
+          : 'Kategori kampanyaları yüklenirken bir hata oluştu';
       return NetworkError.general(errorMessage, error: e);
     }
   }

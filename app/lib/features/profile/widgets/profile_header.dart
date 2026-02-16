@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/services/preferences_service.dart';
+import '../../../core/services/auth_service.dart';
 import '../../../core/utils/page_transitions.dart';
+import '../../auth/login_screen.dart';
 import '../avatar_selection_screen.dart';
 
 /// Profile Header Widget
@@ -16,7 +18,9 @@ class ProfileHeader extends StatefulWidget {
 class _ProfileHeaderState extends State<ProfileHeader> {
   String? _userName;
   String? _userAvatar;
+  String? _photoUrl;
   bool _isLoading = true;
+  bool _isAuthenticated = false;
 
   // Avatar emoji map
   final Map<String, String> _avatarEmojis = {
@@ -45,10 +49,20 @@ class _ProfileHeaderState extends State<ProfileHeader> {
       final prefsService = PreferencesService.instance;
       final name = await prefsService.getUserName();
       final avatar = await prefsService.getUserAvatar();
+      final firebaseUser = AuthService.instance.currentUser;
+      _isAuthenticated = firebaseUser != null;
+
+      final resolvedName =
+          (firebaseUser?.displayName?.trim().isNotEmpty ?? false)
+          ? firebaseUser!.displayName!.trim()
+          : name;
+      final resolvedPhoto = firebaseUser?.photoURL;
+
       if (mounted) {
         setState(() {
-          _userName = name;
+          _userName = resolvedName;
           _userAvatar = avatar;
+          _photoUrl = resolvedPhoto;
           _isLoading = false;
         });
       }
@@ -78,6 +92,7 @@ class _ProfileHeaderState extends State<ProfileHeader> {
 
   @override
   Widget build(BuildContext context) {
+    final hasAuth = AuthService.instance.currentUser != null;
     return Column(
       children: [
         Stack(
@@ -96,19 +111,21 @@ class _ProfileHeaderState extends State<ProfileHeader> {
                   ),
                 ],
               ),
-              child:
-                  _userAvatar != null && _avatarEmojis.containsKey(_userAvatar)
-                  ? Center(
-                      child: Text(
-                        _avatarEmojis[_userAvatar]!,
-                        style: const TextStyle(fontSize: 56),
+              child: _photoUrl != null
+                  ? ClipOval(
+                      child: Image.network(
+                        _photoUrl!,
+                        width: 112,
+                        height: 112,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => _buildAvatarFallback(),
+                        loadingBuilder: (context, child, progress) {
+                          if (progress == null) return child;
+                          return _buildAvatarFallback(isLoading: true);
+                        },
                       ),
                     )
-                  : Icon(
-                      Icons.account_circle,
-                      size: 56,
-                      color: AppColors.secondaryLight,
-                    ),
+                  : _buildAvatarFallback(),
             ),
             Positioned(
               bottom: 0,
@@ -166,7 +183,42 @@ class _ProfileHeaderState extends State<ProfileHeader> {
             ).copyWith(fontWeight: FontWeight.w500),
           ),
         ),
+        if (!hasAuth && !_isAuthenticated) ...[
+          const SizedBox(height: 8),
+          TextButton.icon(
+            onPressed: () {
+              Navigator.of(context).push(
+                SlidePageRoute(
+                  child: const LoginScreen(),
+                  direction: SlideDirection.right,
+                ),
+              );
+            },
+            icon: const Icon(Icons.login),
+            label: const Text('Giriş yap'),
+          ),
+        ],
       ],
     );
+  }
+
+  Widget _buildAvatarFallback({bool isLoading = false}) {
+    if (_userAvatar != null && _avatarEmojis.containsKey(_userAvatar)) {
+      return Center(
+        child: Text(
+          _avatarEmojis[_userAvatar]!,
+          style: const TextStyle(fontSize: 56),
+        ),
+      );
+    }
+    return isLoading
+        ? const Center(
+            child: SizedBox(
+              width: 28,
+              height: 28,
+              child: CircularProgressIndicator(strokeWidth: 3),
+            ),
+          )
+        : Icon(Icons.account_circle, size: 56, color: AppColors.secondaryLight);
   }
 }

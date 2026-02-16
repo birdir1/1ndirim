@@ -122,7 +122,10 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
     out = out.replaceAll(RegExp(r'[\\-_]+'), ' ');
     if (RegExp(r'https?://', caseSensitive: false).hasMatch(out) ||
         RegExp(r'[a-z0-9]+_[a-z0-9]+', caseSensitive: false).hasMatch(out) ||
-        RegExp(r'\\.com\\b', caseSensitive: false).hasMatch(out)) {
+        RegExp(r'\\.com\\b', caseSensitive: false).hasMatch(out) ||
+        RegExp(r'function\\s*\\(\\)', caseSensitive: false).hasMatch(out) ||
+        RegExp(r'window\\.', caseSensitive: false).hasMatch(out) ||
+        RegExp(r'<script', caseSensitive: false).hasMatch(out)) {
       return '';
     }
     // Remove leading bağlaç/ek kalıntıları
@@ -141,6 +144,9 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
       RegExp(r'mtv kampanyasi', caseSensitive: false),
       RegExp(r'kisisel verilerin', caseSensitive: false),
       RegExp(r'kvkk', caseSensitive: false),
+      RegExp(r'function\\s*\\(\\)', caseSensitive: false),
+      RegExp(r'window\\.', caseSensitive: false),
+      RegExp(r'<script', caseSensitive: false),
     ];
     for (final p in noisePatterns) {
       if (p.hasMatch(out)) return '';

@@ -72,9 +72,6 @@ class AppLocalizations {
       'compare': 'Karşılaştır',
       'add_to_compare': 'Karşılaştırmaya Ekle',
       'remove_from_compare': 'Karşılaştırmadan Çıkar',
-      'price_tracking': 'Fiyat Takibi',
-      'track_price': 'Fiyatı Takip Et',
-      'stop_tracking': 'Takibi Durdur',
 
       // Profil
       'my_profile': 'Profilim',
@@ -96,7 +93,6 @@ class AppLocalizations {
       'level': 'Seviye',
       'badges': 'Rozetler',
       'community': 'Topluluk',
-      'price_tracking_menu': 'Fiyat Takibi',
       'blog': 'Blog & Rehberler',
 
       // Gamification
@@ -134,18 +130,6 @@ class AppLocalizations {
       'add_more': 'Daha Fazla Ekle',
       'remove': 'Kaldır',
       'clear_all': 'Tümünü Temizle',
-
-      // Fiyat Takibi
-      'tracked_campaigns': 'Takip Edilen Kampanyalar',
-      'price_history': 'Fiyat Geçmişi',
-      'current_price': 'Güncel Fiyat',
-      'original_price': 'Orijinal Fiyat',
-      'discount': 'İndirim',
-      'price_change': 'Fiyat Değişimi',
-      'price_increased': 'Fiyat Arttı',
-      'price_decreased': 'Fiyat Azaldı',
-      'price_stable': 'Fiyat Sabit',
-      'no_tracked_campaigns': 'Takip edilen kampanya yok',
 
       // Blog
       'blog_title': 'Blog & Rehberler',
@@ -217,15 +201,14 @@ class AppLocalizations {
       'profile_logout_confirm': 'Hesaptan çıkmak istediğinizden emin misiniz?',
       'profile_logout_success': 'Başarıyla çıkış yapıldı',
       'profile_logout_error': 'Çıkış yapılırken hata oluştu',
-      'price_tracking_stopped': 'Fiyat takibi durduruldu',
-      'price_tracking_detail_error': 'Kampanya detayı yüklenemedi',
-      'price_unchanged': 'Değişmedi',
-      'no_price_history': 'Henüz fiyat geçmişi yok',
       'campaign_detail': 'Kampanya Detayı',
       'share_error': 'Paylaşım hatası',
-      'price_unspecified': 'Belirtilmemiş',
-      'price_target_prefix': 'Hedef',
-      'profile_track_subtitle': 'Kampanya fiyatlarını takip et',
+      'login_welcome_title': 'Bir İndirim',
+      'login_welcome_subtitle':
+          'Aslında hakkın olan fakat bilmediğin fırsatlarını görmeye hazır mısın?',
+      'login_with_apple': 'Apple ile Giriş Yap',
+      'login_with_google': 'Google ile Giriş Yap',
+      'login_privacy_note': 'Verilerin şifrelenmiş olarak korunur.',
       'how_it_works_short': 'Nasıl çalışır?',
       'privacy_kvkk': 'Gizlilik ve KVKK',
       'developed_by': 'birdir1 tarafından geliştirilmiştir',
@@ -299,9 +282,6 @@ class AppLocalizations {
       'compare': 'Compare',
       'add_to_compare': 'Add to Compare',
       'remove_from_compare': 'Remove from Compare',
-      'price_tracking': 'Price Tracking',
-      'track_price': 'Track Price',
-      'stop_tracking': 'Stop Tracking',
 
       // Profile
       'my_profile': 'My Profile',
@@ -323,7 +303,6 @@ class AppLocalizations {
       'level': 'Level',
       'badges': 'Badges',
       'community': 'Community',
-      'price_tracking_menu': 'Price Tracking',
       'blog': 'Blog & Guides',
 
       // Gamification
@@ -361,18 +340,6 @@ class AppLocalizations {
       'add_more': 'Add More',
       'remove': 'Remove',
       'clear_all': 'Clear All',
-
-      // Price Tracking
-      'tracked_campaigns': 'Tracked Campaigns',
-      'price_history': 'Price History',
-      'current_price': 'Current Price',
-      'original_price': 'Original Price',
-      'discount': 'Discount',
-      'price_change': 'Price Change',
-      'price_increased': 'Price Increased',
-      'price_decreased': 'Price Decreased',
-      'price_stable': 'Price Stable',
-      'no_tracked_campaigns': 'No tracked campaigns',
 
       // Blog
       'blog_title': 'Blog & Guides',
@@ -445,15 +412,14 @@ class AppLocalizations {
       'profile_logout_confirm': 'Are you sure you want to sign out?',
       'profile_logout_success': 'Signed out successfully',
       'profile_logout_error': 'An error occurred while signing out',
-      'price_tracking_stopped': 'Price tracking stopped',
-      'price_tracking_detail_error': 'Campaign detail could not be loaded',
-      'price_unchanged': 'Unchanged',
-      'no_price_history': 'No price history yet',
       'campaign_detail': 'Campaign Detail',
       'share_error': 'Share error',
-      'price_unspecified': 'Not specified',
-      'price_target_prefix': 'Target',
-      'profile_track_subtitle': 'Track campaign prices',
+      'login_welcome_title': 'Bir İndirim',
+      'login_welcome_subtitle':
+          'Are you ready to discover opportunities you deserve but may not know about?',
+      'login_with_apple': 'Sign in with Apple',
+      'login_with_google': 'Sign in with Google',
+      'login_privacy_note': 'Your data is protected with encryption.',
       'how_it_works_short': 'How it works?',
       'privacy_kvkk': 'Privacy & KVKK',
       'developed_by': 'Developed by birdir1',
@@ -534,9 +500,6 @@ class AppLocalizations {
   String get compare => translate('compare');
   String get addToCompare => translate('add_to_compare');
   String get removeFromCompare => translate('remove_from_compare');
-  String get priceTracking => translate('price_tracking');
-  String get trackPrice => translate('track_price');
-  String get stopTracking => translate('stop_tracking');
 
   // Profile
   String get myProfile => translate('my_profile');
@@ -558,7 +521,6 @@ class AppLocalizations {
   String get level => translate('level');
   String get badges => translate('badges');
   String get community => translate('community');
-  String get priceTrackingMenu => translate('price_tracking_menu');
   String get blog => translate('blog');
 
   // Gamification
@@ -597,18 +559,6 @@ class AppLocalizations {
   String get addMore => translate('add_more');
   String get remove => translate('remove');
   String get clearAll => translate('clear_all');
-
-  // Price Tracking
-  String get trackedCampaigns => translate('tracked_campaigns');
-  String get priceHistory => translate('price_history');
-  String get currentPrice => translate('current_price');
-  String get originalPrice => translate('original_price');
-  String get discount => translate('discount');
-  String get priceChange => translate('price_change');
-  String get priceIncreased => translate('price_increased');
-  String get priceDecreased => translate('price_decreased');
-  String get priceStable => translate('price_stable');
-  String get noTrackedCampaigns => translate('no_tracked_campaigns');
 
   // Blog
   String get blogTitle => translate('blog_title');
@@ -680,16 +630,13 @@ class AppLocalizations {
   String get profileLogoutConfirm => translate('profile_logout_confirm');
   String get profileLogoutSuccess => translate('profile_logout_success');
   String get profileLogoutError => translate('profile_logout_error');
-  String get priceTrackingStopped => translate('price_tracking_stopped');
-  String get priceTrackingDetailError =>
-      translate('price_tracking_detail_error');
-  String get priceUnchanged => translate('price_unchanged');
-  String get noPriceHistory => translate('no_price_history');
   String get campaignDetail => translate('campaign_detail');
   String get shareError => translate('share_error');
-  String get priceUnspecified => translate('price_unspecified');
-  String get priceTargetPrefix => translate('price_target_prefix');
-  String get profileTrackSubtitle => translate('profile_track_subtitle');
+  String get loginWelcomeTitle => translate('login_welcome_title');
+  String get loginWelcomeSubtitle => translate('login_welcome_subtitle');
+  String get loginWithApple => translate('login_with_apple');
+  String get loginWithGoogle => translate('login_with_google');
+  String get loginPrivacyNote => translate('login_privacy_note');
   String get howItWorksShort => translate('how_it_works_short');
   String get privacyKvkk => translate('privacy_kvkk');
   String get developedBy => translate('developed_by');

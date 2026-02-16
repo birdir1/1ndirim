@@ -14,7 +14,9 @@ import '../widgets/opportunity_card_v2.dart';
 /// Arama Sayfası
 /// Kampanyaları arama terimine göre arar ve sonuçları gösterir
 class SearchScreen extends StatefulWidget {
-  const SearchScreen({super.key});
+  final bool restrictToSelectedSources;
+
+  const SearchScreen({super.key, this.restrictToSelectedSources = true});
 
   @override
   State<SearchScreen> createState() => _SearchScreenState();
@@ -24,7 +26,14 @@ class _SearchScreenState extends State<SearchScreen> {
   final OpportunityRepository _opportunityRepository =
       OpportunityRepository.instance;
   final FavoriteRepository _favoriteRepository = FavoriteRepository.instance;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  FirebaseAuth? get _auth {
+    try {
+      return FirebaseAuth.instance;
+    } catch (_) {
+      return null;
+    }
+  }
+
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _focusNode = FocusNode();
 
@@ -85,17 +94,19 @@ class _SearchScreenState extends State<SearchScreen> {
 
     try {
       // Seçili kaynakları al
-      final sourcesProvider = Provider.of<SelectedSourcesProvider>(
-        context,
-        listen: false,
-      );
-      final selectedSourceNames = sourcesProvider.getSelectedSourceNames();
+      List<String>? selectedSourceNames;
+      if (widget.restrictToSelectedSources) {
+        final sourcesProvider = Provider.of<SelectedSourcesProvider>(
+          context,
+          listen: false,
+        );
+        final selected = sourcesProvider.getSelectedSourceNames();
+        selectedSourceNames = selected.isNotEmpty ? selected : null;
+      }
 
       final result = await _opportunityRepository.searchCampaigns(
         searchTerm: searchTerm,
-        sourceNames: selectedSourceNames.isNotEmpty
-            ? selectedSourceNames
-            : null,
+        sourceNames: selectedSourceNames,
       );
 
       if (mounted && _lastSearchTerm == searchTerm) {
@@ -120,7 +131,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
   Future<void> _prefetchFavorites() async {
     if (!mounted) return;
-    if (_auth.currentUser == null) {
+    if (_auth?.currentUser == null) {
       if (_favoriteMap.isNotEmpty) {
         setState(() {
           _favoriteMap = {};

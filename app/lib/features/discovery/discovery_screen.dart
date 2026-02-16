@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
@@ -5,40 +7,81 @@ import '../../core/theme/app_ui_tokens.dart';
 import '../../core/utils/page_transitions.dart';
 import '../../core/utils/network_result.dart';
 import '../../core/l10n/app_localizations.dart';
+import '../../data/models/discovery_models.dart';
 import '../../data/models/opportunity_model.dart';
 import '../../data/repositories/opportunity_repository.dart';
 import '../home/campaign_detail_screen.dart';
+import '../home/search/search_screen.dart';
 import 'widgets/category_pill.dart';
 import 'widgets/featured_card.dart';
 import 'widgets/curated_campaign_card.dart';
 
+typedef DiscoveryCategoriesLoader =
+    Future<NetworkResult<DiscoveryCategoriesResult>> Function(int limit);
+typedef DiscoveryCategoryPageLoader =
+    Future<NetworkResult<DiscoveryCategoryPageResult>> Function({
+      required String categoryId,
+      required int limit,
+      required int offset,
+    });
+
 /// Discovery Screen - Herkes İçin Fırsatlar
-/// Kullanıcının seçtiği kaynaklardan bağımsız, evrensel kampanyalar
+/// Backend'den kategori bazlı kampanyaları alır.
 class DiscoveryScreen extends StatefulWidget {
-  const DiscoveryScreen({super.key});
+  final DiscoveryCategoriesLoader? loadDiscoveryCategories;
+  final DiscoveryCategoryPageLoader? loadDiscoveryCategoryPage;
+
+  const DiscoveryScreen({
+    super.key,
+    this.loadDiscoveryCategories,
+    this.loadDiscoveryCategoryPage,
+  });
 
   @override
   State<DiscoveryScreen> createState() => _DiscoveryScreenState();
 }
 
 class _DiscoveryScreenState extends State<DiscoveryScreen> {
-  String _selectedCategory = 'Dizi & Film';
-  NetworkResult<List<OpportunityModel>> _campaignsResult =
+  static const int _initialPerCategoryLimit = 12;
+  static const int _pageSize = 20;
+
+  String? _selectedCategoryId;
+  NetworkResult<DiscoveryCategoriesResult> _discoveryResult =
       const NetworkLoading();
-  List<OpportunityModel> _allCampaigns = [];
+  List<DiscoveryCategorySection> _categories = [];
+  final Map<String, DiscoveryCategorySection> _categoryById = {};
+  final Set<String> _expandedCategoryIds = {};
+
   OpportunityModel? _featuredCampaign;
+  bool _isLoadingMore = false;
+  String? _loadMoreError;
 
-  final OpportunityRepository _opportunityRepository =
-      OpportunityRepository.instance;
+  Future<NetworkResult<DiscoveryCategoriesResult>> _fetchDiscoveryCategories(
+    int limit,
+  ) {
+    final loader = widget.loadDiscoveryCategories;
+    if (loader != null) {
+      return loader(limit);
+    }
+    return OpportunityRepository.instance.getDiscoveryCategories(limit: limit);
+  }
 
-  final List<Map<String, dynamic>> _categories = [
-    {'name': 'Dizi & Film', 'icon': '🎬'},
-    {'name': 'Müzik', 'icon': '🎵'},
-    {'name': 'Dijital Servisler', 'icon': '📱'},
-    {'name': 'Giyim', 'icon': '🛍️'},
-    {'name': 'Cashback', 'icon': '💸'},
-    {'name': 'Oyun', 'icon': '🎮'},
-  ];
+  Future<NetworkResult<DiscoveryCategoryPageResult>>
+  _fetchDiscoveryCategoryPage({
+    required String categoryId,
+    required int limit,
+    required int offset,
+  }) {
+    final loader = widget.loadDiscoveryCategoryPage;
+    if (loader != null) {
+      return loader(categoryId: categoryId, limit: limit, offset: offset);
+    }
+    return OpportunityRepository.instance.getDiscoveryByCategory(
+      categoryId: categoryId,
+      limit: limit,
+      offset: offset,
+    );
+  }
 
   @override
   void initState() {
@@ -50,85 +93,210 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
     if (!mounted) return;
 
     setState(() {
-      _campaignsResult = const NetworkLoading();
+      _discoveryResult = const NetworkLoading();
+      _loadMoreError = null;
+      _isLoadingMore = false;
     });
 
-    try {
-      // Tüm kampanyaları getir (kaynak filtresi olmadan)
-      final result = await _opportunityRepository.getAllOpportunities();
+    final result = await _fetchDiscoveryCategories(_initialPerCategoryLimit);
 
-      if (mounted && result is NetworkSuccess<List<OpportunityModel>>) {
-        final campaigns = result.data;
+    if (!mounted) return;
 
-        // İlk kampanyayı featured olarak seç
-        final featured = campaigns.isNotEmpty ? campaigns.first : null;
+    if (result is NetworkSuccess<DiscoveryCategoriesResult>) {
+      final incomingCategories = result.data.categories;
+      final incomingMap = {for (final c in incomingCategories) c.id: c};
 
-        setState(() {
-          _campaignsResult = result;
-          _allCampaigns = campaigns;
-          _featuredCampaign = featured;
-        });
-      } else if (mounted && result is NetworkError) {
-        setState(() {
-          _campaignsResult = result;
-        });
-      }
-    } catch (e) {
-      if (!mounted) return;
-      final l10n = AppLocalizations.of(context)!;
+      final preservedSelection = _selectedCategoryId;
+      final nextSelected =
+          preservedSelection != null &&
+              incomingMap.containsKey(preservedSelection)
+          ? preservedSelection
+          : (incomingCategories.isNotEmpty
+                ? incomingCategories.first.id
+                : null);
+
       setState(() {
-        _campaignsResult = NetworkError.general(l10n.errorLoading);
+        _discoveryResult = result;
+        _categories = incomingCategories;
+        _categoryById
+          ..clear()
+          ..addAll(incomingMap);
+        _selectedCategoryId = nextSelected;
+        _featuredCampaign = _pickFeaturedCampaign(incomingCategories);
+      });
+      return;
+    }
+
+    setState(() {
+      _discoveryResult = result;
+      _categories = [];
+      _categoryById.clear();
+      _selectedCategoryId = null;
+      _featuredCampaign = null;
+    });
+  }
+
+  OpportunityModel? _pickFeaturedCampaign(
+    List<DiscoveryCategorySection> categories,
+  ) {
+    final all = <OpportunityModel>[];
+    final seen = <String>{};
+
+    for (final category in categories) {
+      for (final campaign in category.campaigns) {
+        if (seen.add(campaign.id)) {
+          all.add(campaign);
+        }
+      }
+    }
+
+    if (all.isEmpty) return null;
+
+    all.sort((a, b) => _campaignScore(b).compareTo(_campaignScore(a)));
+    return all.first;
+  }
+
+  int _campaignScore(OpportunityModel c) {
+    int score = 0;
+
+    if (c.discountPercentage != null) {
+      score += c.discountPercentage!.round();
+    }
+
+    final titleLower = c.title.toLowerCase();
+    final descLower = (c.description ?? '').toLowerCase();
+    final tagsLower = c.tags.join(' ').toLowerCase();
+
+    if (titleLower.contains('cashback') ||
+        descLower.contains('cashback') ||
+        tagsLower.contains('cashback')) {
+      score += 12;
+    }
+
+    if (titleLower.contains('indirim') || tagsLower.contains('indirim')) {
+      score += 6;
+    }
+
+    if ((c.description ?? '').trim().length > 24) {
+      score += 4;
+    }
+
+    if (c.tags.isNotEmpty) {
+      score += math.min(4, c.tags.length);
+    }
+
+    return score;
+  }
+
+  DiscoveryCategorySection? get _selectedCategory {
+    if (_selectedCategoryId == null) return null;
+    return _categoryById[_selectedCategoryId!];
+  }
+
+  bool get _isSelectedExpanded {
+    final id = _selectedCategoryId;
+    if (id == null) return false;
+    return _expandedCategoryIds.contains(id);
+  }
+
+  List<OpportunityModel> get _visibleCampaigns {
+    final selected = _selectedCategory;
+    if (selected == null) return const [];
+
+    if (_isSelectedExpanded) return selected.campaigns;
+    return selected.campaigns.take(10).toList();
+  }
+
+  void _onCategoryTap(String categoryId) {
+    if (categoryId == _selectedCategoryId) return;
+
+    setState(() {
+      _selectedCategoryId = categoryId;
+      _loadMoreError = null;
+    });
+  }
+
+  void _expandSelectedCategory() {
+    final selected = _selectedCategory;
+    if (selected == null) return;
+
+    if (!_isSelectedExpanded) {
+      setState(() {
+        _expandedCategoryIds.add(selected.id);
       });
     }
   }
 
-  List<OpportunityModel> get _filteredCampaigns {
-    // Kategori bazlı filtreleme (şimdilik basit tag kontrolü)
-    // Gerçek uygulamada backend'den kategori bilgisi gelecek
-    return _allCampaigns.where((campaign) {
-      final categoryLower = _selectedCategory.toLowerCase();
-      final titleLower = campaign.title.toLowerCase();
-      final subtitleLower = campaign.subtitle.toLowerCase();
-      final tagsLower = campaign.tags.map((t) => t.toLowerCase()).join(' ');
+  Future<void> _loadMoreForSelectedCategory() async {
+    final selected = _selectedCategory;
+    if (selected == null || _isLoadingMore || !selected.hasMore) return;
 
-      // Basit keyword matching
-      if (categoryLower.contains('dizi') || categoryLower.contains('film')) {
-        return titleLower.contains('netflix') ||
-            titleLower.contains('disney') ||
-            titleLower.contains('prime') ||
-            titleLower.contains('blu') ||
-            tagsLower.contains('dizi') ||
-            tagsLower.contains('film');
-      } else if (categoryLower.contains('müzik')) {
-        return titleLower.contains('spotify') ||
-            titleLower.contains('apple music') ||
-            titleLower.contains('youtube music') ||
-            tagsLower.contains('müzik');
-      } else if (categoryLower.contains('dijital')) {
-        return titleLower.contains('dijital') ||
-            titleLower.contains('online') ||
-            titleLower.contains('uygulama') ||
-            tagsLower.contains('dijital');
-      } else if (categoryLower.contains('giyim')) {
-        return titleLower.contains('giyim') ||
-            titleLower.contains('moda') ||
-            titleLower.contains('kıyafet') ||
-            tagsLower.contains('giyim') ||
-            tagsLower.contains('moda');
-      } else if (categoryLower.contains('cashback')) {
-        return titleLower.contains('cashback') ||
-            titleLower.contains('para iadesi') ||
-            subtitleLower.contains('cashback') ||
-            tagsLower.contains('cashback');
-      } else if (categoryLower.contains('oyun')) {
-        return titleLower.contains('oyun') ||
-            titleLower.contains('game') ||
-            titleLower.contains('steam') ||
-            tagsLower.contains('oyun');
+    setState(() {
+      _isLoadingMore = true;
+      _loadMoreError = null;
+    });
+
+    final result = await _fetchDiscoveryCategoryPage(
+      categoryId: selected.id,
+      limit: _pageSize,
+      offset: selected.campaigns.length,
+    );
+
+    if (!mounted) return;
+
+    if (result is NetworkSuccess<DiscoveryCategoryPageResult>) {
+      final page = result.data;
+      final byId = {for (final c in selected.campaigns) c.id: c};
+      for (final campaign in page.campaigns) {
+        byId[campaign.id] = campaign;
       }
+      final mergedCampaigns = byId.values.toList();
 
-      return true;
-    }).toList();
+      final updated = selected.copyWith(
+        campaigns: mergedCampaigns,
+        count: mergedCampaigns.length,
+        totalCount: page.totalCount,
+        hasMore: page.hasMore,
+        isEmpty: page.isEmpty,
+        fallbackMessage: page.fallbackMessage,
+      );
+
+      setState(() {
+        _applyCategoryUpdate(updated);
+        _isLoadingMore = false;
+      });
+      return;
+    }
+
+    setState(() {
+      _isLoadingMore = false;
+      _loadMoreError =
+          (result as NetworkError<DiscoveryCategoryPageResult>).message;
+    });
+  }
+
+  void _applyCategoryUpdate(DiscoveryCategorySection updated) {
+    _categoryById[updated.id] = updated;
+
+    final next = <DiscoveryCategorySection>[];
+    for (final category in _categories) {
+      if (category.id == updated.id) {
+        next.add(updated);
+      } else {
+        next.add(category);
+      }
+    }
+    _categories = next;
+  }
+
+  Future<void> _openDiscoverySearch() async {
+    if (!mounted) return;
+    await Navigator.of(context).push(
+      SlidePageRoute(
+        child: const SearchScreen(restrictToSelectedSources: false),
+        direction: SlideDirection.right,
+      ),
+    );
   }
 
   @override
@@ -192,9 +360,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                     size: 26,
                   ),
                   tooltip: l10n.search,
-                  onPressed: () {
-                    // Future: Search functionality
-                  },
+                  onPressed: _openDiscoverySearch,
                 ),
               ],
             ),
@@ -205,6 +371,10 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   }
 
   Widget _buildCategorySelector() {
+    if (_categories.isEmpty) {
+      return const SizedBox(height: 48);
+    }
+
     return Container(
       height: 48,
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -217,14 +387,10 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
         itemBuilder: (context, index) {
           final category = _categories[index];
           return CategoryPill(
-            name: category['name'] as String,
-            emoji: category['icon'] as String,
-            isActive: _selectedCategory == category['name'],
-            onTap: () {
-              setState(() {
-                _selectedCategory = category['name'] as String;
-              });
-            },
+            name: category.name,
+            emoji: category.icon,
+            isActive: _selectedCategoryId == category.id,
+            onTap: () => _onCategoryTap(category.id),
           );
         },
       ),
@@ -233,7 +399,8 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
 
   Widget _buildContent() {
     final l10n = AppLocalizations.of(context)!;
-    if (_campaignsResult is NetworkLoading) {
+
+    if (_discoveryResult is NetworkLoading) {
       return const Center(
         child: CircularProgressIndicator(
           valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryLight),
@@ -241,83 +408,144 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       );
     }
 
-    if (_campaignsResult is NetworkError) {
-      final error = _campaignsResult as NetworkError<List<OpportunityModel>>;
+    if (_discoveryResult is NetworkError) {
+      final error = _discoveryResult as NetworkError<DiscoveryCategoriesResult>;
       return _buildErrorState(error.message);
     }
 
-    if (_campaignsResult is NetworkSuccess<List<OpportunityModel>>) {
-      final filtered = _filteredCampaigns;
+    if (_categories.isEmpty) {
+      return _buildErrorState(l10n.discoveryEmptyCategoryDesc);
+    }
 
-      return RefreshIndicator(
-        onRefresh: _loadDiscoveryCampaigns,
-        color: AppColors.primaryLight,
-        child: CustomScrollView(
-          slivers: [
-            // Editör Seçimi
-            if (_featuredCampaign != null)
-              SliverToBoxAdapter(child: _buildEditorsPick()),
+    final selected = _selectedCategory;
+    if (selected == null) {
+      return _buildErrorState(l10n.errorLoading);
+    }
 
-            // Sizin İçin Seçtiklerimiz
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
+    final visibleCampaigns = _visibleCampaigns;
+    final canLoadMoreWithoutExpand = selected.campaigns.length <= 10;
+
+    return RefreshIndicator(
+      onRefresh: _loadDiscoveryCampaigns,
+      color: AppColors.primaryLight,
+      child: CustomScrollView(
+        slivers: [
+          if (_featuredCampaign != null)
+            SliverToBoxAdapter(child: _buildEditorsPick()),
+
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
                       l10n.discoveryCuratedForYou,
                       style: AppTextStyles.sectionTitle(isDark: false),
                     ),
-                    if (filtered.length > 5)
-                      Text(
+                  ),
+                  if (!_isSelectedExpanded && selected.campaigns.length > 10)
+                    TextButton(
+                      onPressed: _expandSelectedCategory,
+                      child: Text(
                         l10n.viewAll,
                         style: AppTextStyles.caption(isDark: false).copyWith(
                           color: AppColors.primaryLight,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                  ],
-                ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+
+          if (visibleCampaigns.isEmpty)
+            SliverToBoxAdapter(child: _buildEmptyCategory(selected))
+          else
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  final campaign = visibleCampaigns[index];
+                  return CuratedCampaignCard(
+                    campaign: campaign,
+                    onTap: () {
+                      Navigator.of(context).push(
+                        SlidePageRoute(
+                          child: CampaignDetailScreen.fromOpportunity(
+                            opportunity: campaign,
+                          ),
+                          direction: SlideDirection.right,
+                        ),
+                      );
+                    },
+                  );
+                }, childCount: visibleCampaigns.length),
               ),
             ),
 
-            // Kampanya Listesi
-            if (filtered.isEmpty)
-              SliverToBoxAdapter(child: _buildEmptyCategory())
-            else
-              SliverPadding(
+          if ((_isSelectedExpanded || canLoadMoreWithoutExpand) &&
+              (selected.hasMore || _isLoadingMore))
+            SliverToBoxAdapter(
+              child: Padding(
                 padding: const EdgeInsets.fromLTRB(24, 0, 24, 100),
-                sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate((context, index) {
-                    final campaign = filtered[index];
-                    return CuratedCampaignCard(
-                      campaign: campaign,
-                      onTap: () {
-                        Navigator.of(context).push(
-                          SlidePageRoute(
-                            child: CampaignDetailScreen.fromOpportunity(
-                              opportunity: campaign,
-                            ),
-                            direction: SlideDirection.right,
-                          ),
-                        );
-                      },
-                    );
-                  }, childCount: filtered.length > 10 ? 10 : filtered.length),
-                ),
+                child: _buildLoadMore(selected),
               ),
-          ],
+            )
+          else
+            const SliverToBoxAdapter(child: SizedBox(height: 100)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLoadMore(DiscoveryCategorySection selected) {
+    final l10n = AppLocalizations.of(context)!;
+
+    if (_isLoadingMore) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 16),
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryLight),
+          ),
         ),
       );
     }
 
-    return const SizedBox.shrink();
+    return Column(
+      children: [
+        if (_loadMoreError != null)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Text(
+              _loadMoreError!,
+              textAlign: TextAlign.center,
+              style: AppTextStyles.caption(
+                isDark: false,
+              ).copyWith(color: AppColors.error),
+            ),
+          ),
+        if (selected.hasMore)
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: _loadMoreForSelectedCategory,
+              icon: const Icon(Icons.expand_more),
+              label: Text(l10n.viewAll),
+            ),
+          ),
+      ],
+    );
   }
 
   Widget _buildEditorsPick() {
     final l10n = AppLocalizations.of(context)!;
-    if (_featuredCampaign == null) return const SizedBox.shrink();
+    final campaign = _featuredCampaign;
+
+    if (campaign == null) return const SizedBox.shrink();
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
@@ -336,12 +564,12 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
           ),
           const SizedBox(height: 12),
           FeaturedCard(
-            campaign: _featuredCampaign!,
+            campaign: campaign,
             onTap: () {
               Navigator.of(context).push(
                 SlidePageRoute(
                   child: CampaignDetailScreen.fromOpportunity(
-                    opportunity: _featuredCampaign!,
+                    opportunity: campaign,
                   ),
                   direction: SlideDirection.right,
                 ),
@@ -353,8 +581,10 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
     );
   }
 
-  Widget _buildEmptyCategory() {
+  Widget _buildEmptyCategory(DiscoveryCategorySection selected) {
     final l10n = AppLocalizations.of(context)!;
+    final message = selected.fallbackMessage ?? l10n.discoveryEmptyCategoryDesc;
+
     return Padding(
       padding: const EdgeInsets.all(48),
       child: Column(
@@ -381,7 +611,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            l10n.discoveryEmptyCategoryDesc,
+            message,
             style: AppTextStyles.body(
               isDark: false,
             ).copyWith(color: AppColors.textSecondaryLight, fontSize: 14),

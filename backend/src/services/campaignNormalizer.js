@@ -5,9 +5,14 @@
  * - Adds rule-based validation; optional LLM enrichment
  */
 const he = require('he');
-const AIService = require('./AIService');
+const ai = require('./AIService');
 
-const ai = new AIService();
+function stripScriptsAndStyles(html = '') {
+  // Remove <script>...</script> and <style>...</style> blocks completely
+  return html
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, ' ');
+}
 
 function stripTags(html = '') {
   return html.replace(/<\/?[^>]+(>|$)/g, ' ');
@@ -19,7 +24,10 @@ function normalizeWhitespace(text = '') {
 
 function toPlainText({ rawHtml, rawText }) {
   if (rawText && rawText.trim().length > 0) return normalizeWhitespace(rawText);
-  if (rawHtml) return normalizeWhitespace(stripTags(rawHtml));
+  if (rawHtml) {
+    const withoutScripts = stripScriptsAndStyles(rawHtml);
+    return normalizeWhitespace(stripTags(withoutScripts));
+  }
   return '';
 }
 
@@ -77,10 +85,16 @@ function validateNormalized(normalized, raw) {
   const badTitles = ['kampanya', 'kampanyalar', 'kampanyalarımız', 'sizin için ne yapabilirim', 'sana nasıl yardımcı olabilirim'];
   const hasBadTitle = badTitles.some((t) => (normalized.title || '').toLowerCase().includes(t));
   const hasPlaceholder = /000\s*tl/i.test(`${normalized.title} ${normalized.detailText}`);
+  const monthYearSlug = /\b(ocak|şubat|subat|mart|nisan|mayıs|mayis|haziran|temmuz|ağustos|agustos|eylül|eylul|ekim|kasım|kasim|aralık|aralik)\b.*\b20\d{2}\b/i;
+  const looksLikeFilenameTitle = monthYearSlug.test(normalized.title || '') && (normalized.title || '').length < 50;
   if (!normalized.title || normalized.title.trim().length < 6 || hasBadTitle) {
     result.isValid = false;
     result.needsReview = true;
     result.reason = 'bad_title';
+  } else if (looksLikeFilenameTitle) {
+    result.isValid = false;
+    result.needsReview = true;
+    result.reason = 'title_looks_like_filename';
   } else if (hasPlaceholder) {
     result.isValid = false;
     result.needsReview = true;
@@ -97,16 +111,26 @@ async function normalizeCampaignText({ bankName, rawHtml, rawText, sourceUrl }) 
   const decodedHtml = he.decode(rawHtml || '');
   const plainText = toPlainText({ rawHtml: decodedHtml, rawText });
 
+  // JS gürültüsünü temizle: function(), window., var gibi bloklar baskınsa kırp
+  const jsNoisePattern = /(function\s*\(|window\.|document\.|var\s+[a-zA-Z_$])/i;
+  const cleanedPlain = jsNoisePattern.test(plainText)
+    ? plainText
+        .split(/\n|;|\r/)
+        .filter((line) => !jsNoisePattern.test(line))
+        .join(' ')
+        .trim()
+    : plainText;
+
   let normalized =
-    (await maybeUseAI(bankName, plainText)) ||
-    summarizeWithoutAI(plainText || `${bankName} kampanyası`);
+    (await maybeUseAI(bankName, cleanedPlain)) ||
+    summarizeWithoutAI(cleanedPlain || `${bankName} kampanyası`);
 
   // Fill defaults
   normalized = {
     title: normalized.title ? normalizeWhitespace(normalized.title) : '',
     subtitle: normalized.subtitle ? normalizeWhitespace(normalized.subtitle) : '',
     shortDescription: normalized.shortDescription ? normalizeWhitespace(normalized.shortDescription) : '',
-    detailText: normalized.detailText ? normalized.detailText.trim() : plainText,
+    detailText: normalized.detailText ? normalized.detailText.trim() : cleanedPlain,
     validUntil: normalized.validUntil || '',
     minSpend: normalized.minSpend || '',
     discountAmount: normalized.discountAmount || '',
@@ -114,7 +138,7 @@ async function normalizeCampaignText({ bankName, rawHtml, rawText, sourceUrl }) 
     tags: normalized.tags || [],
   };
 
-  const validation = validateNormalized(normalized, plainText);
+  const validation = validateNormalized(normalized, cleanedPlain);
 
   return {
     sourceUrl,

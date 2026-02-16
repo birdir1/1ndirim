@@ -4,7 +4,7 @@ import '../../core/utils/network_result.dart';
 
 /// Favorite Repository
 /// UI katmanı sadece bu repository üzerinden favori işlemleri yapar
-class FavoriteRepository {
+abstract class FavoriteRepository {
   final FavoriteApiDataSource _dataSource;
   static const Duration _favoritesCacheTtl = Duration(seconds: 10);
   static const Duration _batchCheckCacheTtl = Duration(seconds: 8);
@@ -15,14 +15,14 @@ class FavoriteRepository {
   final Map<String, Future<Map<String, bool>>> _inFlightBatchChecks = {};
   final Map<String, _BatchCheckCacheEntry> _batchCheckCache = {};
 
+  FavoriteRepository(this._dataSource);
+
   // Singleton instance
   static FavoriteRepository? _instance;
   static FavoriteRepository get instance {
-    _instance ??= FavoriteRepository._();
+    _instance ??= FavoriteRepositoryImpl();
     return _instance!;
   }
-
-  FavoriteRepository._() : _dataSource = FavoriteApiDataSource();
 
   /// Favori kampanyaları getirir
   Future<NetworkResult<List<OpportunityModel>>> getFavorites({
@@ -162,6 +162,12 @@ class FavoriteRepository {
     _cachedFavoritesAt = null;
     _batchCheckCache.clear();
   }
+}
+
+/// Varsayılan Favori repository implementasyonu
+class FavoriteRepositoryImpl extends FavoriteRepository {
+  FavoriteRepositoryImpl({FavoriteApiDataSource? dataSource})
+      : super(dataSource ?? FavoriteApiDataSource());
 }
 
 class _BatchCheckCacheEntry {

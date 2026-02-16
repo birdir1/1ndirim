@@ -4,6 +4,8 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../utils/app_logger.dart';
+import 'analytics_service.dart';
+import 'notification_service.dart';
 
 /// Authentication Service
 /// Apple Sign-In ve Google Sign-In işlemlerini yönetir
@@ -44,6 +46,8 @@ class AuthService {
   static const String _keyGoogleUserId = 'google_user_id';
   static const String _keyAuthProvider = 'auth_provider'; // 'apple', 'google', 'email'
   static const String _keyUserName = 'user_name';
+  static const String _googleServerClientId =
+      '559416998491-6do766p66ljj68jopt7lg9cf32fh97ot.apps.googleusercontent.com';
 
   // ========== Apple Sign-In ==========
 
@@ -176,7 +180,9 @@ class AuthService {
     try {
       // 0. Google SDK initialize (yeni API'de zorunlu)
       if (!_googleInitialized) {
-        await googleSignIn!.initialize();
+        await googleSignIn!.initialize(
+          serverClientId: _googleServerClientId,
+        );
         _googleInitialized = true;
       }
 
@@ -349,6 +355,18 @@ class AuthService {
     await prefs.remove(_keyGoogleUserId);
     await prefs.remove(_keyAuthProvider);
     await prefs.remove(_keyUserName);
+    // Bildirim tokenını temizle ve backend'e bildirmeyi durdur
+    try {
+      await NotificationService().disableNotifications();
+    } catch (e) {
+      AppLogger.warning('Notification disable failed on logout: $e');
+    }
+    // Analytics'e logout olayı gönder
+    try {
+      await AnalyticsService().logEvent(name: 'logout');
+    } catch (e) {
+      AppLogger.warning('Analytics logout event failed: $e');
+    }
     await signOutGoogle();
     await signOutFirebase();
   }

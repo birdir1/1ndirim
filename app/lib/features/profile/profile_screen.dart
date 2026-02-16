@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_ui_tokens.dart';
 import '../../core/services/preferences_service.dart';
+import '../../core/services/auth_service.dart';
 import '../../core/utils/page_transitions.dart';
 import '../../core/widgets/section_card.dart';
 import '../../core/l10n/app_localizations.dart';
+import '../../core/utils/network_result.dart';
 import 'widgets/profile_header.dart';
 import 'widgets/profile_menu_item.dart';
 import 'widgets/sources_section.dart';
@@ -15,7 +16,7 @@ import '../how_it_works/how_it_works_screen.dart';
 import '../settings/kvkk_screen.dart';
 import '../settings/terms_of_use_screen.dart';
 import '../blog/blog_screen.dart';
-import '../price_tracking/price_tracking_screen.dart';
+import '../auth/login_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -28,10 +29,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _newOpportunitiesEnabled = true;
   bool _expiringOpportunitiesEnabled = false;
   bool _isLoading = true;
+  NetworkResult<void> _loadResult = const NetworkLoading();
+  bool _hasAuth = false;
 
   @override
   void initState() {
     super.initState();
+    _hasAuth = AuthService.instance.currentUser != null;
     _loadNotificationSettings();
   }
 
@@ -47,13 +51,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _newOpportunitiesEnabled = newOpportunities;
           _expiringOpportunitiesEnabled = expiring;
           _isLoading = false;
+          _loadResult = const NetworkSuccess(null);
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
           _isLoading = false;
+          _loadResult = NetworkError.general(e.toString());
         });
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.errorOccurred),
+            backgroundColor: AppColors.error,
+            action: SnackBarAction(
+              label: AppLocalizations.of(context)!.retry,
+              textColor: Colors.white,
+              onPressed: _loadNotificationSettings,
+            ),
+          ),
+        );
       }
     }
   }
@@ -73,11 +92,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         setState(() {
           _newOpportunitiesEnabled = !value;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.profileSettingsSaveError),
-            backgroundColor: AppColors.error,
-          ),
+        _showErrorSnackBar(
+          l10n.profileSettingsSaveError,
+          onRetry: () {
+            _updateNotificationNewOpportunities(value);
+          },
         );
       }
     }
@@ -98,19 +117,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
         setState(() {
           _expiringOpportunitiesEnabled = !value;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.profileSettingsSaveError),
-            backgroundColor: AppColors.error,
-          ),
+        _showErrorSnackBar(
+          l10n.profileSettingsSaveError,
+          onRetry: () {
+            _updateNotificationExpiring(value);
+          },
         );
       }
     }
   }
 
+  void _showErrorSnackBar(String message, {VoidCallback? onRetry}) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppColors.error,
+        action: onRetry != null
+            ? SnackBarAction(
+                label: AppLocalizations.of(context)!.retry,
+                textColor: Colors.white,
+                onPressed: onRetry,
+              )
+            : null,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final isAuthenticated = AuthService.instance.currentUser != null;
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
       body: SafeArea(
@@ -127,8 +164,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     const SizedBox(height: 20),
                     const ProfileHeader(),
                     const SizedBox(height: 32),
-                    const SourcesSection(),
+                    if (isAuthenticated) const SourcesSection(),
+                    if (!isAuthenticated)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: _buildLoginCta(context, l10n),
+                      ),
                     const SizedBox(height: AppUiTokens.sectionGap),
+                    if (_loadResult is NetworkError<void>)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Text(
+                          l10n.profileSettingsSaveError,
+                          style: AppTextStyles.caption(
+                            isDark: false,
+                          ).copyWith(color: AppColors.error),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
                     NotificationsSection(
                       newOpportunitiesEnabled: _newOpportunitiesEnabled,
                       expiringOpportunitiesEnabled:
@@ -142,19 +195,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     SectionCard(
                       child: Column(
                         children: [
-                          ProfileMenuItem(
-                            icon: Icons.trending_down,
-                            title: l10n.priceTracking,
-                            subtitle: l10n.profileTrackSubtitle,
-                            onTap: () {
-                              Navigator.of(context).push(
-                                SlidePageRoute(
-                                  child: const PriceTrackingScreen(),
-                                  direction: SlideDirection.right,
-                                ),
-                              );
-                            },
-                          ),
                           ProfileMenuItem(
                             icon: Icons.article,
                             title: l10n.blogTitle,
@@ -203,88 +243,90 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               );
                             },
                           ),
+                          ProfileMenuItem(
+                            icon: Icons.refresh,
+                            title: l10n.refresh,
+                            onTap: _loadNotificationSettings,
+                          ),
                         ],
                       ),
                     ),
                     const SizedBox(height: 32),
 
                     // Hesaptan Çıkış Butonu
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: () async {
-                          // Onay dialogu göster
-                          final shouldLogout = await showDialog<bool>(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: Text(l10n.profileLogoutTitle),
-                              content: Text(l10n.profileLogoutConfirm),
-                              actions: [
-                                TextButton(
-                                  onPressed: () =>
-                                      Navigator.of(context).pop(false),
-                                  child: Text(l10n.cancel),
-                                ),
-                                TextButton(
-                                  onPressed: () =>
-                                      Navigator.of(context).pop(true),
-                                  style: TextButton.styleFrom(
-                                    foregroundColor: AppColors.error,
+                    if (isAuthenticated)
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () async {
+                            final shouldLogout = await showDialog<bool>(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: Text(l10n.profileLogoutTitle),
+                                content: Text(l10n.profileLogoutConfirm),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.of(context).pop(false),
+                                    child: Text(l10n.cancel),
                                   ),
-                                  child: Text(l10n.logout),
-                                ),
-                              ],
-                            ),
-                          );
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.of(context).pop(true),
+                                    style: TextButton.styleFrom(
+                                      foregroundColor: AppColors.error,
+                                    ),
+                                    child: Text(l10n.logout),
+                                  ),
+                                ],
+                              ),
+                            );
 
-                          if (shouldLogout == true && context.mounted) {
-                            try {
-                              // Firebase'den çıkış yap
-                              await FirebaseAuth.instance.signOut();
+                            if (shouldLogout == true && context.mounted) {
+                              try {
+                                final messenger = ScaffoldMessenger.of(context);
+                                await AuthService.instance.clearAuthData();
+                                await PreferencesService.instance.clearAll();
 
-                              // Preferences'ları temizle
-                              await PreferencesService.instance.clearAll();
-
-                              // Ana sayfaya yönlendir ve tüm stack'i temizle
-                              if (context.mounted) {
-                                Navigator.of(context).pushNamedAndRemoveUntil(
-                                  '/',
-                                  (route) => false,
-                                );
-
-                                ScaffoldMessenger.of(context).showSnackBar(
+                                messenger.showSnackBar(
                                   SnackBar(
                                     content: Text(l10n.profileLogoutSuccess),
                                     backgroundColor: AppColors.success,
                                   ),
                                 );
-                              }
-                            } catch (e) {
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      '${l10n.profileLogoutError}: $e',
+
+                                if (context.mounted) {
+                                  Navigator.of(context).pushNamedAndRemoveUntil(
+                                    '/',
+                                    (route) => false,
+                                  );
+                                }
+                              } catch (e) {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        '${l10n.profileLogoutError}: $e',
+                                      ),
+                                      backgroundColor: AppColors.error,
                                     ),
-                                    backgroundColor: AppColors.error,
-                                  ),
-                                );
+                                  );
+                                }
                               }
                             }
-                          }
-                        },
-                        icon: const Icon(Icons.logout),
-                        label: Text(l10n.logout),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.error,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                          },
+                          icon: const Icon(Icons.logout),
+                          label: Text(l10n.logout),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.error,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
                         ),
                       ),
-                    ),
 
                     const SizedBox(height: 32),
 
@@ -319,6 +361,60 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildLoginCta(BuildContext context, AppLocalizations l10n) {
+    return SectionCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.login,
+            style: AppTextStyles.subtitle(isDark: false),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Profil bilgilerini görmek ve kaynaklarını düzenlemek için giriş yap.',
+            style: AppTextStyles.body(isDark: false).copyWith(
+              color: AppColors.textSecondaryLight,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    SlidePageRoute(
+                      child: const LoginScreen(),
+                      direction: SlideDirection.right,
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.login),
+                label: Text(l10n.login),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryLight,
+                  foregroundColor: Colors.white,
+                ),
+              ),
+              const SizedBox(width: 12),
+              OutlinedButton(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    SlidePageRoute(
+                      child: const HowItWorksScreen(),
+                      direction: SlideDirection.right,
+                    ),
+                  );
+                },
+                child: Text(l10n.howItWorksShort),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

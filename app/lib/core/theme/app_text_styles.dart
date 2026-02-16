@@ -5,7 +5,16 @@ import 'app_colors.dart';
 /// 1ndirim Typography System
 /// Font: Poppins (Modern, clean, readable)
 class AppTextStyles {
-  static String get _fontFamily => GoogleFonts.poppins().fontFamily!;
+  static String get _fontFamily {
+    if (GoogleFonts.config.allowRuntimeFetching == false) {
+      return 'Roboto';
+    }
+    try {
+      return GoogleFonts.poppins().fontFamily ?? 'Roboto';
+    } catch (_) {
+      return 'Roboto';
+    }
+  }
 
   // Headline - 28px bold
   static TextStyle headline({bool isDark = false}) {

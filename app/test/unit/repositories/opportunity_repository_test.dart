@@ -54,5 +54,19 @@ void main() {
         expect(result, isA<NetworkResult>());
       },
     );
+
+    test('getDiscoveryCategories returns NetworkResult', () async {
+      final result = await repository.getDiscoveryCategories(limit: 5);
+      expect(result, isA<NetworkResult>());
+    });
+
+    test('getDiscoveryByCategory returns NetworkResult', () async {
+      final result = await repository.getDiscoveryByCategory(
+        categoryId: 'entertainment',
+        limit: 5,
+        offset: 0,
+      );
+      expect(result, isA<NetworkResult>());
+    });
   });
 }

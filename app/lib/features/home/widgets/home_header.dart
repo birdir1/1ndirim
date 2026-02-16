@@ -41,47 +41,53 @@ class HomeHeader extends StatelessWidget {
                   builder: (context, compareProvider, child) {
                     return Stack(
                       children: [
-                        InkWell(
-                          onTap: () {
-                            if (compareProvider.isEmpty) {
-                              final l10n = AppLocalizations.of(context);
-                              if (l10n != null) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(l10n.selectCampaigns),
-                                    duration: const Duration(seconds: 2),
+                        Semantics(
+                          button: true,
+                          label: compareProvider.count > 0
+                              ? 'Karşılaştırma, ${compareProvider.count} kampanya seçili'
+                              : 'Karşılaştırma, kampanya seç',
+                          child: InkWell(
+                            onTap: () {
+                              if (compareProvider.isEmpty) {
+                                final l10n = AppLocalizations.of(context);
+                                if (l10n != null) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(l10n.selectCampaigns),
+                                      duration: const Duration(seconds: 2),
+                                    ),
+                                  );
+                                }
+                              } else {
+                                Navigator.of(context).push(
+                                  SlidePageRoute(
+                                    child: CompareScreen(
+                                      campaigns: compareProvider.campaigns,
+                                    ),
+                                    direction: SlideDirection.up,
                                   ),
                                 );
                               }
-                            } else {
-                              Navigator.of(context).push(
-                                SlidePageRoute(
-                                  child: CompareScreen(
-                                    campaigns: compareProvider.campaigns,
+                            },
+                            borderRadius: BorderRadius.circular(12),
+                            child: Container(
+                              width: 48,
+                              height: 48,
+                              decoration: BoxDecoration(
+                                color: AppColors.overlayWhiteLight,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: AppColors.textPrimaryLight.withValues(
+                                    alpha: 0.1,
                                   ),
-                                  direction: SlideDirection.up,
+                                  width: 1,
                                 ),
-                              );
-                            }
-                          },
-                          borderRadius: BorderRadius.circular(12),
-                          child: Container(
-                            width: 48,
-                            height: 48,
-                            decoration: BoxDecoration(
-                              color: AppColors.overlayWhiteLight,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: AppColors.textPrimaryLight.withValues(
-                                  alpha: 0.1,
-                                ),
-                                width: 1,
                               ),
-                            ),
-                            child: Icon(
-                              Icons.compare_arrows,
-                              size: 20,
-                              color: AppColors.primaryLight,
+                              child: Icon(
+                                Icons.compare_arrows,
+                                size: 20,
+                                color: AppColors.primaryLight,
+                              ),
                             ),
                           ),
                         ),

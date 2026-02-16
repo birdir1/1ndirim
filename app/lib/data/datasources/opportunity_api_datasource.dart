@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import '../../core/config/api_config.dart';
 import '../../core/theme/app_colors.dart';
+import '../models/discovery_models.dart';
 import '../models/opportunity_model.dart';
 import '../../core/utils/tag_normalizer.dart';
 import '../../core/services/dio_client.dart';
@@ -12,6 +13,16 @@ class OpportunityApiDataSource {
   final Dio _dio;
 
   OpportunityApiDataSource({Dio? dio}) : _dio = dio ?? DioClient.instance;
+
+  int _parseInt(dynamic value, {int fallback = 0}) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    if (value is String) {
+      final parsed = int.tryParse(value);
+      if (parsed != null) return parsed;
+    }
+    return fallback;
+  }
 
   /// Tüm kampanyaları getirir
   Future<List<OpportunityModel>> getOpportunities({
@@ -113,6 +124,168 @@ class OpportunityApiDataSource {
       }
       // Wrap other errors
       throw Exception('Beklenmeyen hata: ${e.toString()}');
+    }
+  }
+
+  /// Keşfet ekranı için kategori + ilk kampanya listelerini getirir.
+  Future<DiscoveryCategoriesResult> getDiscoveryCategories({
+    int limit = 20,
+  }) async {
+    try {
+      final response = await _dio.get(
+        '${ApiConfig.campaigns}/discover',
+        queryParameters: {'limit': limit},
+      );
+
+      if (response.statusCode != 200 || response.data == null) {
+        throw Exception('Keşfet verileri alınamadı.');
+      }
+
+      if (response.data['success'] != true) {
+        final errorMessage =
+            response.data['error'] as String? ??
+            response.data['message'] as String? ??
+            'Keşfet verileri alınamadı.';
+        throw Exception(errorMessage);
+      }
+
+      final data = response.data['data'];
+      if (data is! List) {
+        throw Exception('Keşfet verisi formatı geçersiz.');
+      }
+
+      final categories = data.map((item) {
+        final json = item as Map<String, dynamic>;
+        final campaignsRaw = json['campaigns'];
+        final campaigns = campaignsRaw is List
+            ? campaignsRaw
+                  .map((c) => _mapApiResponseToModel(c as Map<String, dynamic>))
+                  .toList()
+            : <OpportunityModel>[];
+
+        final sourcesRaw = json['sources'];
+        final sources = sourcesRaw is List
+            ? sourcesRaw.map((s) => s.toString()).toList()
+            : <String>[];
+
+        return DiscoveryCategorySection(
+          id: (json['id'] ?? '').toString(),
+          name: (json['name'] ?? '').toString(),
+          icon: (json['icon'] ?? '🏷️').toString(),
+          sources: sources,
+          minCampaigns: _parseInt(json['minCampaigns']),
+          campaigns: campaigns,
+          count: _parseInt(json['count'], fallback: campaigns.length),
+          totalCount: _parseInt(
+            json['totalCount'],
+            fallback: _parseInt(json['count'], fallback: campaigns.length),
+          ),
+          hasMore: json['hasMore'] == true,
+          isEmpty: json['isEmpty'] == true,
+          fallbackMessage: json['fallbackMessage'] as String?,
+        );
+      }).toList();
+
+      final pagination = response.data['pagination'] as Map<String, dynamic>?;
+
+      return DiscoveryCategoriesResult(
+        categories: categories,
+        totalCategories: _parseInt(
+          response.data['totalCategories'],
+          fallback: categories.length,
+        ),
+        perCategoryLimit: _parseInt(
+          pagination?['perCategoryLimit'],
+          fallback: limit,
+        ),
+      );
+    } on DioException catch (e) {
+      throw Exception(
+        'Keşfet verileri alınamadı: ${e.message ?? "Bilinmeyen ağ hatası"}',
+      );
+    } catch (e) {
+      if (e is Exception) rethrow;
+      throw Exception('Keşfet verileri işlenemedi.');
+    }
+  }
+
+  /// Tek kategori için keşfet kampanyalarını sayfalı getirir.
+  Future<DiscoveryCategoryPageResult> getDiscoveryByCategory({
+    required String categoryId,
+    int limit = 20,
+    int offset = 0,
+  }) async {
+    try {
+      final response = await _dio.get(
+        '${ApiConfig.campaigns}/discover/$categoryId',
+        queryParameters: {'limit': limit, 'offset': offset},
+      );
+
+      if (response.statusCode != 200 || response.data == null) {
+        throw Exception('Kategori verisi alınamadı.');
+      }
+
+      if (response.data['success'] != true) {
+        final errorMessage =
+            response.data['error'] as String? ??
+            response.data['message'] as String? ??
+            'Kategori verisi alınamadı.';
+        throw Exception(errorMessage);
+      }
+
+      final data = response.data['data'];
+      if (data is! Map<String, dynamic>) {
+        throw Exception('Kategori verisi formatı geçersiz.');
+      }
+
+      final categoryRaw = data['category'] as Map<String, dynamic>?;
+      final campaignsRaw = data['campaigns'];
+      final campaigns = campaignsRaw is List
+          ? campaignsRaw
+                .map((c) => _mapApiResponseToModel(c as Map<String, dynamic>))
+                .toList()
+          : <OpportunityModel>[];
+      final pagination = data['pagination'] as Map<String, dynamic>?;
+
+      final section = DiscoveryCategorySection(
+        id: (categoryRaw?['id'] ?? categoryId).toString(),
+        name: (categoryRaw?['name'] ?? categoryId).toString(),
+        icon: (categoryRaw?['icon'] ?? '🏷️').toString(),
+        sources: (categoryRaw?['sources'] is List)
+            ? (categoryRaw!['sources'] as List)
+                  .map((s) => s.toString())
+                  .toList()
+            : <String>[],
+        minCampaigns: _parseInt(categoryRaw?['minCampaigns']),
+        campaigns: campaigns,
+        count: _parseInt(data['count'], fallback: campaigns.length),
+        totalCount: _parseInt(
+          data['totalCount'],
+          fallback: _parseInt(data['count'], fallback: campaigns.length),
+        ),
+        hasMore: data['hasMore'] == true,
+        isEmpty: data['isEmpty'] == true,
+        fallbackMessage: data['fallbackMessage'] as String?,
+      );
+
+      return DiscoveryCategoryPageResult(
+        category: section,
+        campaigns: campaigns,
+        count: section.count,
+        totalCount: section.totalCount,
+        hasMore: section.hasMore,
+        isEmpty: section.isEmpty,
+        fallbackMessage: section.fallbackMessage,
+        limit: _parseInt(pagination?['limit'], fallback: limit),
+        offset: _parseInt(pagination?['offset'], fallback: offset),
+      );
+    } on DioException catch (e) {
+      throw Exception(
+        'Kategori kampanyaları alınamadı: ${e.message ?? "Bilinmeyen ağ hatası"}',
+      );
+    } catch (e) {
+      if (e is Exception) rethrow;
+      throw Exception('Kategori kampanyaları işlenemedi.');
     }
   }
 

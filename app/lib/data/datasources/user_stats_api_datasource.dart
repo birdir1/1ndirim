@@ -7,7 +7,13 @@ import '../models/user_stats_model.dart';
 /// Backend API'den kullanıcı istatistiklerini yönetir
 class UserStatsApiDataSource {
   final Dio _dio;
-  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+  FirebaseAuth? get _firebaseAuth {
+    try {
+      return FirebaseAuth.instance;
+    } catch (_) {
+      return null;
+    }
+  }
 
   UserStatsApiDataSource({Dio? dio})
       : _dio = dio ??
@@ -20,7 +26,7 @@ class UserStatsApiDataSource {
   /// Firebase token'ı alır
   Future<String?> _getAuthToken() async {
     try {
-      final user = _firebaseAuth.currentUser;
+      final user = _firebaseAuth?.currentUser;
       if (user == null) {
         return null;
       }

@@ -22,29 +22,33 @@ class OpportunityCardEnhanced extends StatelessWidget {
 
   String _clean(String input) {
     var out = input.trim();
-    out = out.replaceAll(
-      RegExp(r'^0[0-9\.]*\s*TL[^A-Za-z0-9]?', caseSensitive: false),
-      '',
-    );
-    out = out.replaceAll(RegExp(r'[_\\-][0-9]{2,4}x[0-9]{2,4}', caseSensitive: false), ' ');
-    out = out.replaceAll(RegExp(r'\\.(jpg|jpeg|png|gif|webp)(\\?.*)?$', caseSensitive: false), '');
-    out = out.replaceAll(RegExp(r'[\\-_]+'), ' ');
-    if (RegExp(r'https?://', caseSensitive: false).hasMatch(out) ||
-        RegExp(r'[a-z0-9]+_[a-z0-9]+', caseSensitive: false).hasMatch(out) ||
-        RegExp(r'\\.com\\b', caseSensitive: false).hasMatch(out)) {
-      return '';
-    }
-    if (RegExp(r'çerez', caseSensitive: false).hasMatch(out) ||
-        RegExp(r'kampanya bulunam', caseSensitive: false).hasMatch(out) ||
-        RegExp(r'sitemizden en iyi şekilde faydalan', caseSensitive: false)
-            .hasMatch(out) ||
-        RegExp(r'©', caseSensitive: false).hasMatch(out) ||
-        RegExp(r'vakıfbank', caseSensitive: false).hasMatch(out) ||
-        RegExp(r'vakifbank', caseSensitive: false).hasMatch(out) ||
-        RegExp(r'kisisel verilerin', caseSensitive: false).hasMatch(out) ||
-        RegExp(r'kvkk', caseSensitive: false).hasMatch(out)) {
-      return '';
-    }
+    out = out.replaceAll(RegExp(r'^0[0-9\.]*\s*TL[^A-Za-z0-9]?', caseSensitive: false), '');
+    out = out.replaceAll(RegExp(r'[_\-][0-9]{2,4}x[0-9]{2,4}', caseSensitive: false), ' ');
+    out = out.replaceAll(RegExp(r'\.(jpg|jpeg|png|gif|webp)(\?.*)?$', caseSensitive: false), '');
+    out = out.replaceAll(RegExp(r'[\-_]+'), ' ');
+
+    final dropPatterns = [
+      RegExp(r'https?://', caseSensitive: false),
+      RegExp(r'[a-z0-9]+_[a-z0-9]+', caseSensitive: false),
+      RegExp(r'\.com\b', caseSensitive: false),
+      RegExp(r'function\s*\(\)', caseSensitive: false),
+      RegExp(r'window\.', caseSensitive: false),
+      RegExp(r'<script', caseSensitive: false),
+    ];
+    if (dropPatterns.any((p) => p.hasMatch(out))) return '';
+
+    final noisePatterns = [
+      RegExp(r'çerez', caseSensitive: false),
+      RegExp(r'kampanya bulunam', caseSensitive: false),
+      RegExp(r'sitemizden en iyi şekilde faydalan', caseSensitive: false),
+      RegExp(r'©', caseSensitive: false),
+      RegExp(r'vakıfbank', caseSensitive: false),
+      RegExp(r'vakifbank', caseSensitive: false),
+      RegExp(r'kisisel verilerin', caseSensitive: false),
+      RegExp(r'kvkk', caseSensitive: false),
+    ];
+    if (noisePatterns.any((p) => p.hasMatch(out))) return '';
+
     out = out.replaceAll(RegExp(r'\s+'), ' ').trim();
     return out;
   }
@@ -75,25 +79,30 @@ class OpportunityCardEnhanced extends StatelessWidget {
         subtitle.toLowerCase() != opportunity.sourceName.toLowerCase() &&
         subtitle.length >= 8 &&
         !RegExp(r'^detaylar?$', caseSensitive: false).hasMatch(subtitle);
-    return InkWell(
-      onTap: () {
-        Navigator.of(context).push(
-          SlidePageRoute(
-            child: CampaignDetailScreen.fromOpportunity(
-              opportunity: opportunity,
-              primaryTag: normalized.primary,
+    return Semantics(
+      button: true,
+      label: '${_pickBetterTitle(opportunity.title, subtitleRaw ?? opportunity.subtitle)}'
+          ' • ${opportunity.sourceName}'
+          '${normalized.primary != null ? ' • ${normalized.primary}' : ''}',
+      child: InkWell(
+        onTap: () {
+          Navigator.of(context).push(
+            SlidePageRoute(
+              child: CampaignDetailScreen.fromOpportunity(
+                opportunity: opportunity,
+                primaryTag: normalized.primary,
+              ),
+              direction: SlideDirection.right,
             ),
-            direction: SlideDirection.right,
-          ),
-        );
-      },
-      borderRadius: BorderRadius.circular(24),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
-        decoration: BoxDecoration(
-          color: AppColors.cardBackground,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
+          );
+        },
+        borderRadius: BorderRadius.circular(24),
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          decoration: BoxDecoration(
+            color: AppColors.cardBackground,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
             color: SourceLogoHelper.getLogoBackgroundColor(opportunity.sourceName).withValues(alpha: 0.15),
             width: 1.5,
           ),

@@ -1,5 +1,37 @@
 import 'package:flutter/material.dart';
 
+// Metin temizleme yardımcıları
+String normalizeText(String input) {
+  var out = input.trim();
+  out = out.replaceAll(RegExp(r'\s+'), ' ');
+  out = out.replaceAll(RegExp(r'^[\.,;:!\-\s]+'), '');
+  out = out.replaceAll(RegExp(r'[\.,;:!\-\s]+$'), '');
+  // Bozuk placeholder'ları süpür
+  if (RegExp(r'000\s*tl', caseSensitive: false).hasMatch(out)) return '';
+  return out;
+}
+
+bool isDateOnlyLine(String input) {
+  final t = normalizeText(input).toLowerCase();
+  if (t.isEmpty) return false;
+  final hasDateWord = RegExp(
+    r'(tarih|geçerlidir|gecerlidir|son gün|songun|arasında|kampanya)',
+    caseSensitive: false,
+  ).hasMatch(t);
+  final hasMonthOrYear = RegExp(
+    r'(ocak|şubat|subat|mart|nisan|mayıs|mayis|haziran|temmuz|ağustos|agustos|eylül|eylul|ekim|kasım|kasim|aralık|aralik|20\d{2}|\d{1,2}[./]\d{1,2}[./]\d{2,4})',
+    caseSensitive: false,
+  ).hasMatch(t);
+  return hasDateWord && hasMonthOrYear;
+}
+
+bool isSameMeaning(String a, String b) {
+  final na = normalizeText(a).toLowerCase();
+  final nb = normalizeText(b).toLowerCase();
+  if (na.isEmpty || nb.isEmpty) return false;
+  return na == nb || na.startsWith(nb) || nb.startsWith(na);
+}
+
 /// Fırsat Modeli
 class OpportunityModel {
   final String id;

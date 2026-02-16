@@ -21,6 +21,7 @@ class CuratedCampaignCard extends StatelessWidget {
     final sourceColor = SourceLogoHelper.getLogoBackgroundColor(
       campaign.sourceName,
     );
+    final semanticsLabel = '${campaign.title} - ${campaign.sourceName}';
 
     // Get meaningful subtitle
     String displaySubtitle = campaign.subtitle;
@@ -38,127 +39,132 @@ class CuratedCampaignCard extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.divider, width: 1),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.shadowDark.withValues(alpha: 0.04),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                // Brand Icon
-                Container(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: sourceColor.withValues(alpha: 0.25),
-                      width: 2,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: sourceColor.withValues(alpha: 0.1),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
+      child: Semantics(
+        button: true,
+        label: semanticsLabel,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(16),
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.divider, width: 1),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.shadowDark.withValues(alpha: 0.04),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  // Brand Icon
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: sourceColor.withValues(alpha: 0.25),
+                        width: 2,
                       ),
-                    ],
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(10.0),
-                    child: SourceLogoHelper.getLogoWidget(
-                      campaign.sourceName,
-                      width: 36,
-                      height: 36,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 16),
-
-                // Content
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Campaign Title
-                      Text(
-                        campaign.title,
-                        style: AppTextStyles.body(isDark: false).copyWith(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 15,
-                          height: 1.3,
-                          color: AppColors.textPrimaryLight,
+                      boxShadow: [
+                        BoxShadow(
+                          color: sourceColor.withValues(alpha: 0.1),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                      ],
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(10.0),
+                      child: SourceLogoHelper.getLogoWidget(
+                        campaign.sourceName,
+                        width: 36,
+                        height: 36,
                       ),
-                      const SizedBox(height: 6),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
 
-                      // Benefit Description
-                      if (displaySubtitle.isNotEmpty)
+                  // Content
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Campaign Title
                         Text(
-                          displaySubtitle,
-                          style: AppTextStyles.caption(isDark: false).copyWith(
-                            color: AppColors.textSecondaryLight,
-                            fontSize: 13,
-                            height: 1.4,
+                          campaign.title,
+                          style: AppTextStyles.body(isDark: false).copyWith(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 15,
+                            height: 1.3,
+                            color: AppColors.textPrimaryLight,
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
-                      const SizedBox(height: 8),
+                        const SizedBox(height: 6),
 
-                      // Source/Provider Line
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: sourceColor.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              campaign.sourceName,
-                              style: AppTextStyles.caption(isDark: false)
-                                  .copyWith(
-                                    color: sourceColor,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                            ),
+                        // Benefit Description
+                        if (displaySubtitle.isNotEmpty)
+                          Text(
+                            displaySubtitle,
+                            style: AppTextStyles.caption(isDark: false)
+                                .copyWith(
+                                  color: AppColors.textSecondaryLight,
+                                  fontSize: 13,
+                                  height: 1.4,
+                                ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        ],
-                      ),
-                    ],
+                        const SizedBox(height: 8),
+
+                        // Source/Provider Line
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: sourceColor.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                campaign.sourceName,
+                                style: AppTextStyles.caption(isDark: false)
+                                    .copyWith(
+                                      color: sourceColor,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                ),
 
-                const SizedBox(width: 12),
+                  const SizedBox(width: 12),
 
-                // Arrow
-                Icon(
-                  Icons.arrow_forward_ios,
-                  size: 16,
-                  color: AppColors.iconSecondary,
-                ),
-              ],
+                  // Arrow
+                  Icon(
+                    Icons.arrow_forward_ios,
+                    size: 16,
+                    color: AppColors.iconSecondary,
+                  ),
+                ],
+              ),
             ),
           ),
         ),

@@ -484,7 +484,7 @@ class Campaign {
    * @param {number} limit - Maksimum kampanya sayısı (varsayılan: 20)
    * @returns {Promise<Array>}
    */
-  static async findByCategory(category, limit = 20) {
+  static async findByCategory(category, limit = 20, offset = 0) {
     const query = `
       SELECT 
         c.*,
@@ -499,9 +499,10 @@ class Campaign {
         AND c.category = $1
       ORDER BY c.is_pinned DESC, c.pinned_at DESC NULLS LAST, c.created_at DESC
       LIMIT $2
+      OFFSET $3
     `;
 
-    const result = await pool.query(query, [category, limit]);
+    const result = await pool.query(query, [category, limit, Math.max(0, offset)]);
     return result.rows;
   }
 
@@ -512,9 +513,9 @@ class Campaign {
    * @param {number} limit - Maksimum kampanya sayısı (varsayılan: 20)
    * @returns {Promise<Object>} - { campaigns: Array, isEmpty: boolean }
    */
-  static async findByCategoryWithFallback(category, limit = 20) {
+  static async findByCategoryWithFallback(category, limit = 20, offset = 0) {
     // Try to get active campaigns
-    const activeCampaigns = await this.findByCategory(category, limit);
+    const activeCampaigns = await this.findByCategory(category, limit, offset);
 
     if (activeCampaigns.length > 0) {
       return {
@@ -523,28 +524,62 @@ class Campaign {
       };
     }
 
-	    // Fallback: Get last known campaigns (even if expired)
-	    const query = `
-	      SELECT 
-	        c.*,
-	        s.name as source_name,
-	        s.type as source_type,
-	        s.logo_url as source_logo_url,
-	        true as is_expired
-	      FROM campaigns c
-	      INNER JOIN sources s ON c.source_id = s.id
-	      WHERE c.category = $1
-	        AND (c.is_hidden = false OR c.is_hidden IS NULL)
+    // Fallback: Get last known campaigns (even if expired)
+    const query = `
+      SELECT 
+        c.*,
+        s.name as source_name,
+        s.type as source_type,
+        s.logo_url as source_logo_url,
+        true as is_expired
+      FROM campaigns c
+      INNER JOIN sources s ON c.source_id = s.id
+      WHERE c.category = $1
+        AND (c.is_hidden = false OR c.is_hidden IS NULL)
       ORDER BY c.created_at DESC
       LIMIT $2
+      OFFSET $3
     `;
 
-    const result = await pool.query(query, [category, Math.min(limit, 5)]);
+    const fallbackLimit = Math.max(1, Math.min(limit, 100));
+    const result = await pool.query(query, [
+      category,
+      fallbackLimit,
+      Math.max(0, offset),
+    ]);
     
     return {
       campaigns: result.rows,
       isEmpty: true,
     };
+  }
+
+  /**
+   * Kategori bazlı kampanya sayısını getirir
+   * @param {string} category - Kategori adı
+   * @param {Object} options
+   * @param {boolean} options.includeExpired - true ise süre/aktif filtresi olmadan sayar
+   * @returns {Promise<number>}
+   */
+  static async countByCategory(category, { includeExpired = false } = {}) {
+    const query = includeExpired
+      ? `
+        SELECT COUNT(*)::int AS count
+        FROM campaigns c
+        WHERE c.category = $1
+          AND (c.is_hidden = false OR c.is_hidden IS NULL)
+      `
+      : `
+        SELECT COUNT(*)::int AS count
+        FROM campaigns c
+        WHERE c.category = $1
+          AND c.is_active = true
+          AND c.expires_at > NOW()
+          AND (c.is_hidden = false OR c.is_hidden IS NULL)
+      `;
+
+    const result = await pool.query(query, [category]);
+    return result.rows[0]?.count || 0;
   }
 
   /**

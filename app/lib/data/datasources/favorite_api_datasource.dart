@@ -9,7 +9,13 @@ import '../models/opportunity_model.dart';
 /// Backend API'den favori işlemlerini yönetir
 class FavoriteApiDataSource {
   final Dio _dio;
-  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+  FirebaseAuth? get _firebaseAuth {
+    try {
+      return FirebaseAuth.instance;
+    } catch (_) {
+      return null;
+    }
+  }
   static final RegExp _uuidRegex = RegExp(
     r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$',
   );
@@ -20,7 +26,7 @@ class FavoriteApiDataSource {
   /// Firebase token'ı alır
   Future<String?> _getAuthToken() async {
     try {
-      final user = _firebaseAuth.currentUser;
+      final user = _firebaseAuth?.currentUser;
       if (user == null) {
         return null;
       }

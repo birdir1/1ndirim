@@ -151,25 +151,38 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
       RegExp(r'^0[0-9\.]*\s*TL[^A-Za-z0-9]?', caseSensitive: false),
       '',
     );
-    out = out.replaceAll(RegExp(r'[_\\-][0-9]{2,4}x[0-9]{2,4}', caseSensitive: false), ' ');
-    out = out.replaceAll(RegExp(r'\\.(jpg|jpeg|png|gif|webp)(\\?.*)?$', caseSensitive: false), '');
-    out = out.replaceAll(RegExp(r'[\\-_]+'), ' ');
-    if (RegExp(r'https?://', caseSensitive: false).hasMatch(out) ||
-        RegExp(r'[a-z0-9]+_[a-z0-9]+', caseSensitive: false).hasMatch(out) ||
-        RegExp(r'\\.com\\b', caseSensitive: false).hasMatch(out)) {
-      return '';
-    }
-    if (RegExp(r'çerez', caseSensitive: false).hasMatch(out) ||
-        RegExp(r'kampanya bulunam', caseSensitive: false).hasMatch(out) ||
-        RegExp(r'sitemizden en iyi şekilde faydalan', caseSensitive: false)
-            .hasMatch(out) ||
-        RegExp(r'©', caseSensitive: false).hasMatch(out) ||
-        RegExp(r'vakıfbank', caseSensitive: false).hasMatch(out) ||
-        RegExp(r'vakifbank', caseSensitive: false).hasMatch(out) ||
-        RegExp(r'kisisel verilerin', caseSensitive: false).hasMatch(out) ||
-        RegExp(r'kvkk', caseSensitive: false).hasMatch(out)) {
-      return '';
-    }
+    out = out.replaceAll(
+      RegExp(r'[_\-][0-9]{2,4}x[0-9]{2,4}', caseSensitive: false),
+      ' ',
+    );
+    out = out.replaceAll(
+      RegExp(r'\.(jpg|jpeg|png|gif|webp)(\?.*)?$', caseSensitive: false),
+      '',
+    );
+    out = out.replaceAll(RegExp(r'[\-_]+'), ' ');
+
+    final dropPatterns = [
+      RegExp(r'https?://', caseSensitive: false),
+      RegExp(r'[a-z0-9]+_[a-z0-9]+', caseSensitive: false),
+      RegExp(r'\.com\b', caseSensitive: false),
+      RegExp(r'function\s*\(\)', caseSensitive: false),
+      RegExp(r'window\.', caseSensitive: false),
+      RegExp(r'<script', caseSensitive: false),
+    ];
+    if (dropPatterns.any((p) => p.hasMatch(out))) return '';
+
+    final noisePatterns = [
+      RegExp(r'çerez', caseSensitive: false),
+      RegExp(r'kampanya bulunam', caseSensitive: false),
+      RegExp(r'sitemizden en iyi şekilde faydalan', caseSensitive: false),
+      RegExp(r'©', caseSensitive: false),
+      RegExp(r'vakıfbank', caseSensitive: false),
+      RegExp(r'vakifbank', caseSensitive: false),
+      RegExp(r'kisisel verilerin', caseSensitive: false),
+      RegExp(r'kvkk', caseSensitive: false),
+    ];
+    if (noisePatterns.any((p) => p.hasMatch(out))) return '';
+
     out = out.replaceAll(RegExp(r'\s+'), ' ').trim();
     if (out.isNotEmpty) {
       out = out[0].toUpperCase() + out.substring(1);
@@ -181,15 +194,18 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
     final title = _cleanText(rawTitle);
     final fallback = _cleanText(detail);
     final looksIncomplete = title.length < 25 || RegExp(r"\d$").hasMatch(title);
-    if (looksIncomplete && fallback.isNotEmpty && fallback.length > title.length) {
-      final firstLine = fallback.split(RegExp(r"[\.!?\n]")).firstWhere(
-        (e) => e.trim().isNotEmpty,
-        orElse: () => fallback,
-      );
+    if (looksIncomplete &&
+        fallback.isNotEmpty &&
+        fallback.length > title.length) {
+      final firstLine = fallback
+          .split(RegExp(r"[\.!?\n]"))
+          .firstWhere((e) => e.trim().isNotEmpty, orElse: () => fallback);
       final normalized = _cleanText(firstLine);
       if (normalized.isNotEmpty) return normalized;
     }
-    return title.isNotEmpty ? title : (fallback.isNotEmpty ? fallback : rawTitle);
+    return title.isNotEmpty
+        ? title
+        : (fallback.isNotEmpty ? fallback : rawTitle);
   }
 
   @override
@@ -206,425 +222,434 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
         primaryTag.toLowerCase() == 'bankası' ||
         primaryTag.toLowerCase() == 'bankasi' ||
         primaryTag.toLowerCase() == 'operatör';
+    final displayTitle = _pickBetterTitle(
+      widget.opportunity.title,
+      widget.opportunity.detailText ??
+          widget.opportunity.description ??
+          widget.opportunity.subtitle,
+    );
+    final semanticLabel = '$displayTitle • ${widget.opportunity.sourceName}'
+        '${primaryTag != null ? ' • $primaryTag' : ''}';
 
-    return InkWell(
-      onTap: () {
-        Navigator.of(context).push(
-          SlidePageRoute(
-            child: CampaignDetailScreen.fromOpportunity(
-              opportunity: widget.opportunity,
-              primaryTag: primaryTag,
-            ),
-            direction: SlideDirection.right,
-          ),
-        );
-      },
-      borderRadius: BorderRadius.circular(28),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(28),
-          border: Border.all(
-            color: sourceColor.withValues(alpha: 0.25),
-            width: 2,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: sourceColor.withValues(alpha: 0.15),
-              blurRadius: 24,
-              offset: const Offset(0, 8),
-            ),
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header: Logo + Source Name (Büyük ve Net)
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: sourceBg,
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(28),
-                ),
-                border: Border(
-                  bottom: BorderSide(
-                    color: sourceColor.withValues(alpha: 0.1),
-                    width: 1,
-                  ),
-                ),
+    return Semantics(
+      button: true,
+      label: semanticLabel,
+      child: InkWell(
+        onTap: () {
+          Navigator.of(context).push(
+            SlidePageRoute(
+              child: CampaignDetailScreen.fromOpportunity(
+                opportunity: widget.opportunity,
+                primaryTag: primaryTag,
               ),
-              child: Row(
-                children: [
-                  // Source Logo - ÇOK DAHA BÜYÜK VE NET
-                  Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: sourceColor.withValues(alpha: 0.3),
-                        width: 2,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: sourceColor.withValues(alpha: 0.2),
-                          blurRadius: 12,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(14.0),
-                      child: SourceLogoHelper.getLogoWidget(
-                        widget.opportunity.sourceName,
-                        width: 52,
-                        height: 52,
-                      ),
+              direction: SlideDirection.right,
+            ),
+          );
+        },
+        borderRadius: BorderRadius.circular(28),
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(
+              color: sourceColor.withValues(alpha: 0.25),
+              width: 2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: sourceColor.withValues(alpha: 0.15),
+                blurRadius: 24,
+                offset: const Offset(0, 8),
+              ),
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header: Logo + Source Name (Büyük ve Net)
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: sourceBg,
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(28),
+                  ),
+                  border: Border(
+                    bottom: BorderSide(
+                      color: sourceColor.withValues(alpha: 0.1),
+                      width: 1,
                     ),
                   ),
-                  const SizedBox(width: 16),
-                  // Source Name - Büyük ve Belirgin
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          widget.opportunity.sourceName,
-                          style: AppTextStyles.cardTitle(isDark: false)
-                              .copyWith(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w700,
-                                color: sourceColor,
-                                letterSpacing: -0.5,
-                              ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                ),
+                child: Row(
+                  children: [
+                    // Source Logo - ÇOK DAHA BÜYÜK VE NET
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: sourceColor.withValues(alpha: 0.3),
+                          width: 2,
                         ),
-                        const SizedBox(height: 4),
-                        if (!hidePrimaryChip)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: sourceColor.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              primaryTag,
-                              style: AppTextStyles.small(isDark: false)
-                                  .copyWith(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                    color: sourceColor,
-                                  ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: sourceColor.withValues(alpha: 0.2),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
                           ),
-                      ],
+                        ],
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(14.0),
+                        child: SourceLogoHelper.getLogoWidget(
+                          widget.opportunity.sourceName,
+                          width: 52,
+                          height: 52,
+                        ),
+                      ),
                     ),
-                  ),
-                  // Aksiyon Butonları
-                  Row(
-                    children: [
-                      // Karşılaştırma Butonu
-                      Consumer<CompareProvider>(
-                        builder: (context, compareProvider, child) {
-                          final isInCompare = compareProvider.contains(
-                            widget.opportunity.id,
-                          );
-                          final isFull = compareProvider.isFull && !isInCompare;
+                    const SizedBox(width: 16),
+                    // Source Name - Büyük ve Belirgin
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.opportunity.sourceName,
+                            style: AppTextStyles.cardTitle(isDark: false)
+                                .copyWith(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w700,
+                                  color: sourceColor,
+                                  letterSpacing: -0.5,
+                                ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          if (!hidePrimaryChip)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: sourceColor.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                primaryTag,
+                                style: AppTextStyles.small(isDark: false)
+                                    .copyWith(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                      color: sourceColor,
+                                    ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    // Aksiyon Butonları
+                    Row(
+                      children: [
+                        // Karşılaştırma Butonu
+                        Consumer<CompareProvider>(
+                          builder: (context, compareProvider, child) {
+                            final isInCompare = compareProvider.contains(
+                              widget.opportunity.id,
+                            );
+                            final isFull = compareProvider.isFull && !isInCompare;
 
-                          return GestureDetector(
-                            onTap: () {
-                              if (isInCompare) {
-                                compareProvider.removeCampaign(
-                                  widget.opportunity.id,
-                                );
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      'Karşılaştırmadan kaldırıldı',
+                            return GestureDetector(
+                              onTap: () {
+                                if (isInCompare) {
+                                  compareProvider.removeCampaign(
+                                    widget.opportunity.id,
+                                  );
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'Karşılaştırmadan kaldırıldı',
+                                      ),
+                                      duration: Duration(seconds: 1),
                                     ),
-                                    duration: Duration(seconds: 1),
-                                  ),
-                                );
-                              } else if (isFull) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      'En fazla ${CompareProvider.maxCompareCount} kampanya karşılaştırabilirsiniz',
-                                    ),
-                                    duration: const Duration(seconds: 2),
-                                    backgroundColor: AppColors.error,
-                                  ),
-                                );
-                              } else {
-                                final added = compareProvider.addCampaign(
-                                  widget.opportunity,
-                                );
-                                if (added) {
+                                  );
+                                } else if (isFull) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
                                       content: Text(
-                                        '${compareProvider.count}/${CompareProvider.maxCompareCount} kampanya seçildi',
+                                        'En fazla ${CompareProvider.maxCompareCount} kampanya karşılaştırabilirsiniz',
                                       ),
-                                      duration: const Duration(seconds: 1),
-                                      action: compareProvider.count >= 2
-                                          ? SnackBarAction(
-                                              label: 'Karşılaştır',
-                                              textColor: Colors.white,
-                                              onPressed: () {
-                                                Navigator.of(context).push(
-                                                  SlidePageRoute(
-                                                    child: CompareScreen(
-                                                      campaigns: compareProvider
-                                                          .campaigns,
-                                                    ),
-                                                    direction:
-                                                        SlideDirection.up,
-                                                  ),
-                                                );
-                                              },
-                                            )
-                                          : null,
+                                      duration: const Duration(seconds: 2),
+                                      backgroundColor: AppColors.error,
                                     ),
                                   );
+                                } else {
+                                  final added = compareProvider.addCampaign(
+                                    widget.opportunity,
+                                  );
+                                  if (added) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          '${compareProvider.count}/${CompareProvider.maxCompareCount} kampanya seçildi',
+                                        ),
+                                        duration: const Duration(seconds: 1),
+                                        action: compareProvider.count >= 2
+                                            ? SnackBarAction(
+                                                label: 'Karşılaştır',
+                                                textColor: Colors.white,
+                                                onPressed: () {
+                                                  Navigator.of(context).push(
+                                                    SlidePageRoute(
+                                                      child: CompareScreen(
+                                                        campaigns: compareProvider
+                                                            .campaigns,
+                                                      ),
+                                                      direction:
+                                                          SlideDirection.up,
+                                                    ),
+                                                  );
+                                                },
+                                              )
+                                            : null,
+                                      ),
+                                    );
+                                  }
                                 }
-                              }
-                            },
+                              },
+                              child: Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: isInCompare
+                                      ? AppColors.primaryLight.withValues(
+                                          alpha: 0.1,
+                                        )
+                                      : Colors.white.withValues(alpha: 0.8),
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: isInCompare
+                                        ? AppColors.primaryLight.withValues(
+                                            alpha: 0.3,
+                                          )
+                                        : Colors.grey.withValues(alpha: 0.3),
+                                    width: 1.5,
+                                  ),
+                                ),
+                                child: Icon(
+                                  Icons.compare_arrows,
+                                  color: isInCompare
+                                      ? AppColors.primaryLight
+                                      : (isFull
+                                            ? Colors.grey.withValues(alpha: 0.5)
+                                            : Colors.grey),
+                                  size: 20,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(width: 8),
+                        // Favori Butonu
+                        if (_auth?.currentUser != null)
+                          GestureDetector(
+                            onTap: _toggleFavorite,
                             child: Container(
                               width: 40,
                               height: 40,
                               decoration: BoxDecoration(
-                                color: isInCompare
-                                    ? AppColors.primaryLight.withValues(
-                                        alpha: 0.1,
-                                      )
+                                color: _isFavorite
+                                    ? AppColors.discountRed.withValues(alpha: 0.1)
                                     : Colors.white.withValues(alpha: 0.8),
                                 shape: BoxShape.circle,
                                 border: Border.all(
-                                  color: isInCompare
-                                      ? AppColors.primaryLight.withValues(
+                                  color: _isFavorite
+                                      ? AppColors.discountRed.withValues(
                                           alpha: 0.3,
                                         )
                                       : Colors.grey.withValues(alpha: 0.3),
                                   width: 1.5,
                                 ),
                               ),
-                              child: Icon(
-                                Icons.compare_arrows,
-                                color: isInCompare
-                                    ? AppColors.primaryLight
-                                    : (isFull
-                                          ? Colors.grey.withValues(alpha: 0.5)
-                                          : Colors.grey),
-                                size: 20,
-                              ),
+                              child: _isLoading
+                                  ? const Padding(
+                                      padding: EdgeInsets.all(10.0),
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor: AlwaysStoppedAnimation<Color>(
+                                          AppColors.discountRed,
+                                        ),
+                                      ),
+                                    )
+                                  : Icon(
+                                      _isFavorite
+                                          ? Icons.favorite
+                                          : Icons.favorite_border,
+                                      color: _isFavorite
+                                          ? AppColors.discountRed
+                                          : Colors.grey,
+                                      size: 20,
+                                    ),
                             ),
-                          );
-                        },
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              // Content
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Title - Çok Büyük ve Belirgin
+                    Text(
+                      displayTitle,
+                      style: AppTextStyles.cardTitle(isDark: false).copyWith(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.5,
+                        height: 1.3,
+                        color: sourceColor,
                       ),
-                      const SizedBox(width: 8),
-                      // Favori Butonu
-                      if (_auth?.currentUser != null)
-                        GestureDetector(
-                          onTap: _toggleFavorite,
-                          child: Container(
-                            width: 40,
-                            height: 40,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Subtitle - Eğer anlamsız veya çok kısaysa tags'den göster
+                    Builder(
+                      builder: (context) {
+                        final cleanedTitle = _cleanText(widget.opportunity.title);
+                        String displayText = _cleanText(
+                          widget.opportunity.detailText ??
+                              widget.opportunity.description ??
+                              widget.opportunity.subtitle,
+                        );
+
+                        // Eğer subtitle başlıkla aynı/benzerse gösterme
+                        if (displayText.isNotEmpty &&
+                            cleanedTitle.isNotEmpty &&
+                            displayText.toLowerCase() ==
+                                cleanedTitle.toLowerCase()) {
+                          displayText = '';
+                        }
+
+                        // "detaylar" tek başına ise gösterme
+                        if (RegExp(
+                          r'^detaylar?$',
+                          caseSensitive: false,
+                        ).hasMatch(displayText)) {
+                          displayText = '';
+                        }
+
+                        // Kaynak adıyla aynı veya çok kısa ise gösterme
+                        if (displayText.isNotEmpty &&
+                            (displayText.toLowerCase() ==
+                                    widget.opportunity.sourceName.toLowerCase() ||
+                                displayText.length < 8)) {
+                          displayText = '';
+                        }
+
+                        // Eğer subtitle boş, çok kısa veya anlamsızsa tags'den al
+                        if (displayText.isEmpty ||
+                            displayText.length < 10 ||
+                            displayText.toUpperCase() ==
+                                displayText || // Tamamı büyük harf
+                            displayText.contains(RegExp(r'^[A-Z0-9]+$'))) {
+                          // Sadece büyük harf ve rakam
+                          // Tags'den anlamlı bir açıklama bul
+                          if (chipTags.isNotEmpty) {
+                            displayText = chipTags
+                                .where((tag) => tag.length > 6)
+                                .take(2)
+                                .join(' • ');
+                          }
+                        }
+
+                        if (displayText.isEmpty) return const SizedBox.shrink();
+
+                        return Text(
+                          displayText,
+                          style: AppTextStyles.cardSubtitle(isDark: false)
+                              .copyWith(
+                                fontSize: 15,
+                                height: 1.5,
+                                color: const Color(0xFF4A4A4A),
+                              ),
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                        );
+                      },
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Tags - Daha Büyük ve Görsel
+                    if (chipTags.isNotEmpty)
+                      Wrap(
+                        spacing: 10,
+                        runSpacing: 10,
+                        children: chipTags.map((tag) {
+                          final isDiscount =
+                              tag.toLowerCase().contains('%') ||
+                              tag.toLowerCase().contains('indirim') ||
+                              tag.toLowerCase().contains('son');
+                          return Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 8,
+                            ),
                             decoration: BoxDecoration(
-                              color: _isFavorite
-                                  ? AppColors.discountRed.withValues(alpha: 0.1)
-                                  : Colors.white.withValues(alpha: 0.8),
-                              shape: BoxShape.circle,
+                              color: isDiscount
+                                  ? AppColors.badgeDiscountBackground
+                                  : AppColors.badgeBackground,
+                              borderRadius: BorderRadius.circular(22),
                               border: Border.all(
-                                color: _isFavorite
-                                    ? AppColors.discountRed.withValues(
+                                color: isDiscount
+                                    ? AppColors.badgeDiscountText.withValues(
                                         alpha: 0.3,
                                       )
-                                    : Colors.grey.withValues(alpha: 0.3),
+                                    : AppColors.badgeText.withValues(alpha: 0.3),
                                 width: 1.5,
                               ),
                             ),
-                            child: _isLoading
-                                ? const Padding(
-                                    padding: EdgeInsets.all(10.0),
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                        AppColors.discountRed,
-                                      ),
-                                    ),
-                                  )
-                                : Icon(
-                                    _isFavorite
-                                        ? Icons.favorite
-                                        : Icons.favorite_border,
-                                    color: _isFavorite
-                                        ? AppColors.discountRed
-                                        : Colors.grey,
-                                    size: 20,
+                            child: Text(
+                              tag,
+                              style: AppTextStyles.badgeText(isDark: false)
+                                  .copyWith(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: isDiscount
+                                        ? AppColors.badgeDiscountText
+                                        : AppColors.badgeText,
                                   ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-
-            // Content
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Title - Çok Büyük ve Belirgin
-                  Text(
-                    _pickBetterTitle(
-                      widget.opportunity.title,
-                      widget.opportunity.detailText ??
-                          widget.opportunity.description ??
-                          widget.opportunity.subtitle,
-                    ),
-                    style: AppTextStyles.cardTitle(isDark: false).copyWith(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.5,
-                      height: 1.3,
-                      color: sourceColor,
-                    ),
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Subtitle - Eğer anlamsız veya çok kısaysa tags'den göster
-                  Builder(
-                    builder: (context) {
-                      final cleanedTitle = _cleanText(widget.opportunity.title);
-                      String displayText = _cleanText(
-                        widget.opportunity.detailText ??
-                            widget.opportunity.description ??
-                            widget.opportunity.subtitle,
-                      );
-
-                      // Eğer subtitle başlıkla aynı/benzerse gösterme
-                      if (displayText.isNotEmpty &&
-                          cleanedTitle.isNotEmpty &&
-                          displayText.toLowerCase() ==
-                              cleanedTitle.toLowerCase()) {
-                        displayText = '';
-                      }
-
-                      // "detaylar" tek başına ise gösterme
-                      if (RegExp(r'^detaylar?$', caseSensitive: false)
-                          .hasMatch(displayText)) {
-                        displayText = '';
-                      }
-
-                      // Kaynak adıyla aynı veya çok kısa ise gösterme
-                      if (displayText.isNotEmpty &&
-                          (displayText.toLowerCase() ==
-                              widget.opportunity.sourceName.toLowerCase() ||
-                              displayText.length < 8)) {
-                        displayText = '';
-                      }
-
-                      // Eğer subtitle boş, çok kısa veya anlamsızsa tags'den al
-                      if (displayText.isEmpty ||
-                          displayText.length < 10 ||
-                          displayText.toUpperCase() ==
-                              displayText || // Tamamı büyük harf
-                          displayText.contains(RegExp(r'^[A-Z0-9]+$'))) {
-                        // Sadece büyük harf ve rakam
-                        // Tags'den anlamlı bir açıklama bul
-                        if (chipTags.isNotEmpty) {
-                          displayText = chipTags
-                              .where((tag) => tag.length > 6)
-                              .take(2)
-                              .join(' • ');
-                        }
-                      }
-
-                      if (displayText.isEmpty) return const SizedBox.shrink();
-
-                      return Text(
-                        displayText,
-                        style: AppTextStyles.cardSubtitle(isDark: false)
-                            .copyWith(
-                              fontSize: 15,
-                              height: 1.5,
-                              color: const Color(0xFF4A4A4A),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                        maxLines: 3,
-                        overflow: TextOverflow.ellipsis,
-                      );
-                    },
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Tags - Daha Büyük ve Görsel
-                  if (chipTags.isNotEmpty)
-                    Wrap(
-                      spacing: 10,
-                      runSpacing: 10,
-                      children: chipTags.map((tag) {
-                        final isDiscount =
-                            tag.toLowerCase().contains('%') ||
-                            tag.toLowerCase().contains('indirim') ||
-                            tag.toLowerCase().contains('son');
-                        return Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isDiscount
-                                ? AppColors.badgeDiscountBackground
-                                : AppColors.badgeBackground,
-                            borderRadius: BorderRadius.circular(22),
-                            border: Border.all(
-                              color: isDiscount
-                                  ? AppColors.badgeDiscountText.withValues(
-                                      alpha: 0.3,
-                                    )
-                                  : AppColors.badgeText.withValues(alpha: 0.3),
-                              width: 1.5,
-                            ),
-                          ),
-                          child: Text(
-                            tag,
-                            style: AppTextStyles.badgeText(isDark: false)
-                                .copyWith(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                  color: isDiscount
-                                      ? AppColors.badgeDiscountText
-                                      : AppColors.badgeText,
-                                ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                ],
+                          );
+                        }).toList(),
+                      ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

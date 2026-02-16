@@ -4,11 +4,9 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
-import '../../core/utils/page_transitions.dart';
 import '../../core/providers/selected_sources_provider.dart';
 import '../../data/models/source_model.dart';
 import '../../data/repositories/source_repository.dart';
-import 'save_confirmation_screen.dart';
 
 class EditSourcesScreen extends StatefulWidget {
   const EditSourcesScreen({super.key});
@@ -225,11 +223,23 @@ class _EditSourcesScreenState extends State<EditSourcesScreen> {
 
           if (!mounted) return;
 
-          // Onay ekranına git
-          Navigator.of(context).pushReplacement(
-            SlidePageRoute(
-              child: const SaveConfirmationScreen(),
-              direction: SlideDirection.right,
+          // Ayrı onay sayfasına geçmek yerine kısa bir başarı bildirimi göster
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Row(
+                children: [
+                  Icon(Icons.check_circle, color: Colors.white, size: 20),
+                  SizedBox(width: 8),
+                  Expanded(child: Text('Kaynaklarınız kaydedildi')),
+                ],
+              ),
+              backgroundColor: AppColors.success,
+              behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 2),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
           );
         }
