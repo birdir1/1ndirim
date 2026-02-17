@@ -109,6 +109,15 @@ const limiter = rateLimit({
   legacyHeaders: false, // `X-RateLimit-*` header'larını devre dışı bırak
 });
 
+const isAdminPanelRequest = (req) => {
+  const host = (req.headers.host || '').toLowerCase();
+  const referer = (req.headers.referer || '').toLowerCase();
+  return (
+    host.includes('admin.1indirim.birdir1.com') ||
+    referer.includes('admin.1indirim.birdir1.com')
+  );
+};
+
 // Daha sıkı rate limit (auth endpoint'leri için)
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 dakika
@@ -160,6 +169,8 @@ app.use((req, res, next) => {
   // Bot ingestion runs bursty and is already protected by token + loopback/private IP.
   // Do not apply public rate limit to trusted bot requests.
   if (isTrustedBotRequest(req)) return next();
+  // Admin panel is behind auth and should not be blocked by public limits.
+  if (isAdminPanelRequest(req)) return next();
   return limiter(req, res, next);
 });
 
