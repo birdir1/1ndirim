@@ -16,7 +16,8 @@
     "add-sources": "node src/scripts/add-missing-sources.js",
     "fix-operators": "node src/scripts/fix_operator_sources.js",
     "reprocess-campaigns": "node scripts/reprocessCampaigns.js",
-    "import:feed": "node scripts/manualFeedImport.js"
+    "import:feed": "node scripts/manualFeedImport.js",
+    "fetch:epic-free": "node scripts/fetchEpicFreeGames.js"
   },
   "keywords": [
     "campaign",
