@@ -18,7 +18,6 @@ const usersRouter = require('./routes/users'); // User Management (FCM tokens, e
 const commentsRouter = require('./routes/comments'); // Campaign Comments
 const ratingsRouter = require('./routes/ratings'); // Campaign Ratings
 const communityRouter = require('./routes/community'); // Community Features
-const priceTrackingRouter = require('./routes/price_tracking'); // Price Tracking
 const blogRouter = require('./routes/blog'); // Blog & Content
 const referralsRouter = require('./routes/referrals'); // Referral System
 const premiumRouter = require('./routes/premium'); // Premium Subscriptions
@@ -191,7 +190,6 @@ app.get('/', (req, res) => {
         comments: '/api/comments', // Campaign Comments
         ratings: '/api/ratings', // Campaign Ratings
         community: '/api/community', // Community Features
-        priceTracking: '/api/price-tracking', // Price Tracking
         blog: '/api/blog', // Blog & Content
         referrals: '/api/referrals', // Referral System
         premium: '/api/premium', // Premium Subscriptions
@@ -211,7 +209,6 @@ app.use('/api/users', usersRouter); // User Management
 app.use('/api/comments', commentsRouter); // Campaign Comments
 app.use('/api/ratings', ratingsRouter); // Campaign Ratings
 app.use('/api/community', communityRouter); // Community Features
-app.use('/api/price-tracking', priceTrackingRouter); // Price Tracking
 app.use('/api/blog', blogRouter); // Blog & Content
 app.use('/api/referrals', referralsRouter); // Referral System
 app.use('/api/premium', premiumRouter); // Premium Subscriptions
@@ -246,7 +243,6 @@ const startServer = () =>
     console.log(`💬 Comments: http://localhost:${PORT}/api/comments`);
     console.log(`⭐ Ratings: http://localhost:${PORT}/api/ratings`);
     console.log(`👥 Community: http://localhost:${PORT}/api/community`);
-    console.log(`💰 Price Tracking: http://localhost:${PORT}/api/price-tracking`);
     console.log(`📝 Blog: http://localhost:${PORT}/api/blog`);
     console.log(`🎁 Referrals: http://localhost:${PORT}/api/referrals`);
     console.log(`⭐ Premium: http://localhost:${PORT}/api/premium`);
