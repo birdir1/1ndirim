@@ -369,103 +369,178 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
     );
   }
 
+  IconData _sortIcon(String id) {
+    switch (id) {
+      case 'popular':
+        return Icons.trending_up;
+      case 'latest':
+        return Icons.fiber_new;
+      case 'free_week':
+        return Icons.card_giftcard;
+      case 'expiring':
+        return Icons.timer;
+      default:
+        return Icons.sort;
+    }
+  }
+
   Widget _buildHeader() {
     final l10n = AppLocalizations.of(context)!;
-    return Container(
+    return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppUiTokens.screenPadding,
         AppUiTokens.sectionGap,
         AppUiTokens.screenPadding,
-        12,
+        8,
       ),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: AppUiTokens.elevatedSurface(),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: AppUiTokens.elevatedSurface().copyWith(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              AppColors.primaryLight.withValues(alpha: 0.08),
+              Colors.white,
+            ],
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.discoveryTitle,
+                    style: AppTextStyles.headline(
+                      isDark: false,
+                    ).copyWith(fontSize: 24),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    l10n.discoverySubtitle,
+                    style: AppTextStyles.caption(isDark: false).copyWith(
+                      color: AppColors.textSecondaryLight,
+                      fontSize: 13,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
                     children: [
-                      Text(
-                        l10n.discoveryTitle,
-                        style: AppTextStyles.headline(
-                          isDark: false,
-                        ).copyWith(fontSize: 24),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        l10n.discoverySubtitle,
-                        style: AppTextStyles.caption(isDark: false).copyWith(
-                          color: AppColors.textSecondaryLight,
-                          fontSize: 13,
+                      Icon(Icons.local_fire_department,
+                          size: 16, color: AppColors.primaryLight),
+                      const SizedBox(width: 4),
+                      Flexible(
+                        child: Text(
+                          _categories.isNotEmpty
+                              ? '${_categories.length} kategori • ${_categories.fold<int>(0, (p, c) => p + c.count)} fırsat'
+                              : 'Keşfet güncelleniyor',
+                          style: AppTextStyles.caption(isDark: false).copyWith(
+                            color: AppColors.textSecondaryLight,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
                   ),
-                ),
-                IconButton(
-                  icon: Icon(
-                    Icons.search,
-                    color: AppColors.textSecondaryLight,
-                    size: 26,
-                  ),
-                  tooltip: l10n.search,
-                  onPressed: _openDiscoverySearch,
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+            IconButton(
+              icon: Icon(
+                Icons.search,
+                color: AppColors.textSecondaryLight,
+                size: 26,
+              ),
+              tooltip: l10n.search,
+              onPressed: _openDiscoverySearch,
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildSortTabs() {
-    return Container(
-      height: 44,
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppUiTokens.screenPadding,
-        vertical: 4,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppUiTokens.screenPadding,
+        8,
+        AppUiTokens.screenPadding,
+        4,
       ),
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemBuilder: (context, index) {
-          final mode = _sortModes[index];
-          final isActive = mode['id'] == _selectedSort;
-          return ChoiceChip(
-            label: Text(mode['label'] ?? ''),
-            selected: isActive,
-            onSelected: (_) {
-              if (isActive) return;
-              final prev = _selectedSort;
-              final next = mode['id']!;
-              setState(() => _selectedSort = next);
-              AnalyticsService().logExploreModeSwitch(
-                from: prev,
-                to: next,
-                categoryId: _selectedCategoryId,
-              );
-              _loadDiscoveryCampaigns();
-            },
-            selectedColor: AppColors.primaryLight.withValues(alpha: 0.15),
-            labelStyle: AppTextStyles.caption(isDark: false).copyWith(
-              color: isActive ? AppColors.primaryLight : AppColors.textPrimaryLight,
-              fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+      child: Container(
+        height: 44,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.shadowDark.withValues(alpha: 0.06),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
             ),
-            backgroundColor: Colors.white,
-            side: BorderSide(
-              color: isActive
-                  ? AppColors.primaryLight.withValues(alpha: 0.5)
-                  : AppColors.textSecondaryLight.withValues(alpha: 0.2),
-            ),
-          );
-        },
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
-        itemCount: _sortModes.length,
+          ],
+          border: Border.all(color: AppColors.divider),
+        ),
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          itemBuilder: (context, index) {
+            final mode = _sortModes[index];
+            final isActive = mode['id'] == _selectedSort;
+            return GestureDetector(
+              onTap: () {
+                if (isActive) return;
+                final prev = _selectedSort;
+                final next = mode['id']!;
+                setState(() => _selectedSort = next);
+                AnalyticsService().logExploreModeSwitch(
+                  from: prev,
+                  to: next,
+                  categoryId: _selectedCategoryId,
+                );
+                _loadDiscoveryCampaigns();
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 150),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                decoration: BoxDecoration(
+                  color: isActive ? AppColors.primaryLight.withValues(alpha: 0.12) : Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: isActive
+                        ? AppColors.primaryLight.withValues(alpha: 0.5)
+                        : AppColors.divider,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      _sortIcon(mode['id']!),
+                      size: 16,
+                      color: isActive ? AppColors.primaryLight : AppColors.textSecondaryLight,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      mode['label'] ?? '',
+                      style: AppTextStyles.caption(isDark: false).copyWith(
+                        color: isActive ? AppColors.primaryLight : AppColors.textPrimaryLight,
+                        fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+          separatorBuilder: (_, __) => const SizedBox(width: 8),
+          itemCount: _sortModes.length,
+        ),
       ),
     );
   }
@@ -476,8 +551,8 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
     }
 
     return Container(
-      height: 48,
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      height: 54,
+      padding: const EdgeInsets.symmetric(vertical: 6),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(
@@ -486,11 +561,48 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
         itemCount: _categories.length,
         itemBuilder: (context, index) {
           final category = _categories[index];
-          return CategoryPill(
-            name: category.name,
-            emoji: category.icon,
-            isActive: _selectedCategoryId == category.id,
-            onTap: () => _onCategoryTap(category.id),
+          final isActive = _selectedCategoryId == category.id;
+          return Padding(
+            padding: const EdgeInsets.only(right: 10),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: isActive
+                    ? AppColors.primaryLight.withValues(alpha: 0.12)
+                    : Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: isActive
+                      ? AppColors.primaryLight.withValues(alpha: 0.5)
+                      : AppColors.divider,
+                ),
+                boxShadow: [
+                  if (isActive)
+                    BoxShadow(
+                      color: AppColors.primaryLight.withValues(alpha: 0.16),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                ],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(category.icon, style: const TextStyle(fontSize: 16)),
+                  const SizedBox(width: 6),
+                  Text(
+                    category.name,
+                    style: AppTextStyles.caption(isDark: false).copyWith(
+                      color: isActive
+                          ? AppColors.primaryLight
+                          : AppColors.textPrimaryLight,
+                      fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           );
         },
       ),
