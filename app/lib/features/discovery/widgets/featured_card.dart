@@ -100,15 +100,15 @@ class FeaturedCard extends StatelessWidget {
                                 color: AppColors.primaryLight,
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              child: Text(
-                                'ÖZEL FIRSAT',
-                                style: AppTextStyles.badgeText(isDark: false)
-                                    .copyWith(
-                                      color: Colors.white,
-                                      fontSize: 10,
-                                      letterSpacing: 0.5,
-                                    ),
-                              ),
+                          child: Text(
+                            'ÖZEL',
+                            style: AppTextStyles.badgeText(isDark: false)
+                                .copyWith(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  letterSpacing: 0.5,
+                                ),
+                          ),
                             ),
                             if (campaign.sponsored == true) ...[
                               const SizedBox(width: 6),
@@ -125,7 +125,7 @@ class FeaturedCard extends StatelessWidget {
                                   ),
                                 ),
                                 child: Text(
-                                  'Sponsorlu',
+                                  'Sponsor',
                                   style: AppTextStyles.badgeText(isDark: false)
                                       .copyWith(
                                         color: AppColors.warning,

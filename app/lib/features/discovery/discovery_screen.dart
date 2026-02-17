@@ -48,9 +48,9 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   static const int _pageSize = 20;
   static const List<Map<String, String>> _sortModes = [
     {'id': 'popular', 'label': 'Popüler'},
-    {'id': 'latest', 'label': 'Son Eklenen'},
+    {'id': 'latest', 'label': 'Son'},
+    {'id': 'free_week', 'label': 'Ücretsiz'},
     {'id': 'expiring', 'label': 'Bitiyor'},
-    {'id': 'free_week', 'label': 'Ücretsiz Bu Hafta'},
   ];
 
   String? _selectedCategoryId;
