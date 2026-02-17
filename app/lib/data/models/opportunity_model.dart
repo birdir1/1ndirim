@@ -57,6 +57,17 @@ class OpportunityModel {
   final double? originalPrice; // Orijinal fiyat
   final double? discountPercentage; // İndirim yüzdesi
   final String? priceCurrency; // Para birimi
+  final String? platform; // steam/epic/ps/xbox/ott/music
+  final String? contentType; // game/ott/music/general
+  final String? startAt;
+  final String? endAt;
+  final bool? isFree;
+  final String? city;
+  final String? district;
+  final double? lat;
+  final double? lng;
+  final bool? sponsored;
+  final int? sponsoredWeight;
 
   const OpportunityModel({
     required this.id,
@@ -82,6 +93,17 @@ class OpportunityModel {
     this.originalPrice,
     this.discountPercentage,
     this.priceCurrency,
+    this.platform,
+    this.contentType,
+    this.startAt,
+    this.endAt,
+    this.isFree,
+    this.city,
+    this.district,
+    this.lat,
+    this.lng,
+    this.sponsored,
+    this.sponsoredWeight,
   });
 
   /// Map'ten model oluşturur
@@ -122,6 +144,17 @@ class OpportunityModel {
           ? (map['discountPercentage'] as num).toDouble()
           : null,
       priceCurrency: map['priceCurrency'] as String?,
+      platform: map['platform'] as String?,
+      contentType: map['contentType'] as String?,
+      startAt: map['startAt'] as String?,
+      endAt: map['endAt'] as String?,
+      isFree: map['isFree'] as bool?,
+      city: map['city'] as String?,
+      district: map['district'] as String?,
+      lat: map['lat'] != null ? (map['lat'] as num).toDouble() : null,
+      lng: map['lng'] != null ? (map['lng'] as num).toDouble() : null,
+      sponsored: map['sponsored'] as bool?,
+      sponsoredWeight: map['sponsoredWeight'] as int?,
     );
   }
 

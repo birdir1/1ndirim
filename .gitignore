@@ -17,6 +17,7 @@ bot/node_modules/
 admin-panel/node_modules/
 admin-panel/.next/
 admin-panel/out/
+app/test/goldens/failures/
 
 # Flutter / app
 app/.dart_tool/

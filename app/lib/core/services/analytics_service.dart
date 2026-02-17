@@ -159,4 +159,114 @@ class AnalyticsService {
       },
     );
   }
+
+  /// === Discovery / Explore specific events ===
+  Future<void> logExploreScreenView({
+    required String sort,
+    String? categoryId,
+  }) async {
+    await logEvent(
+      name: 'explore_screen_view',
+      parameters: _compact({
+        'sort': sort,
+        'category_id': categoryId,
+      }),
+    );
+  }
+
+  Future<void> logExploreModeSwitch({
+    required String from,
+    required String to,
+    String? categoryId,
+  }) async {
+    await logEvent(
+      name: 'explore_mod_switch',
+      parameters: _compact({
+        'from': from,
+        'to': to,
+        'category_id': categoryId,
+      }),
+    );
+  }
+
+  Future<void> logExploreCategoryClick({
+    required String categoryId,
+    required String categoryName,
+    required String sort,
+  }) async {
+    await logEvent(
+      name: 'explore_category_click',
+      parameters: _compact({
+        'category_id': categoryId,
+        'category_name': categoryName,
+        'sort': sort,
+      }),
+    );
+  }
+
+  Future<void> logExploreCardOpen({
+    required String campaignId,
+    required String campaignTitle,
+    String? categoryId,
+    required String sort,
+    bool sponsored = false,
+    String? platform,
+    bool isFree = false,
+    double? discountPercent,
+  }) async {
+    await logEvent(
+      name: 'explore_card_open',
+      parameters: _compact({
+        'campaign_id': campaignId,
+        'campaign_title': campaignTitle,
+        'category_id': categoryId,
+        'sort': sort,
+        'sponsored': sponsored,
+        'platform': platform,
+        'is_free': isFree,
+        'discount_percent': discountPercent,
+      }),
+    );
+  }
+
+  Future<void> logExploreSponsoredClick({
+    required String campaignId,
+    String? categoryId,
+    required String sort,
+  }) async {
+    await logEvent(
+      name: 'explore_sponsored_click',
+      parameters: _compact({
+        'campaign_id': campaignId,
+        'category_id': categoryId,
+        'sort': sort,
+      }),
+    );
+  }
+
+  Future<void> logExploreSaveFavorite({
+    required String campaignId,
+    String? categoryId,
+    required String sort,
+  }) async {
+    await logEvent(
+      name: 'explore_save_favorite',
+      parameters: _compact({
+        'campaign_id': campaignId,
+        'category_id': categoryId,
+        'sort': sort,
+      }),
+    );
+  }
+
+  Map<String, Object> _compact(Map<String, Object?> raw) {
+    final filtered = <String, Object>{};
+    raw.forEach((key, value) {
+      if (value == null) return;
+      if (value is bool || value is num || value is String) {
+        filtered[key] = value;
+      }
+    });
+    return filtered;
+  }
 }

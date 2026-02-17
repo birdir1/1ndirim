@@ -21,7 +21,13 @@ class CuratedCampaignCard extends StatelessWidget {
     final sourceColor = SourceLogoHelper.getLogoBackgroundColor(
       campaign.sourceName,
     );
-    final semanticsLabel = '${campaign.title} - ${campaign.sourceName}';
+    final semanticsLabel = [
+      campaign.title,
+      if (campaign.isFree == true) 'Ücretsiz',
+      if (campaign.discountPercentage != null)
+        '%${campaign.discountPercentage!.round()} indirim',
+      if (campaign.sourceName.isNotEmpty) campaign.sourceName,
+    ].where((e) => e != null && e.toString().isNotEmpty).join(' • ');
 
     // Get meaningful subtitle
     String displaySubtitle = campaign.subtitle;
@@ -98,6 +104,34 @@ class CuratedCampaignCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 6,
+                          children: [
+                            if (campaign.sponsored == true)
+                              _buildBadge('Sponsorlu', AppColors.warning),
+                            if (campaign.isFree == true) ...[
+                              _buildBadge('Ücretsiz', AppColors.success),
+                            ] else if (campaign.discountPercentage != null) ...[
+                              _buildBadge(
+                                '%${campaign.discountPercentage!.round()}',
+                                AppColors.discountRed,
+                              ),
+                            ],
+                            if (campaign.platform != null &&
+                                campaign.platform!.isNotEmpty)
+                              _buildBadge(
+                                campaign.platform!,
+                                AppColors.textSecondaryLight,
+                              ),
+                            if (campaign.endAt != null)
+                              _buildBadge(
+                                _expiryLabel(campaign.endAt!),
+                                AppColors.warning,
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
                         // Campaign Title
                         Text(
                           campaign.title,
@@ -170,5 +204,36 @@ class CuratedCampaignCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Widget _buildBadge(String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
+      ),
+      child: Text(
+        text,
+        style: AppTextStyles.caption(isDark: false).copyWith(
+          color: color,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+
+  String _expiryLabel(String iso) {
+    try {
+      final dt = DateTime.parse(iso);
+      final diff = dt.difference(DateTime.now());
+      if (diff.inDays >= 2) return 'Bitiyor: ${diff.inDays}g';
+      if (diff.inHours >= 1) return 'Bitiyor: ${diff.inHours}s';
+      if (diff.inMinutes > 0) return 'Bitiyor: ${diff.inMinutes}dk';
+      return 'Bitiyor';
+    } catch (_) {
+      return 'Bitiyor';
+    }
   }
 }

@@ -1,0 +1,6 @@
+title,sourceName,platform,contentType,category,subCategory,startAt,endAt,isFree,discountPercent,city,district,lat,lng,originalUrl,affiliateUrl,tags,description
+"Epic Haftalık Ücretsiz Oyun","Epic Games","epic","game","gaming","free","2026-02-17","2026-02-24",true,100,,,,,"https://store.epicgames.com/free","",epic;free;pc,"Bu hafta Epic Games Store'da ücretsiz oyun"
+"Steam Hafta Ortası İndirimi","Steam","steam","game","gaming","sale","2026-02-17","2026-02-23",false,60,,,,,"https://store.steampowered.com/sale/midweek","",steam;sale;pc,"Steam orta hafta kampanyası %60'a varan indirim"
+"GeForce NOW Promo","Nvidia","geforce","game","gaming","cloud","2026-02-17","2026-03-01",false,30,,,,,"https://www.nvidia.com/en-us/geforce-now/","",geforce;cloud;promo,"GeForce NOW aboneliklerinde %30 indirim"
+"Netflix 1 Ay Ücretsiz","Netflix","ott","ott","entertainment","video","2026-02-17","2026-03-17",true,100,,,,,"https://www.netflix.com/tr/","",netflix;ott;trial,"Yeni kullanıcılara 1 ay ücretsiz deneme"
+"Spotify Öğrenci %50","Spotify","music","music","entertainment","music","2026-02-17","2026-06-17",false,50,,,,,"https://www.spotify.com/tr/student/","",spotify;student;music,"Öğrencilere Spotify Premium %50 indirim"

@@ -89,25 +89,52 @@ class FeaturedCard extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        // Badge
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.primaryLight,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            'ÖZEL FIRSAT',
-                            style: AppTextStyles.badgeText(isDark: false)
-                                .copyWith(
-                                  color: Colors.white,
-                                  fontSize: 10,
-                                  letterSpacing: 0.5,
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.primaryLight,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                'ÖZEL FIRSAT',
+                                style: AppTextStyles.badgeText(isDark: false)
+                                    .copyWith(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      letterSpacing: 0.5,
+                                    ),
+                              ),
+                            ),
+                            if (campaign.sponsored == true) ...[
+                              const SizedBox(width: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 5,
                                 ),
-                          ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.warning.withValues(alpha: 0.18),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: AppColors.warning.withValues(alpha: 0.4),
+                                  ),
+                                ),
+                                child: Text(
+                                  'Sponsorlu',
+                                  style: AppTextStyles.badgeText(isDark: false)
+                                      .copyWith(
+                                        color: AppColors.warning,
+                                        fontSize: 10,
+                                      ),
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                         // Logo
                         Container(

@@ -76,6 +76,58 @@ class Campaign {
   }
 
   /**
+   * Minimal insert (used by manual feed) with a stable column list to avoid mismatch.
+   */
+  static async rawInsertMinimal({
+    sourceId,
+    title,
+    description,
+    category,
+    subCategory,
+    platform = null,
+    contentType = null,
+    expiresAt,
+    isFree = false,
+    discountPercent = null,
+    tags = [],
+    originalUrl = null,
+    affiliateUrl = null,
+  }) {
+    const query = `
+      INSERT INTO campaigns (
+        source_id, title, description, category, sub_category,
+        platform, content_type, expires_at, is_free, discount_percent,
+        tags, original_url, affiliate_url, campaign_type, show_in_category_feed,
+        show_in_light_feed, is_active, status
+      )
+      VALUES (
+        $1, $2, $3, $4, $5,
+        $6, $7, $8, $9, $10,
+        $11, $12, $13, 'category', true,
+        true, true, 'active'
+      )
+      RETURNING *
+    `;
+    const params = [
+      sourceId,
+      title,
+      description || '',
+      category,
+      subCategory,
+      platform,
+      contentType,
+      expiresAt,
+      isFree,
+      discountPercent,
+      JSON.stringify(tags),
+      originalUrl,
+      affiliateUrl,
+    ];
+    const res = await pool.query(query, params);
+    return res.rows[0];
+  }
+
+  /**
    * TÜM aktif kampanyaları getirir (feed type'a bakmaz)
    * Main feed guard'ı bypass eder
    * Sadece is_active = true ve expires_at > NOW() kontrol eder
@@ -484,8 +536,14 @@ class Campaign {
    * @param {number} limit - Maksimum kampanya sayısı (varsayılan: 20)
    * @returns {Promise<Array>}
    */
-  static async findByCategory(category, limit = 20, offset = 0) {
-    const query = `
+  static async findByCategory(category, limit = 20, offset = 0, options = {}) {
+    const sort = options.sort || 'latest'; // latest | expiring | free_week | popular
+    const platform = options.platform || null;
+    const lat = options.lat;
+    const lng = options.lng;
+    const radiusKm = options.radiusKm || 50;
+
+    let query = `
       SELECT 
         c.*,
         s.name as source_name,
@@ -497,12 +555,47 @@ class Campaign {
         AND c.expires_at > NOW()
         AND (c.is_hidden = false OR c.is_hidden IS NULL)
         AND c.category = $1
-      ORDER BY c.is_pinned DESC, c.pinned_at DESC NULLS LAST, c.created_at DESC
-      LIMIT $2
-      OFFSET $3
     `;
 
-    const result = await pool.query(query, [category, limit, Math.max(0, offset)]);
+    const params = [category];
+    let paramIndex = 2;
+
+    if (platform) {
+      query += ` AND LOWER(c.platform) = LOWER($${paramIndex})`;
+      params.push(platform);
+      paramIndex++;
+    }
+
+    if (sort === 'free_week') {
+      query += ` AND (c.is_free = true OR (c.discount_percent IS NOT NULL AND c.discount_percent >= 90))`;
+      query += ` AND c.expires_at <= NOW() + INTERVAL '7 days'`;
+    }
+
+    if (lat !== undefined && lng !== undefined) {
+      query += ` AND c.lat IS NOT NULL AND c.lng IS NOT NULL
+        AND (
+          111.045 * DEGREES(ACOS(
+            LEAST(1.0, COS(RADIANS($${paramIndex})) * COS(RADIANS(c.lat)) * COS(RADIANS($${paramIndex + 1}) - RADIANS(c.lng)) + SIN(RADIANS($${paramIndex})) * SIN(RADIANS(c.lat)))
+          ))
+        ) <= $${paramIndex + 2}`;
+      params.push(lat, lng, radiusKm);
+      paramIndex += 3;
+    }
+
+    if (sort === 'expiring') {
+      query += ` ORDER BY c.expires_at ASC, c.is_pinned DESC, c.created_at DESC`;
+    } else if (sort === 'popular') {
+      query += ` ORDER BY c.sponsored DESC, c.sponsored_weight DESC, c.discount_percent DESC NULLS LAST, c.is_pinned DESC, c.created_at DESC`;
+    } else if (sort === 'free_week') {
+      query += ` ORDER BY c.expires_at ASC, c.discount_percent DESC NULLS LAST, c.created_at DESC`;
+    } else {
+      query += ` ORDER BY c.is_pinned DESC, c.pinned_at DESC NULLS LAST, c.created_at DESC`;
+    }
+
+    query += ` LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+    params.push(limit, Math.max(0, offset));
+
+    const result = await pool.query(query, params);
     return result.rows;
   }
 
@@ -513,9 +606,9 @@ class Campaign {
    * @param {number} limit - Maksimum kampanya sayısı (varsayılan: 20)
    * @returns {Promise<Object>} - { campaigns: Array, isEmpty: boolean }
    */
-  static async findByCategoryWithFallback(category, limit = 20, offset = 0) {
+  static async findByCategoryWithFallback(category, limit = 20, offset = 0, options = {}) {
     // Try to get active campaigns
-    const activeCampaigns = await this.findByCategory(category, limit, offset);
+    const activeCampaigns = await this.findByCategory(category, limit, offset, options);
 
     if (activeCampaigns.length > 0) {
       return {
@@ -621,6 +714,18 @@ class Campaign {
       isPersonalized,
       scrapedAt,
       dataHash,
+      platform,
+      contentType,
+      startAt,
+      endAt,
+      isFree,
+      discountPercent,
+      city,
+      district,
+      lat,
+      lng,
+      sponsored,
+      sponsoredWeight,
     } = campaignData;
 
     // JSONB alanlar: explicit stringify
@@ -637,6 +742,7 @@ class Campaign {
       'how_to_use', 'validity_channels', 'status', 'is_active',
       'campaign_type', 'show_in_light_feed', 'show_in_category_feed', 'value_level', // FAZ 7.3, FAZ 7.2, FAZ 7.5
       'category', 'sub_category', 'discount_percentage', 'is_personalized', 'scraped_at', 'data_hash', // NEW
+      'platform', 'content_type', 'start_at', 'end_at', 'is_free', 'discount_percent', 'city', 'district', 'lat', 'lng', 'sponsored', 'sponsored_weight',
       'source_url', 'raw_content', 'normalized_content', 'is_valid', 'needs_review', 'invalid_reason'
       // created_at ve updated_at DEFAULT NOW() ile otomatik set ediliyor
     ];
@@ -673,6 +779,24 @@ class Campaign {
       isPersonalized || false, // NEW
       scrapedAt || new Date(), // NEW
       dataHash || null, // NEW
+      platform || null,
+      contentType || null,
+      startAt || null,
+      endAt || null,
+      typeof isFree === 'boolean' ? isFree : false,
+      discountPercent || discountPercentage || null,
+      city || null,
+      district || null,
+      lat || null,
+      lng || null,
+      typeof sponsored === 'boolean' ? sponsored : false,
+      sponsoredWeight || 0,
+      sourceUrl || originalUrl || null,
+      rawContent || null,
+      normalizedContent ? JSON.stringify(normalizedContent) : JSON.stringify({}),
+      typeof isValid === 'boolean' ? isValid : true,
+      typeof needsReview === 'boolean' ? needsReview : false,
+      invalidReason || null,
     ];
 
     if (hasStartsAt) {
@@ -723,6 +847,18 @@ class Campaign {
       iconColor: 'icon_color',
       iconBgColor: 'icon_bg_color',
       isActive: 'is_active',
+      platform: 'platform',
+      contentType: 'content_type',
+      startAt: 'start_at',
+      endAt: 'end_at',
+      isFree: 'is_free',
+      discountPercent: 'discount_percent',
+      city: 'city',
+      district: 'district',
+      lat: 'lat',
+      lng: 'lng',
+      sponsored: 'sponsored',
+      sponsoredWeight: 'sponsored_weight',
     };
 
     // JSONB alanlar: explicit stringify

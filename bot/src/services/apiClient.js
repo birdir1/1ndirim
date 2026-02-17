@@ -86,7 +86,11 @@ class ApiClient {
             if (status === 429 && attempt < maxRetries) {
               const retryAfterRaw = (error.response.headers && (error.response.headers['retry-after'] || error.response.headers['Retry-After'])) || '';
               const retryAfterSec = Number.parseInt(String(retryAfterRaw || '').trim(), 10);
-              const waitMs = Number.isFinite(retryAfterSec) && retryAfterSec > 0 ? retryAfterSec * 1000 : Math.pow(2, attempt) * 5000;
+              const fallback = Math.pow(2, attempt) * 5000;
+              const maxWaitMs = parseInt(process.env.BOT_MAX_429_WAIT_MS || '900000', 10); // 15dk
+              const waitMsBase = Number.isFinite(retryAfterSec) && retryAfterSec > 0 ? retryAfterSec * 1000 : fallback;
+              const jitter = 0.8 + Math.random() * 0.4;
+              const waitMs = Math.min(maxWaitMs, Math.floor(waitMsBase * jitter));
               console.warn(`⬅️  POST /campaigns status=429 (retry) waitMs=${waitMs} error=${errMsg}`);
               await new Promise((resolve) => setTimeout(resolve, waitMs));
               continue;
@@ -153,13 +157,29 @@ class ApiClient {
    * Dead-letter'daki kampanyaları tekrar dener
    * @returns {Promise<Array>} - Sonuçlar
    */
-  async retryDeadLetters() {
-    const files = fs.readdirSync(DEAD_LETTER_DIR).filter((f) => f.endsWith('.json'));
+  async retryDeadLetters({
+    maxFiles = 50,
+    ttlHours = 24,
+    backoffBaseMs = 2000,
+  } = {}) {
+    const now = Date.now();
+    const files = fs
+      .readdirSync(DEAD_LETTER_DIR)
+      .filter((f) => f.endsWith('.json'))
+      .slice(0, maxFiles);
     const results = [];
 
     for (const file of files) {
       try {
         const filepath = path.join(DEAD_LETTER_DIR, file);
+        const stat = fs.statSync(filepath);
+        const ageHours = (now - stat.mtimeMs) / (1000 * 60 * 60);
+        if (ageHours > ttlHours) {
+          fs.unlinkSync(filepath);
+          results.push({ file, success: false, skipped: true, reason: 'expired' });
+          continue;
+        }
+
         const deadLetter = JSON.parse(fs.readFileSync(filepath, 'utf8'));
 
         console.log(`🔄 Dead-letter tekrar deneniyor: ${file}`);
@@ -171,6 +191,8 @@ class ApiClient {
           results.push({ file, success: true });
         } else {
           results.push({ file, success: false, error: result.error });
+          // minimal backoff to avoid hammering backend
+          await new Promise((resolve) => setTimeout(resolve, backoffBaseMs));
         }
       } catch (error) {
         results.push({ file, success: false, error: error.message });

@@ -130,11 +130,12 @@ class OpportunityApiDataSource {
   /// Keşfet ekranı için kategori + ilk kampanya listelerini getirir.
   Future<DiscoveryCategoriesResult> getDiscoveryCategories({
     int limit = 20,
+    String sort = 'latest',
   }) async {
     try {
       final response = await _dio.get(
         '${ApiConfig.campaigns}/discover',
-        queryParameters: {'limit': limit},
+        queryParameters: {'limit': limit, 'sort': sort},
       );
 
       if (response.statusCode != 200 || response.data == null) {
@@ -214,11 +215,28 @@ class OpportunityApiDataSource {
     required String categoryId,
     int limit = 20,
     int offset = 0,
+    String sort = 'latest',
+    String? platform,
+    double? lat,
+    double? lng,
+    double? radiusKm,
   }) async {
     try {
+      final params = {
+        'limit': limit,
+        'offset': offset,
+        'sort': sort,
+      };
+      if (platform != null) params['platform'] = platform;
+      if (lat != null && lng != null) {
+        params['lat'] = lat;
+        params['lng'] = lng;
+        if (radiusKm != null) params['radius'] = radiusKm;
+      }
+
       final response = await _dio.get(
         '${ApiConfig.campaigns}/discover/$categoryId',
-        queryParameters: {'limit': limit, 'offset': offset},
+        queryParameters: params,
       );
 
       if (response.statusCode != 200 || response.data == null) {
@@ -683,6 +701,17 @@ class OpportunityApiDataSource {
           ? (json['discountPercentage'] as num).toDouble()
           : null,
       priceCurrency: json['priceCurrency'] as String?,
+      platform: json['platform'] as String?,
+      contentType: json['contentType'] as String?,
+      startAt: json['startAt'] as String?,
+      endAt: json['endAt'] as String?,
+      isFree: json['isFree'] as bool?,
+      city: json['city'] as String?,
+      district: json['district'] as String?,
+      lat: json['lat'] != null ? (json['lat'] as num).toDouble() : null,
+      lng: json['lng'] != null ? (json['lng'] as num).toDouble() : null,
+      sponsored: json['sponsored'] as bool?,
+      sponsoredWeight: json['sponsoredWeight'] as int?,
     );
   }
 

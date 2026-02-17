@@ -71,28 +71,35 @@ void main() {
     await tester.pumpWidget(
       _app(
         DiscoveryScreen(
-          loadDiscoveryCategories: (_) async => NetworkSuccess(
-            DiscoveryCategoriesResult(
-              categories: categories,
-              totalCategories: categories.length,
-              perCategoryLimit: 12,
-            ),
-          ),
-          loadDiscoveryCategoryPage:
-              ({required categoryId, required limit, required offset}) async =>
-                  NetworkSuccess(
-                    DiscoveryCategoryPageResult(
-                      category: categories.first,
-                      campaigns: categories.first.campaigns,
-                      count: categories.first.campaigns.length,
-                      totalCount: categories.first.totalCount,
-                      hasMore: false,
-                      isEmpty: false,
-                      fallbackMessage: null,
-                      limit: limit,
-                      offset: offset,
-                    ),
-                  ),
+          loadDiscoveryCategories: (limit, sort) async {
+            return NetworkSuccess(
+              DiscoveryCategoriesResult(
+                categories: categories,
+                totalCategories: categories.length,
+                perCategoryLimit: 12,
+              ),
+            );
+          },
+          loadDiscoveryCategoryPage: ({
+            required categoryId,
+            required limit,
+            required offset,
+            required sort,
+          }) async {
+            return NetworkSuccess(
+              DiscoveryCategoryPageResult(
+                category: categories.first,
+                campaigns: categories.first.campaigns,
+                count: categories.first.campaigns.length,
+                totalCount: categories.first.totalCount,
+                hasMore: false,
+                isEmpty: false,
+                fallbackMessage: null,
+                limit: limit,
+                offset: offset,
+              ),
+            );
+          },
         ),
       ),
     );

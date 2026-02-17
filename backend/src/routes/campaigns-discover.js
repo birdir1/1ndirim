@@ -116,6 +116,11 @@ router.get('/discover', cacheMiddleware(CacheService.TTL.CAMPAIGNS_LIST), async 
       defaultValue: 20,
     });
     const categories = await getActiveCategoriesWithFallback();
+    const sort = (req.query.sort || 'latest').toString();
+    const platform = req.query.platform || null;
+    const lat = req.query.lat ? Number(req.query.lat) : undefined;
+    const lng = req.query.lng ? Number(req.query.lng) : undefined;
+    const radiusKm = req.query.radius ? Number(req.query.radius) : undefined;
     const result = [];
 
     for (const category of categories) {
@@ -124,6 +129,7 @@ router.get('/discover', cacheMiddleware(CacheService.TTL.CAMPAIGNS_LIST), async 
         category.id,
         perCategoryLimit,
         0,
+        { sort, platform, lat, lng, radiusKm },
       );
       const totalCount = await Campaign.countByCategory(category.id, {
         includeExpired: isEmpty,
@@ -150,7 +156,18 @@ router.get('/discover', cacheMiddleware(CacheService.TTL.CAMPAIGNS_LIST), async 
         status: campaign.status,
         category: campaign.category,
         subCategory: campaign.sub_category,
-        discountPercentage: campaign.discount_percentage,
+        discountPercentage: campaign.discount_percentage || campaign.discount_percent,
+        platform: campaign.platform,
+        contentType: campaign.content_type,
+        startAt: campaign.start_at,
+        endAt: campaign.end_at,
+        isFree: campaign.is_free,
+        city: campaign.city,
+        district: campaign.district,
+        lat: campaign.lat,
+        lng: campaign.lng,
+        sponsored: campaign.sponsored,
+        sponsoredWeight: campaign.sponsored_weight,
         isExpired: campaign.is_expired || false,
       }));
 
@@ -207,6 +224,12 @@ router.get('/discover/:category', cacheMiddleware(CacheService.TTL.CAMPAIGNS_LIS
       defaultValue: 0,
     });
 
+    const sort = (req.query.sort || 'latest').toString();
+    const platform = req.query.platform || null;
+    const lat = req.query.lat ? Number(req.query.lat) : undefined;
+    const lng = req.query.lng ? Number(req.query.lng) : undefined;
+    const radiusKm = req.query.radius ? Number(req.query.radius) : undefined;
+
     // Validate category
     const categoryConfig = await getCategoryByIdWithFallback(category);
     if (!categoryConfig) {
@@ -222,6 +245,7 @@ router.get('/discover/:category', cacheMiddleware(CacheService.TTL.CAMPAIGNS_LIS
       category,
       limit,
       offset,
+      { sort, platform, lat, lng, radiusKm },
     );
     const totalCount = await Campaign.countByCategory(category, {
       includeExpired: isEmpty,
@@ -249,7 +273,18 @@ router.get('/discover/:category', cacheMiddleware(CacheService.TTL.CAMPAIGNS_LIS
       status: campaign.status,
       category: campaign.category,
       subCategory: campaign.sub_category,
-      discountPercentage: campaign.discount_percentage,
+      discountPercentage: campaign.discount_percentage || campaign.discount_percent,
+      platform: campaign.platform,
+      contentType: campaign.content_type,
+      startAt: campaign.start_at,
+      endAt: campaign.end_at,
+      isFree: campaign.is_free,
+      city: campaign.city,
+      district: campaign.district,
+      lat: campaign.lat,
+      lng: campaign.lng,
+      sponsored: campaign.sponsored,
+      sponsoredWeight: campaign.sponsored_weight,
       isExpired: campaign.is_expired || false,
     }));
 

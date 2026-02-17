@@ -7,6 +7,7 @@ import '../../core/theme/app_ui_tokens.dart';
 import '../../core/utils/page_transitions.dart';
 import '../../core/utils/network_result.dart';
 import '../../core/l10n/app_localizations.dart';
+import '../../core/services/analytics_service.dart';
 import '../../data/models/discovery_models.dart';
 import '../../data/models/opportunity_model.dart';
 import '../../data/repositories/opportunity_repository.dart';
@@ -17,12 +18,13 @@ import 'widgets/featured_card.dart';
 import 'widgets/curated_campaign_card.dart';
 
 typedef DiscoveryCategoriesLoader =
-    Future<NetworkResult<DiscoveryCategoriesResult>> Function(int limit);
+    Future<NetworkResult<DiscoveryCategoriesResult>> Function(int limit, String sort);
 typedef DiscoveryCategoryPageLoader =
     Future<NetworkResult<DiscoveryCategoryPageResult>> Function({
       required String categoryId,
       required int limit,
       required int offset,
+      required String sort,
     });
 
 /// Discovery Screen - Herkes İçin Fırsatlar
@@ -44,8 +46,15 @@ class DiscoveryScreen extends StatefulWidget {
 class _DiscoveryScreenState extends State<DiscoveryScreen> {
   static const int _initialPerCategoryLimit = 12;
   static const int _pageSize = 20;
+  static const List<Map<String, String>> _sortModes = [
+    {'id': 'popular', 'label': 'Popüler'},
+    {'id': 'latest', 'label': 'Son Eklenen'},
+    {'id': 'expiring', 'label': 'Bitiyor'},
+    {'id': 'free_week', 'label': 'Ücretsiz Bu Hafta'},
+  ];
 
   String? _selectedCategoryId;
+  String _selectedSort = 'latest';
   NetworkResult<DiscoveryCategoriesResult> _discoveryResult =
       const NetworkLoading();
   List<DiscoveryCategorySection> _categories = [];
@@ -61,9 +70,12 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   ) {
     final loader = widget.loadDiscoveryCategories;
     if (loader != null) {
-      return loader(limit);
+      return loader(limit, _selectedSort);
     }
-    return OpportunityRepository.instance.getDiscoveryCategories(limit: limit);
+    return OpportunityRepository.instance.getDiscoveryCategories(
+      limit: limit,
+      sort: _selectedSort,
+    );
   }
 
   Future<NetworkResult<DiscoveryCategoryPageResult>>
@@ -74,12 +86,18 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   }) {
     final loader = widget.loadDiscoveryCategoryPage;
     if (loader != null) {
-      return loader(categoryId: categoryId, limit: limit, offset: offset);
+      return loader(
+        categoryId: categoryId,
+        limit: limit,
+        offset: offset,
+        sort: _selectedSort,
+      );
     }
     return OpportunityRepository.instance.getDiscoveryByCategory(
       categoryId: categoryId,
       limit: limit,
       offset: offset,
+      sort: _selectedSort,
     );
   }
 
@@ -124,6 +142,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
         _selectedCategoryId = nextSelected;
         _featuredCampaign = _pickFeaturedCampaign(incomingCategories);
       });
+      _logScreenView(nextSelected);
       return;
     }
 
@@ -154,6 +173,33 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
 
     all.sort((a, b) => _campaignScore(b).compareTo(_campaignScore(a)));
     return all.first;
+  }
+
+  void _logScreenView(String? categoryId) {
+    AnalyticsService().logExploreScreenView(
+      sort: _selectedSort,
+      categoryId: categoryId,
+    );
+  }
+
+  void _logCardOpen(OpportunityModel campaign) {
+    AnalyticsService().logExploreCardOpen(
+      campaignId: campaign.id,
+      campaignTitle: campaign.title,
+      categoryId: _selectedCategoryId,
+      sort: _selectedSort,
+      sponsored: campaign.sponsored ?? false,
+      platform: campaign.platform,
+      isFree: campaign.isFree ?? false,
+      discountPercent: campaign.discountPercentage,
+    );
+    if (campaign.sponsored == true) {
+      AnalyticsService().logExploreSponsoredClick(
+        campaignId: campaign.id,
+        categoryId: _selectedCategoryId,
+        sort: _selectedSort,
+      );
+    }
   }
 
   int _campaignScore(OpportunityModel c) {
@@ -209,6 +255,13 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
 
   void _onCategoryTap(String categoryId) {
     if (categoryId == _selectedCategoryId) return;
+
+    final category = _categoryById[categoryId];
+    AnalyticsService().logExploreCategoryClick(
+      categoryId: categoryId,
+      categoryName: category?.name ?? 'unknown',
+      sort: _selectedSort,
+    );
 
     setState(() {
       _selectedCategoryId = categoryId;
@@ -307,6 +360,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
         child: Column(
           children: [
             _buildHeader(),
+            _buildSortTabs(),
             _buildCategorySelector(),
             Expanded(child: _buildContent()),
           ],
@@ -366,6 +420,52 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSortTabs() {
+    return Container(
+      height: 44,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppUiTokens.screenPadding,
+        vertical: 4,
+      ),
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemBuilder: (context, index) {
+          final mode = _sortModes[index];
+          final isActive = mode['id'] == _selectedSort;
+          return ChoiceChip(
+            label: Text(mode['label'] ?? ''),
+            selected: isActive,
+            onSelected: (_) {
+              if (isActive) return;
+              final prev = _selectedSort;
+              final next = mode['id']!;
+              setState(() => _selectedSort = next);
+              AnalyticsService().logExploreModeSwitch(
+                from: prev,
+                to: next,
+                categoryId: _selectedCategoryId,
+              );
+              _loadDiscoveryCampaigns();
+            },
+            selectedColor: AppColors.primaryLight.withValues(alpha: 0.15),
+            labelStyle: AppTextStyles.caption(isDark: false).copyWith(
+              color: isActive ? AppColors.primaryLight : AppColors.textPrimaryLight,
+              fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+            ),
+            backgroundColor: Colors.white,
+            side: BorderSide(
+              color: isActive
+                  ? AppColors.primaryLight.withValues(alpha: 0.5)
+                  : AppColors.textSecondaryLight.withValues(alpha: 0.2),
+            ),
+          );
+        },
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemCount: _sortModes.length,
       ),
     );
   }
@@ -472,6 +572,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                   return CuratedCampaignCard(
                     campaign: campaign,
                     onTap: () {
+                      _logCardOpen(campaign);
                       Navigator.of(context).push(
                         SlidePageRoute(
                           child: CampaignDetailScreen.fromOpportunity(
@@ -566,6 +667,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
           FeaturedCard(
             campaign: campaign,
             onTap: () {
+              _logCardOpen(campaign);
               Navigator.of(context).push(
                 SlidePageRoute(
                   child: CampaignDetailScreen.fromOpportunity(

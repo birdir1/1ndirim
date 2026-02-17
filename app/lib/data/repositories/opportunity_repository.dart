@@ -159,10 +159,12 @@ class OpportunityRepository {
   /// Keşfet kategorilerini backend'den getirir.
   Future<NetworkResult<DiscoveryCategoriesResult>> getDiscoveryCategories({
     int limit = 20,
+    String sort = 'latest',
   }) async {
     try {
       final categories = await _apiDataSource.getDiscoveryCategories(
         limit: limit,
+        sort: sort,
       );
       return NetworkSuccess(categories);
     } catch (e) {
@@ -178,12 +180,22 @@ class OpportunityRepository {
     required String categoryId,
     int limit = 20,
     int offset = 0,
+    String sort = 'latest',
+    String? platform,
+    double? lat,
+    double? lng,
+    double? radiusKm,
   }) async {
     try {
       final page = await _apiDataSource.getDiscoveryByCategory(
         categoryId: categoryId,
         limit: limit,
         offset: offset,
+        sort: sort,
+        platform: platform,
+        lat: lat,
+        lng: lng,
+        radiusKm: radiusKm,
       );
       return NetworkSuccess(page);
     } catch (e) {

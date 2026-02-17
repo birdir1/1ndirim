@@ -7,6 +7,7 @@ import { clearAuth } from '@/lib/auth';
 
 const nav = [
   { href: '/dashboard', label: 'Dashboard' },
+  { href: '/discover', label: 'Keşfet' },
   { href: '/sources', label: 'Kaynaklar' },
   { href: '/campaigns', label: 'Kampanyalar' },
   { href: '/suggestions', label: 'Öneriler' },
