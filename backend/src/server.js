@@ -19,8 +19,6 @@ const commentsRouter = require('./routes/comments'); // Campaign Comments
 const ratingsRouter = require('./routes/ratings'); // Campaign Ratings
 const communityRouter = require('./routes/community'); // Community Features
 const blogRouter = require('./routes/blog'); // Blog & Content
-const referralsRouter = require('./routes/referrals'); // Referral System
-const premiumRouter = require('./routes/premium'); // Premium Subscriptions
 const { deactivateExpiredCampaigns } = require('./jobs/deactivateExpiredCampaigns');
 const { isTrustedBotRequest } = require('./middleware/botAuth');
 
@@ -191,8 +189,6 @@ app.get('/', (req, res) => {
         ratings: '/api/ratings', // Campaign Ratings
         community: '/api/community', // Community Features
         blog: '/api/blog', // Blog & Content
-        referrals: '/api/referrals', // Referral System
-        premium: '/api/premium', // Premium Subscriptions
       },
   });
 });
@@ -210,8 +206,6 @@ app.use('/api/comments', commentsRouter); // Campaign Comments
 app.use('/api/ratings', ratingsRouter); // Campaign Ratings
 app.use('/api/community', communityRouter); // Community Features
 app.use('/api/blog', blogRouter); // Blog & Content
-app.use('/api/referrals', referralsRouter); // Referral System
-app.use('/api/premium', premiumRouter); // Premium Subscriptions
 app.use('/', legalRouter); // Privacy Policy & Terms of Use (root level)
 
 // 404 handler
@@ -244,8 +238,6 @@ const startServer = () =>
     console.log(`⭐ Ratings: http://localhost:${PORT}/api/ratings`);
     console.log(`👥 Community: http://localhost:${PORT}/api/community`);
     console.log(`📝 Blog: http://localhost:${PORT}/api/blog`);
-    console.log(`🎁 Referrals: http://localhost:${PORT}/api/referrals`);
-    console.log(`⭐ Premium: http://localhost:${PORT}/api/premium`);
 
     // Cron job: Sadece CRON_ONLY env yoksa çalıştır (production'da ayrı worker)
     if (!process.env.CRON_ONLY) {
