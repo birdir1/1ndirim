@@ -361,7 +361,6 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
           children: [
             _buildHeader(),
             _buildSortTabs(),
-            _buildCategorySelector(),
             Expanded(child: _buildContent()),
           ],
         ),
@@ -546,67 +545,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   }
 
   Widget _buildCategorySelector() {
-    if (_categories.isEmpty) {
-      return const SizedBox(height: 48);
-    }
-
-    return Container(
-      height: 54,
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppUiTokens.screenPadding,
-        ),
-        itemCount: _categories.length,
-        itemBuilder: (context, index) {
-          final category = _categories[index];
-          final isActive = _selectedCategoryId == category.id;
-          return Padding(
-            padding: const EdgeInsets.only(right: 10),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 150),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(
-                color: isActive
-                    ? AppColors.primaryLight.withValues(alpha: 0.12)
-                    : Colors.white,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: isActive
-                      ? AppColors.primaryLight.withValues(alpha: 0.5)
-                      : AppColors.divider,
-                ),
-                boxShadow: [
-                  if (isActive)
-                    BoxShadow(
-                      color: AppColors.primaryLight.withValues(alpha: 0.16),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                ],
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(category.icon, style: const TextStyle(fontSize: 16)),
-                  const SizedBox(width: 6),
-                  Text(
-                    category.name,
-                    style: AppTextStyles.caption(isDark: false).copyWith(
-                      color: isActive
-                          ? AppColors.primaryLight
-                          : AppColors.textPrimaryLight,
-                      fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
+    return const SizedBox.shrink();
   }
 
   Widget _buildContent() {

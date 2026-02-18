@@ -118,12 +118,6 @@ class CuratedCampaignCard extends StatelessWidget {
                                 AppColors.discountRed,
                               ),
                             ],
-                            if (campaign.platform != null &&
-                                campaign.platform!.isNotEmpty)
-                              _buildBadge(
-                                campaign.platform!,
-                                AppColors.textSecondaryLight,
-                              ),
                             if (campaign.endAt != null)
                               _buildBadge(
                                 _expiryLabel(campaign.endAt!),
