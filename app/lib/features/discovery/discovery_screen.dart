@@ -249,8 +249,13 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
     final selected = _selectedCategory;
     if (selected == null) return const [];
 
-    if (_isSelectedExpanded) return selected.campaigns;
-    return selected.campaigns.take(10).toList();
+    final filtered = selected.campaigns.where((c) {
+      if (selected.sources.isEmpty) return true;
+      return selected.sources.contains(c.sourceName);
+    }).toList();
+
+    if (_isSelectedExpanded) return filtered;
+    return filtered.take(10).toList();
   }
 
   void _onCategoryTap(String categoryId) {
@@ -360,7 +365,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
         child: Column(
           children: [
             _buildHeader(),
-            _buildSortTabs(),
+            _buildCategorySelector(),
             Expanded(child: _buildContent()),
           ],
         ),
@@ -545,7 +550,72 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   }
 
   Widget _buildCategorySelector() {
-    return const SizedBox.shrink();
+    if (_categories.isEmpty) {
+      return const SizedBox(height: 48);
+    }
+
+    return Container(
+      height: 54,
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppUiTokens.screenPadding,
+        ),
+        itemCount: _categories.length,
+        itemBuilder: (context, index) {
+          final category = _categories[index];
+          final isActive = _selectedCategoryId == category.id;
+          return Padding(
+            padding: const EdgeInsets.only(right: 10),
+            child: GestureDetector(
+              onTap: () => _onCategoryTap(category.id),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 150),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: isActive
+                      ? AppColors.primaryLight.withValues(alpha: 0.12)
+                      : Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: isActive
+                        ? AppColors.primaryLight.withValues(alpha: 0.5)
+                        : AppColors.divider,
+                  ),
+                  boxShadow: [
+                    if (isActive)
+                      BoxShadow(
+                        color: AppColors.primaryLight.withValues(alpha: 0.16),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(category.icon, style: const TextStyle(fontSize: 16)),
+                    const SizedBox(width: 6),
+                    Text(
+                      category.name,
+                      style: AppTextStyles.caption(isDark: false).copyWith(
+                        color: isActive
+                            ? AppColors.primaryLight
+                            : AppColors.textPrimaryLight,
+                        fontWeight:
+                            isActive ? FontWeight.w700 : FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
   }
 
   Widget _buildContent() {
