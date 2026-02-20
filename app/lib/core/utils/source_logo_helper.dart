@@ -53,6 +53,10 @@ class SourceLogoHelper {
       'geforce now': 'assets/images/logos/geforce-now.svg',
       'zara': 'assets/images/logos/zara.png',
       'hm': 'assets/images/logos/hm.png',
+      'bershka': 'assets/images/logos/bershka.svg',
+      'pullandbear': 'assets/images/logos/pullbear.svg',
+      'pull&bear': 'assets/images/logos/pullbear.svg',
+      'pullbear': 'assets/images/logos/pullbear.svg',
       'kuveytturk': 'assets/images/logos/kuveytturk.svg',
       'nkolay': 'assets/images/logos/nkolay.svg',
       'odeabank': 'assets/images/logos/odeabank.svg',
@@ -172,6 +176,8 @@ class SourceLogoHelper {
       'ea': const Color(0xFF000000),
       'zara': const Color(0xFF000000),
       'hm': const Color(0xFFCC0000),
+      'bershka': const Color(0xFF000000),
+      'pullbear': const Color(0xFF000000),
     };
 
     final normalized = sourceName.toLowerCase().replaceAll(' ', '');
