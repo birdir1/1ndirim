@@ -51,6 +51,8 @@ class SourceLogoHelper {
       'geforce': 'assets/images/logos/geforce-now.svg',
       'geforcenow': 'assets/images/logos/geforce-now.svg',
       'geforce now': 'assets/images/logos/geforce-now.svg',
+      'zara': 'assets/images/logos/zara.png',
+      'hm': 'assets/images/logos/hm.png',
       'kuveytturk': 'assets/images/logos/kuveytturk.svg',
       'nkolay': 'assets/images/logos/nkolay.svg',
       'odeabank': 'assets/images/logos/odeabank.svg',
@@ -168,6 +170,8 @@ class SourceLogoHelper {
       'steam': const Color(0xFF0E141B),
       'epic': const Color(0xFF121212),
       'ea': const Color(0xFF000000),
+      'zara': const Color(0xFF000000),
+      'hm': const Color(0xFFCC0000),
     };
 
     final normalized = sourceName.toLowerCase().replaceAll(' ', '');
