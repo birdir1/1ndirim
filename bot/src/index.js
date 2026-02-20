@@ -58,6 +58,16 @@ const HayatFinansScraper = require('./scrapers/hayatfinans-scraper');
 const TombankScraper = require('./scrapers/tombank-scraper');
 // FAZ 7: Fetch-based scrapers (SPA kaynaklar için)
 const TebFetchScraper = require('./scrapers/fetch/teb-fetch-scraper');
+const AkbankFetchScraper = require('./scrapers/fetch/akbank-fetch-scraper');
+const TurktelekomPrimeFetch = require('./scrapers/fetch/turktelekom-prime-fetch');
+const TurktelekomBiDunyaFirsatFetch = require('./scrapers/fetch/turktelekom-bdf-fetch');
+const PegasusFetchScraper = require('./scrapers/fetch/pegasus-fetch-scraper');
+const SeturFetchScraper = require('./scrapers/fetch/setur-fetch-scraper');
+const EtsFetchScraper = require('./scrapers/fetch/ets-fetch-scraper');
+const OdamaxFetchScraper = require('./scrapers/fetch/odamax-fetch-scraper');
+const PassoFetchScraper = require('./scrapers/fetch/passo-fetch-scraper');
+const MuzekartFetchScraper = require('./scrapers/fetch/muzekart-fetch-scraper');
+const BiletixFetchScraper = require('./scrapers/fetch/biletix-fetch-scraper');
 const { startScheduler } = require('./scheduler');
 
 const SCRAPER_DELAY_MS = parseInt(process.env.SCRAPER_DELAY_MS || '3000', 10);
@@ -174,6 +184,17 @@ async function runScrapers() {
     new HsbcScraper(),
     new HayatFinansScraper(),
     new TombankScraper(),
+    // Fetch-based additions (co-exist with existing DOM scrapers)
+    new AkbankFetchScraper(),
+    new TurktelekomPrimeFetch(),
+    new TurktelekomBiDunyaFirsatFetch(),
+    new PegasusFetchScraper(),
+    new SeturFetchScraper(),
+    new EtsFetchScraper(),
+    new OdamaxFetchScraper(),
+    new PassoFetchScraper(),
+    new MuzekartFetchScraper(),
+    new BiletixFetchScraper(),
   ];
 
   console.log(`\n🤖 Bot başlatıldı: ${scrapers.length} scraper çalıştırılacak\n`);
