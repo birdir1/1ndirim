@@ -32,6 +32,9 @@ class SourceLogoHelper {
       'fibabanka': 'assets/images/logos/fibabanka.png',
       'garanti': 'assets/images/logos/garanti.svg',
       'garantibbva': 'assets/images/logos/garanti.svg',
+      'ea': 'assets/images/logos/ea.png',
+      'eagames': 'assets/images/logos/ea.png',
+      'electronicarts': 'assets/images/logos/ea.png',
       'halkbank': 'assets/images/logos/halkbank.svg',
       'hayatfinans': 'assets/images/logos/hayatfinans.svg',
       'hsbc': 'assets/images/logos/hsbc.png',
@@ -164,6 +167,7 @@ class SourceLogoHelper {
       'geforce': const Color(0xFF76B900),
       'steam': const Color(0xFF0E141B),
       'epic': const Color(0xFF121212),
+      'ea': const Color(0xFF000000),
     };
 
     final normalized = sourceName.toLowerCase().replaceAll(' ', '');
