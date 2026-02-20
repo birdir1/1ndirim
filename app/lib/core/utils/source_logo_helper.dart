@@ -57,6 +57,8 @@ class SourceLogoHelper {
       'pullandbear': 'assets/images/logos/pullbear.svg',
       'pull&bear': 'assets/images/logos/pullbear.svg',
       'pullbear': 'assets/images/logos/pullbear.svg',
+      'lcw': 'assets/images/logos/lcw.png',
+      'lcwaikiki': 'assets/images/logos/lcw.png',
       'kuveytturk': 'assets/images/logos/kuveytturk.svg',
       'nkolay': 'assets/images/logos/nkolay.svg',
       'odeabank': 'assets/images/logos/odeabank.svg',
@@ -178,6 +180,7 @@ class SourceLogoHelper {
       'hm': const Color(0xFFCC0000),
       'bershka': const Color(0xFF000000),
       'pullbear': const Color(0xFF000000),
+      'lcw': const Color(0xFF0046AD),
     };
 
     final normalized = sourceName.toLowerCase().replaceAll(' ', '');
