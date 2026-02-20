@@ -49,6 +49,7 @@ class SourceLogoHelper {
       'qnbfinansbank': 'assets/images/logos/qnbfinansbank.png',
       'qnb': 'assets/images/logos/qnbfinansbank.png',
       'sekerbank': 'assets/images/logos/sekerbank.png',
+      'spotify': 'assets/images/logos/spotify.svg',
       'teb': 'assets/images/logos/teb.png',
       'teknosacell': 'assets/images/logos/teknosacell.png',
       'tombank': 'assets/images/logos/tombank.svg',
@@ -148,6 +149,7 @@ class SourceLogoHelper {
       'kuveytturk': const Color(0xFF0A9F6D),
       'nkolay': const Color(0xFF2E64FE),
       'enpara': const Color(0xFF8A2BE2),
+      'spotify': const Color(0xFF1DB954),
     };
 
     final normalized = sourceName.toLowerCase().replaceAll(' ', '');
