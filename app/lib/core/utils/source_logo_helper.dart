@@ -41,6 +41,9 @@ class SourceLogoHelper {
       'isbank': 'assets/images/logos/isbank.png',
       'isbankasi': 'assets/images/logos/isbank.png',
       'netflix': 'assets/images/logos/netflix.svg',
+      'epic': 'assets/images/logos/epic.png',
+      'epicgames': 'assets/images/logos/epic.png',
+      'epic games': 'assets/images/logos/epic.png',
       'nvidia': 'assets/images/logos/nvidia.svg',
       'geforce': 'assets/images/logos/geforce-now.svg',
       'geforcenow': 'assets/images/logos/geforce-now.svg',
@@ -160,6 +163,7 @@ class SourceLogoHelper {
       'nvidia': const Color(0xFF76B900),
       'geforce': const Color(0xFF76B900),
       'steam': const Color(0xFF0E141B),
+      'epic': const Color(0xFF121212),
     };
 
     final normalized = sourceName.toLowerCase().replaceAll(' ', '');
