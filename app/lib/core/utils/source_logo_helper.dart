@@ -41,6 +41,10 @@ class SourceLogoHelper {
       'isbank': 'assets/images/logos/isbank.png',
       'isbankasi': 'assets/images/logos/isbank.png',
       'netflix': 'assets/images/logos/netflix.svg',
+      'nvidia': 'assets/images/logos/nvidia.svg',
+      'geforce': 'assets/images/logos/geforce-now.svg',
+      'geforcenow': 'assets/images/logos/geforce-now.svg',
+      'geforce now': 'assets/images/logos/geforce-now.svg',
       'kuveytturk': 'assets/images/logos/kuveytturk.svg',
       'nkolay': 'assets/images/logos/nkolay.svg',
       'odeabank': 'assets/images/logos/odeabank.svg',
@@ -152,6 +156,8 @@ class SourceLogoHelper {
       'enpara': const Color(0xFF8A2BE2),
       'netflix': const Color(0xFFE50914),
       'spotify': const Color(0xFF1DB954),
+      'nvidia': const Color(0xFF76B900),
+      'geforce': const Color(0xFF76B900),
     };
 
     final normalized = sourceName.toLowerCase().replaceAll(' ', '');
