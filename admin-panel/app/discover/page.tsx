@@ -45,6 +45,7 @@ export default function DiscoverAdminPage() {
   const [sources, setSources] = useState<Source[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -99,6 +100,13 @@ export default function DiscoverAdminPage() {
     return arr;
   }, [categories]);
 
+  const tableData = useMemo(() => {
+    if (!selectedCategoryId) return flattened;
+    const cat = categories.find((c) => c.id === selectedCategoryId);
+    if (!cat) return flattened;
+    return cat.campaigns.map((c) => ({ ...c, category: cat.name }));
+  }, [selectedCategoryId, flattened, categories]);
+
   const emptyCategories = categories.filter((c) => c.isEmpty || c.campaigns.length === 0);
 
   return (
@@ -124,7 +132,12 @@ export default function DiscoverAdminPage() {
             {categories.map((c) => (
               <div
                 key={c.id}
-                className="flex items-center justify-between rounded border px-3 py-2 text-sm"
+                className={`flex items-center justify-between rounded border px-3 py-2 text-sm cursor-pointer transition hover:border-blue-400 ${
+                  selectedCategoryId === c.id ? 'border-blue-500 bg-blue-50' : ''
+                }`}
+                onClick={() =>
+                  setSelectedCategoryId((prev) => (prev === c.id ? null : c.id))
+                }
               >
                 <div className="flex items-center gap-2">
                   <span className="text-lg">{c.icon || '🏷️'}</span>
@@ -135,14 +148,8 @@ export default function DiscoverAdminPage() {
                     </div>
                   </div>
                 </div>
-                <div className="text-xs">
-                  {c.isEmpty ? (
-                    <span className="text-amber-600">Boş / fallback</span>
-                  ) : c.hasMore ? (
-                    <span className="text-blue-600">Daha var</span>
-                  ) : (
-                    <span className="text-green-600">Doldu</span>
-                  )}
+                <div className="text-xs text-gray-500">
+                  {selectedCategoryId === c.id ? 'Seçili' : ''}
                 </div>
               </div>
             ))}
@@ -190,7 +197,12 @@ export default function DiscoverAdminPage() {
       <div className="rounded-lg border bg-white p-4 mb-4">
         <div className="flex items-center justify-between mb-2">
           <h2 className="font-semibold">Son Keşfet Kampanyaları</h2>
-          <span className="text-xs text-gray-500">{flattened.length} kayıt</span>
+          <span className="text-xs text-gray-500">
+            {tableData.length} kayıt
+            {selectedCategoryId
+              ? ` • ${categories.find((c) => c.id === selectedCategoryId)?.name || ''}`
+              : ''}
+          </span>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -204,8 +216,12 @@ export default function DiscoverAdminPage() {
               </tr>
             </thead>
             <tbody>
-              {flattened.slice(0, 30).map((c) => (
-                <tr key={c.id} className="border-b last:border-0">
+              {tableData.slice(0, 100).map((c) => (
+                <tr
+                  key={c.id}
+                  className="border-b last:border-0 hover:bg-gray-50 cursor-pointer"
+                  onClick={() => (window.location.href = `/dashboard/campaigns/${c.id}`)}
+                >
                   <td className="p-2">{c.title}</td>
                   <td className="p-2">{c.sourceName}</td>
                   <td className="p-2 text-gray-600">{c.category}</td>
@@ -225,7 +241,7 @@ export default function DiscoverAdminPage() {
                   </td>
                 </tr>
               ))}
-              {!flattened.length && (
+              {!tableData.length && (
                 <tr>
                   <td colSpan={5} className="p-4 text-center text-gray-500">
                     Keşfet kampanyası bulunamadı
