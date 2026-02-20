@@ -40,6 +40,7 @@ class SourceLogoHelper {
       'ing': 'assets/images/logos/ingbank.png',
       'isbank': 'assets/images/logos/isbank.png',
       'isbankasi': 'assets/images/logos/isbank.png',
+      'netflix': 'assets/images/logos/netflix.svg',
       'kuveytturk': 'assets/images/logos/kuveytturk.svg',
       'nkolay': 'assets/images/logos/nkolay.svg',
       'odeabank': 'assets/images/logos/odeabank.svg',
@@ -149,6 +150,7 @@ class SourceLogoHelper {
       'kuveytturk': const Color(0xFF0A9F6D),
       'nkolay': const Color(0xFF2E64FE),
       'enpara': const Color(0xFF8A2BE2),
+      'netflix': const Color(0xFFE50914),
       'spotify': const Color(0xFF1DB954),
     };
 
