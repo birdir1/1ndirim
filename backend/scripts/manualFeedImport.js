@@ -13,6 +13,42 @@
 const fs = require('fs');
 const path = require('path');
 const Campaign = require('../src/models/Campaign');
+const pool = require('../src/config/database');
+
+function guessSourceType(row) {
+  const name = (row.sourceName || '').toLowerCase();
+  const cat = (row.category || '').toLowerCase();
+  if (name.match(/bank|finans|kart|kredi/)) return 'bank';
+  if (name.match(/telekom|telekom|turkcell|vodafone|ttnet|bimcell|pttcell/)) return 'operator';
+  if (cat === 'travel') return 'travel';
+  if (cat === 'fashion') return 'retail';
+  if (cat === 'culture') return 'culture';
+  return 'retail';
+}
+
+async function ensureSource(row) {
+  const sourceName = row.sourceName;
+  let sourceId = await Campaign.getSourceIdByName(sourceName);
+  if (sourceId) return sourceId;
+
+  const type = guessSourceType(row);
+  const site =
+    row.originalUrl && row.originalUrl.startsWith('http')
+      ? new URL(row.originalUrl).origin
+      : null;
+
+  const insertSql = `
+    INSERT INTO sources (name, type, is_active, site, created_at, updated_at)
+    VALUES ($1, $2, true, $3, NOW(), NOW())
+    ON CONFLICT (name)
+      DO UPDATE SET site = COALESCE(sources.site, EXCLUDED.site)
+    RETURNING id
+  `;
+  const res = await pool.query(insertSql, [sourceName, type, site]);
+  sourceId = res.rows[0].id;
+  console.log(`🔗 Source oluşturuldu: ${sourceName} (${type})`);
+  return sourceId;
+}
 
 async function parseCsv(filePath) {
   const raw = fs.readFileSync(filePath, 'utf8');
@@ -46,12 +82,7 @@ async function main() {
   let skip = 0;
   for (const row of rows) {
     console.log('ROW', row);
-    const sourceId = await Campaign.getSourceIdByName(row.sourceName);
-    if (!sourceId) {
-      console.warn(`Skip: kaynak bulunamadı -> ${row.sourceName}`);
-      skip++;
-      continue;
-    }
+    const sourceId = await ensureSource(row);
     const tags = (row.tags || '')
       .split(/;|\|/)
       .map((t) => t.trim())
