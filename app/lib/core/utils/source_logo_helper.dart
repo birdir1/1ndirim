@@ -55,6 +55,7 @@ class SourceLogoHelper {
       'qnb': 'assets/images/logos/qnbfinansbank.png',
       'sekerbank': 'assets/images/logos/sekerbank.png',
       'spotify': 'assets/images/logos/spotify.svg',
+      'steam': 'assets/images/logos/steam.svg',
       'teb': 'assets/images/logos/teb.png',
       'teknosacell': 'assets/images/logos/teknosacell.png',
       'tombank': 'assets/images/logos/tombank.svg',
@@ -158,6 +159,7 @@ class SourceLogoHelper {
       'spotify': const Color(0xFF1DB954),
       'nvidia': const Color(0xFF76B900),
       'geforce': const Color(0xFF76B900),
+      'steam': const Color(0xFF0E141B),
     };
 
     final normalized = sourceName.toLowerCase().replaceAll(' ', '');
