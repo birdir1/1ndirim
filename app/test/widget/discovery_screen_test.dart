@@ -68,7 +68,7 @@ void main() {
 
     await tester.pumpWidget(
       _testApp(
-        DiscoveryScreen(loadDiscoveryCategories: (_) => completer.future),
+        DiscoveryScreen(loadDiscoveryCategories: (_, __) => completer.future),
       ),
     );
 
@@ -99,7 +99,7 @@ void main() {
     await tester.pumpWidget(
       _testApp(
         DiscoveryScreen(
-          loadDiscoveryCategories: (_) async {
+          loadDiscoveryCategories: (_, __) async {
             return NetworkError.general('Sunucuya ulasilamadi');
           },
         ),
@@ -126,7 +126,7 @@ void main() {
       await tester.pumpWidget(
         _testApp(
           DiscoveryScreen(
-            loadDiscoveryCategories: (_) async {
+            loadDiscoveryCategories: (_, __) async {
               return NetworkSuccess(
                 DiscoveryCategoriesResult(
                   categories: [
@@ -144,7 +144,12 @@ void main() {
               );
             },
             loadDiscoveryCategoryPage:
-                ({required categoryId, required limit, required offset}) async {
+                ({
+                  required categoryId,
+                  required limit,
+                  required offset,
+                  required sort,
+                }) async {
                   requestedCategoryId = categoryId;
                   requestedLimit = limit;
                   requestedOffset = offset;
@@ -200,7 +205,7 @@ void main() {
     await tester.pumpWidget(
       _testApp(
         DiscoveryScreen(
-          loadDiscoveryCategories: (_) async {
+          loadDiscoveryCategories: (_, __) async {
             return NetworkSuccess(
               DiscoveryCategoriesResult(
                 categories: [
@@ -218,7 +223,12 @@ void main() {
             );
           },
           loadDiscoveryCategoryPage:
-              ({required categoryId, required limit, required offset}) async {
+              ({
+                required categoryId,
+                required limit,
+                required offset,
+                required sort,
+              }) async {
                 return NetworkError.general('Daha fazla kampanya yuklenemedi');
               },
         ),
@@ -243,7 +253,7 @@ void main() {
     await tester.pumpWidget(
       _testApp(
         DiscoveryScreen(
-          loadDiscoveryCategories: (_) async {
+          loadDiscoveryCategories: (_, __) async {
             return NetworkSuccess(
               DiscoveryCategoriesResult(
                 categories: [
@@ -285,7 +295,7 @@ void main() {
     await tester.pumpWidget(
       _testApp(
         DiscoveryScreen(
-          loadDiscoveryCategories: (_) async {
+          loadDiscoveryCategories: (_, __) async {
             return NetworkSuccess(
               DiscoveryCategoriesResult(
                 categories: [

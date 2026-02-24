@@ -107,7 +107,7 @@ Bu Kullanım Koşulları, Türkiye Cumhuriyeti yasalarına tabidir.
 
 Kullanım Koşulları hakkında sorularınız varsa:
 E-posta: support@birdir1.com
-Web: https://1indirim.birdir1.com/support
+Web: https://1ndirim.birdir1.com/support
 
 KABUL: Bu uygulamayı kullanarak, bu Kullanım Koşullarını okuduğunuzu, anladığınızı ve kabul ettiğinizi onaylarsınız.''';
   }

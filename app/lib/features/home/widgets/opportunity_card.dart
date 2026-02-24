@@ -78,8 +78,7 @@ class OpportunityCard extends StatelessWidget {
 
     return Semantics(
       button: true,
-      label: '$title • ${opportunity.sourceName}'
-          '${normalized.primary != null ? ' • ${normalized.primary}' : ''}',
+      label: '$title • ${opportunity.sourceName}${normalized.primary != null ? ' • ${normalized.primary}' : ''}',
       child: InkWell(
         onTap: () {
           Navigator.of(context).push(
@@ -98,172 +97,160 @@ class OpportunityCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: AppColors.cardBackground,
             borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: SourceLogoHelper.getLogoBackgroundColor(opportunity.sourceName).withValues(alpha: 0.2),
-            width: 1.5,
+            border: Border.all(
+              color: SourceLogoHelper.getLogoBackgroundColor(opportunity.sourceName).withValues(alpha: 0.2),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: SourceLogoHelper.getLogoBackgroundColor(opportunity.sourceName).withValues(alpha: 0.08),
+                blurRadius: 20,
+                offset: const Offset(0, 6),
+              ),
+              BoxShadow(
+                color: AppColors.shadowDark.withValues(alpha: 0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
-          boxShadow: [
-            BoxShadow(
-              color: SourceLogoHelper.getLogoBackgroundColor(opportunity.sourceName).withValues(alpha: 0.08),
-              blurRadius: 20,
-              offset: const Offset(0, 6),
-            ),
-            BoxShadow(
-              color: AppColors.shadowDark.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Source Logo Box - Daha büyük ve net
-            Container(
-              width: 72,
-              height: 72,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: SourceLogoHelper.getLogoBackgroundColor(opportunity.sourceName).withValues(alpha: 0.3),
-                  width: 2,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: SourceLogoHelper.getLogoBackgroundColor(opportunity.sourceName).withValues(alpha: 0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: SourceLogoHelper.getLogoBackgroundColor(opportunity.sourceName).withValues(alpha: 0.3),
+                    width: 2,
                   ),
-                ],
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: SourceLogoHelper.getLogoWidget(
-                  opportunity.sourceName,
-                  width: 48,
-                  height: 48,
-                ),
-              ),
-            ),
-            const SizedBox(width: 16),
-            // Content
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Title - Daha büyük ve belirgin
-                  Text(
-                    title,
-                    style: AppTextStyles.cardTitle(isDark: false).copyWith(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: -0.3,
-                      // İndirim yüzdesi varsa kan kırmızısı
-                      color: opportunity.title.contains('%') || opportunity.title.toLowerCase().contains('indirim')
-                          ? AppColors.discountRed
-                          : AppColors.textPrimaryLight,
-                      height: 1.3,
+                  boxShadow: [
+                    BoxShadow(
+                      color: SourceLogoHelper.getLogoBackgroundColor(opportunity.sourceName).withValues(alpha: 0.1),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
                     ),
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
+                  ],
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: SourceLogoHelper.getLogoWidget(
+                    opportunity.sourceName,
+                    width: 48,
+                    height: 48,
                   ),
-                  const SizedBox(height: 8),
-                  // Subtitle - Daha okunabilir
-                  if (shouldShowSubtitle)
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                     Text(
-                      subtitle,
-                      style: AppTextStyles.cardSubtitle(isDark: false).copyWith(
-                        fontSize: 14,
-                        height: 1.5,
-                        color: AppColors.textSecondaryLight,
+                      title,
+                      style: AppTextStyles.cardTitle(isDark: false).copyWith(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.3,
+                        color: opportunity.title.contains('%') || opportunity.title.toLowerCase().contains('indirim')
+                            ? AppColors.discountRed
+                            : AppColors.textPrimaryLight,
+                        height: 1.3,
                       ),
-                      maxLines: 2,
+                      maxLines: 3,
                       overflow: TextOverflow.ellipsis,
                     ),
-                  const SizedBox(height: 12),
-                  // Source name - Daha belirgin
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: SourceLogoHelper.getLogoBackgroundColor(opportunity.sourceName).withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: SourceLogoHelper.getLogoBackgroundColor(opportunity.sourceName).withValues(alpha: 0.3),
-                            width: 1,
-                          ),
+                    const SizedBox(height: 8),
+                    if (shouldShowSubtitle)
+                      Text(
+                        subtitle,
+                        style: AppTextStyles.cardSubtitle(isDark: false).copyWith(
+                          fontSize: 14,
+                          height: 1.5,
+                          color: AppColors.textSecondaryLight,
                         ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: SourceLogoHelper.getLogoWidget(
-                                opportunity.sourceName,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: SourceLogoHelper.getLogoBackgroundColor(opportunity.sourceName).withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: SourceLogoHelper.getLogoBackgroundColor(opportunity.sourceName).withValues(alpha: 0.3),
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              SizedBox(
                                 width: 20,
                                 height: 20,
+                                child: SourceLogoHelper.getLogoWidget(
+                                  opportunity.sourceName,
+                                  width: 20,
+                                  height: 20,
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              opportunity.sourceName,
-                              style: AppTextStyles.small(isDark: false).copyWith(
-                                color: SourceLogoHelper.getLogoBackgroundColor(opportunity.sourceName),
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  // Tags - İndirim içerenler kan kırmızısı
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 6,
-                    children: opportunity.tags
-                        .map((tag) {
-                          final isDiscount = tag.toLowerCase().contains('%') || 
-                                           tag.toLowerCase().contains('indirim') ||
-                                           tag.toLowerCase().contains('son');
-                          return RepaintBoundary(
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: isDiscount 
-                                    ? AppColors.badgeDiscountBackground 
-                                    : AppColors.badgeBackground,
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Text(
-                                tag,
-                                style: AppTextStyles.badgeText(isDark: false).copyWith(
-                                  color: isDiscount 
-                                      ? AppColors.badgeDiscountText 
-                                      : AppColors.badgeText,
+                              const SizedBox(width: 8),
+                              Text(
+                                opportunity.sourceName,
+                                style: AppTextStyles.small(isDark: false).copyWith(
+                                  color: SourceLogoHelper.getLogoBackgroundColor(opportunity.sourceName),
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: opportunity.tags.map((tag) {
+                        final isDiscount = tag.toLowerCase().contains('%') ||
+                            tag.toLowerCase().contains('indirim') ||
+                            tag.toLowerCase().contains('son');
+                        return RepaintBoundary(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
                             ),
-                          );
-                        })
-                        .toList(),
-                  ),
-                ],
+                            decoration: BoxDecoration(
+                              color: isDiscount ? AppColors.badgeDiscountBackground : AppColors.badgeBackground,
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Text(
+                              tag,
+                              style: AppTextStyles.badgeText(isDark: false).copyWith(
+                                color: isDiscount ? AppColors.badgeDiscountText : AppColors.badgeText,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

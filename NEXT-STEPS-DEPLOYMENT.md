@@ -38,9 +38,9 @@
 
 ### Step 1: SSH to Server
 ```bash
-ssh root@37.140.242.105
+ssh <deploy-user>@<server-host>
 # or
-ssh ubuntu@37.140.242.105
+ssh <deploy-user>@<server-host>
 ```
 
 ### Step 2: Navigate to Project
@@ -82,10 +82,10 @@ sudo systemctl restart 1ndirim-backend
 ### Step 6: Verify Deployment
 ```bash
 # Test health:
-curl https://api.1indirim.birdir1.com/api/health
+curl https://api.1ndirim.birdir1.com/api/health
 
 # Test new dashboard endpoint:
-curl https://api.1indirim.birdir1.com/api/dashboard/stats
+curl https://api.1ndirim.birdir1.com/api/dashboard/stats
 
 # Should return campaign statistics
 ```
@@ -238,9 +238,9 @@ pm2 restart 1ndirim-api
 
 ## 📞 CONTACT
 
-**Server:** 37.140.242.105  
-**Admin:** https://admin.1indirim.birdir1.com  
-**API:** https://api.1indirim.birdir1.com  
+**Server:** <server-host>  
+**Admin:** https://admin.1ndirim.birdir1.com  
+**API:** https://api.1ndirim.birdir1.com  
 **GitHub:** https://github.com/birdir1/1ndirim
 
 ---

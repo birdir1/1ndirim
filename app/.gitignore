@@ -43,6 +43,8 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+/keystores/
+/android/key.properties
 
 # Firebase configuration files (sensitive - do not commit)
 ios/Runner/GoogleService-Info.plist

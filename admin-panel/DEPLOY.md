@@ -8,14 +8,14 @@ Bu rehber, admin panel'i sunucuda deploy etmek için adım adım talimatlar içe
 
 - ✅ Migration'lar çalıştırıldı
 - ✅ İlk admin kullanıcısı eklendi
-- ✅ Backend API çalışıyor (`https://api.1indirim.birdir1.com`)
+- ✅ Backend API çalışıyor (`https://api.1ndirim.birdir1.com`)
 
 ---
 
 ## 📋 Adım 1: Sunucuya Bağlan
 
 ```bash
-ssh root@37.140.242.105
+ssh <deploy-user>@<server-host>
 ```
 
 ---
@@ -57,12 +57,12 @@ nano .env.production
 İçine şunu yaz:
 
 ```bash
-NEXT_PUBLIC_BACKEND_BASE_URL=https://api.1indirim.birdir1.com
+NEXT_PUBLIC_BACKEND_BASE_URL=https://api.1ndirim.birdir1.com
 NODE_ENV=production
 PORT=3002
 ```
 
-**Not:** Port 3002 çünkü Nginx config'de `admin.1indirim.birdir1.com` → `localhost:3002` yapılandırılmış.
+**Not:** Port 3002 çünkü Nginx config'de `admin.1ndirim.birdir1.com` → `localhost:3002` yapılandırılmış.
 
 Kaydet (`Ctrl+X`, `Y`, `Enter`).
 
@@ -105,10 +105,10 @@ cat /etc/nginx/sites-available/1indirim.conf | grep -A 10 "admin.1indirim"
 Şöyle bir şey görmelisin:
 
 ```nginx
-# 1indirim Admin - admin.1indirim.birdir1.com
+# 1indirim Admin - admin.1ndirim.birdir1.com
 server {
     listen 80;
-    server_name admin.1indirim.birdir1.com;
+    server_name admin.1ndirim.birdir1.com;
     
     location / {
         proxy_pass http://localhost:3002;
@@ -139,15 +139,11 @@ systemctl reload nginx
 Tarayıcıda şu adrese git:
 
 ```
-https://admin.1indirim.birdir1.com
+https://admin.1ndirim.birdir1.com
 ```
 
-Login sayfasını görmelisin. Şu bilgilerle giriş yap:
-
-- **Email:** `umitgulcuk680@gmail.com`
-- **API Key:** `fbd93e60567c0c118e990471b8f700a67d25d2a207720aa435f3856e5fcb5d26`
-
-Giriş yaptıktan sonra `/sources` sayfasına yönlendirilmelisin.
+Login sayfasını görmelisin. Üretim ortamında kullanıcı bilgilerini
+gizli değişkenlerden/şifre kasasından al ve panelde test et.
 
 ---
 
@@ -155,7 +151,7 @@ Giriş yaptıktan sonra `/sources` sayfasına yönlendirilmelisin.
 
 Artık:
 - ✅ Admin panel deploy edildi
-- ✅ `https://admin.1indirim.birdir1.com` adresinden erişilebilir
+- ✅ `https://admin.1ndirim.birdir1.com` adresinden erişilebilir
 - ✅ PM2 ile otomatik başlatma aktif
 
 ---
@@ -179,7 +175,7 @@ pm2 stop <process-id>
 **Çözüm:** 
 1. PM2 logları kontrol et: `pm2 logs 1indirim-admin`
 2. Nginx logları kontrol et: `tail -f /var/log/nginx/error.log`
-3. Backend API'nin çalıştığından emin ol: `curl https://api.1indirim.birdir1.com/api/health`
+3. Backend API'nin çalıştığından emin ol: `curl https://api.1ndirim.birdir1.com/api/health`
 
 ---
 

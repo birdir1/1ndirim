@@ -4,22 +4,22 @@
 
 ### 1. Basit Test (Tüm Kampanyalar)
 ```bash
-curl "https://api.1indirim.birdir1.com/api/campaigns/all" | head -c 500
+curl "https://api.1ndirim.birdir1.com/api/campaigns/all" | head -c 500
 ```
 
 ### 2. SourceNames ile Test
 ```bash
-curl "https://api.1indirim.birdir1.com/api/campaigns/all?sourceNames=Ziraat%20Bankası" | head -c 500
+curl "https://api.1ndirim.birdir1.com/api/campaigns/all?sourceNames=Ziraat%20Bankası" | head -c 500
 ```
 
 ### 3. Birden Fazla Source ile Test
 ```bash
-curl "https://api.1indirim.birdir1.com/api/campaigns/all?sourceNames=Ziraat%20Bankası,Halkbank,Akbank" | head -c 500
+curl "https://api.1ndirim.birdir1.com/api/campaigns/all?sourceNames=Ziraat%20Bankası,Halkbank,Akbank" | head -c 500
 ```
 
 ### 4. Health Check
 ```bash
-curl "https://api.1indirim.birdir1.com/api/health"
+curl "https://api.1ndirim.birdir1.com/api/health"
 ```
 
 ## Beklenen Sonuç

@@ -1,0 +1,13 @@
+title = "birdir1 1ndirim secret scan config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Allow known non-secret placeholders and docs examples"
+regexes = [
+  '''your_password''',
+  '''dev-admin-key''',
+  '''REPLACE_WITH''',
+]
+

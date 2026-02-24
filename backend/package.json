@@ -17,7 +17,12 @@
     "fix-operators": "node src/scripts/fix_operator_sources.js",
     "reprocess-campaigns": "node scripts/reprocessCampaigns.js",
     "import:feed": "node scripts/manualFeedImport.js",
-    "fetch:epic-free": "node scripts/fetchEpicFreeGames.js"
+    "fetch:epic-free": "node scripts/fetchEpicFreeGames.js",
+    "smoke:domains": "./scripts/domainSmokeTest.sh",
+    "smoke:legal": "./scripts/legalHealthCheck.sh",
+    "monitor:uptime": "./scripts/uptimeCheck.sh",
+    "monitor:dns-ssl": "./scripts/dnsSslExpiryCheck.sh",
+    "rotate:admin-keys": "node scripts/rotateAdminApiKeys.js"
   },
   "keywords": [
     "campaign",

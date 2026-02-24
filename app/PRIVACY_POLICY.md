@@ -105,7 +105,7 @@ Bu Gizlilik Politikasını zaman zaman güncelleyebiliriz. Değişiklikler yapı
 Gizlilik politikamız hakkında sorularınız varsa, bizimle iletişime geçebilirsiniz:
 
 **E-posta:** support@birdir1.com  
-**Web:** https://1indirim.birdir1.com/support
+**Web:** https://1ndirim.birdir1.com/support
 
 ---
 

@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://admin.1ndirim.birdir1.com/schema/portfolio-apps.schema.json",
+  "title": "Portfolio Apps",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": [
+      "app_id",
+      "repo_url",
+      "platforms",
+      "status",
+      "build_health",
+      "store_health",
+      "domain_health",
+      "owner",
+      "last_release_at"
+    ],
+    "properties": {
+      "app_id": {
+        "type": "string",
+        "enum": ["1ndirim", "1ben", "1dovme", "tar1f"]
+      },
+      "repo_url": {
+        "type": "string",
+        "format": "uri"
+      },
+      "platforms": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "enum": ["ios", "android", "web", "backend"]
+        }
+      },
+      "status": {
+        "type": "string",
+        "enum": ["planning", "in_progress", "blocked", "ready_for_store", "live"]
+      },
+      "build_health": {
+        "type": "string",
+        "enum": ["green", "yellow", "red", "unknown"]
+      },
+      "store_health": {
+        "type": "string",
+        "enum": ["green", "yellow", "red", "unknown"]
+      },
+      "domain_health": {
+        "type": "string",
+        "enum": ["green", "yellow", "red", "unknown"]
+      },
+      "owner": {
+        "type": "string"
+      },
+      "last_release_at": {
+        "type": "string"
+      },
+      "health_url": {
+        "type": ["string", "null"],
+        "format": "uri"
+      },
+      "notes": {
+        "type": "string"
+      }
+    }
+  }
+}

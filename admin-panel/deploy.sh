@@ -32,7 +32,7 @@ npm install
 # 5. Environment variables ayarla
 echo "⚙️ Environment variables ayarlanıyor..."
 cat > .env.production << EOF
-NEXT_PUBLIC_BACKEND_BASE_URL=https://api.1indirim.birdir1.com
+NEXT_PUBLIC_BACKEND_BASE_URL=https://api.1ndirim.birdir1.com
 NODE_ENV=production
 PORT=3002
 EOF
@@ -55,10 +55,10 @@ echo "📊 PM2 durumu:"
 pm2 list | grep 1indirim-admin
 echo ""
 echo "🌐 Admin panel şu adresten erişilebilir:"
-echo "   https://admin.1indirim.birdir1.com"
+echo "   https://admin.1ndirim.birdir1.com"
 echo ""
 echo "🔑 Giriş bilgileri:"
-echo "   Email: umitgulcuk680@gmail.com"
-echo "   API Key: fbd93e60567c0c118e990471b8f700a67d25d2a207720aa435f3856e5fcb5d26"
+echo "   Üretim kullanıcı bilgilerini bu scriptte saklamayın."
+echo "   Email/API key değerlerini secret manager veya güvenli .env kaynağından alın."
 echo ""
 echo "📝 Logları görmek için: pm2 logs 1indirim-admin"

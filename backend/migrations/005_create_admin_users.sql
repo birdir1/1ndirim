@@ -20,8 +20,12 @@ CREATE TABLE IF NOT EXISTS admin_users (
 CREATE INDEX IF NOT EXISTS idx_admin_users_email ON admin_users (email);
 
 -- Seed default admin (idempotent)
+-- IMPORTANT:
+-- Do not commit real admin email/api key here.
+-- This seed creates a bootstrap admin record with a random key.
+-- Rotate it immediately in production using backend/scripts/rotateAdminApiKeys.js.
 INSERT INTO admin_users (email, role, admin_api_key, is_active)
-VALUES ('umitgulcuk680@gmail.com', 'super_admin', '741e8347033aac0528da553a147fc9415161d6d627f189fe256adc9209cfe120', true)
+VALUES ('admin@birdir1.com', 'super_admin', encode(gen_random_bytes(32), 'hex'), true)
 ON CONFLICT (email) DO UPDATE
 SET role = EXCLUDED.role,
     admin_api_key = EXCLUDED.admin_api_key,

@@ -59,7 +59,7 @@ if [ -f ".env" ]; then
 else
     cat > .env << EOF
 NODE_ENV=production
-BACKEND_API_URL=https://api.1indirim.birdir1.com/api
+BACKEND_API_URL=https://api.1ndirim.birdir1.com/api
 INTERNAL_BOT_TOKEN=
 BOT_LOCK_PATH=/tmp/1ndirim-bot.lock
 BOT_LOCK_TTL_MS=7200000

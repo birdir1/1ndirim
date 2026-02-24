@@ -300,15 +300,15 @@
 ## 📞 İletişim
 
 ### Bug Raporlama
-- **Email:** beta@1ndirim.com
+- **Email:** beta@birdir1.com
 - **Form:** [Google Forms linki]
 
 ### Feedback
-- **Email:** feedback@1ndirim.com
+- **Email:** feedback@birdir1.com
 - **Form:** [Google Forms linki]
 
 ### Acil Durumlar
-- **Email:** support@1ndirim.com
+- **Email:** support@birdir1.com
 
 ---
 

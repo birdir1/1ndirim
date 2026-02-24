@@ -86,7 +86,7 @@ Aşağıdaki haklara sahipsiniz:
 
 Gizlilik politikamız hakkında sorularınız varsa:
 E-posta: support@birdir1.com
-Web: https://1indirim.birdir1.com/support
+Web: https://1ndirim.birdir1.com/support
 
 9. KVKK
 

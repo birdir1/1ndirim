@@ -1,6 +1,6 @@
 #!/bin/bash
 # 🚀 PRODUCTION DEPLOYMENT SCRIPT
-# Run this on your production server (37.140.242.105)
+# Run this on your production server (<server-host>)
 
 set -e  # Exit on error
 
@@ -59,14 +59,14 @@ echo "🔍 Verifying deployment..."
 sleep 3
 
 # Test health endpoint
-if curl -f -s https://api.1indirim.birdir1.com/api/health > /dev/null; then
+if curl -f -s https://api.1ndirim.birdir1.com/api/health > /dev/null; then
     echo "✅ Backend health check passed"
 else
     echo "⚠️  Backend health check failed"
 fi
 
 # Test dashboard endpoint
-if curl -f -s https://api.1indirim.birdir1.com/api/dashboard/stats > /dev/null; then
+if curl -f -s https://api.1ndirim.birdir1.com/api/dashboard/stats > /dev/null; then
     echo "✅ Dashboard API working"
 else
     echo "⚠️  Dashboard API not responding (may need backend restart)"
@@ -76,6 +76,6 @@ echo ""
 echo "🎉 Deployment complete!"
 echo ""
 echo "Next steps:"
-echo "1. Test dashboard: curl https://api.1indirim.birdir1.com/api/dashboard/stats | jq"
+echo "1. Test dashboard: curl https://api.1ndirim.birdir1.com/api/dashboard/stats | jq"
 echo "2. Run Phase 1 test: cd bot && node run-phase1-only.js"
-echo "3. Check admin dashboard: https://admin.1indirim.birdir1.com/dashboard"
+echo "3. Check admin dashboard: https://admin.1ndirim.birdir1.com/dashboard"

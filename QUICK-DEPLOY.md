@@ -23,7 +23,7 @@
 ### Option 1: Automated Script (Recommended)
 ```bash
 # SSH to server
-ssh root@37.140.242.105
+ssh <deploy-user>@<server-host>
 
 # Download and run deployment script
 cd /root/1ndirim  # or wherever project is located
@@ -34,7 +34,7 @@ bash DEPLOY-NOW.sh
 ### Option 2: Manual Commands
 ```bash
 # SSH to server
-ssh root@37.140.242.105
+ssh <deploy-user>@<server-host>
 
 # Navigate to project
 cd /root/1ndirim  # adjust path if needed
@@ -53,13 +53,13 @@ pm2 restart 1ndirim-api
 # or: sudo systemctl restart 1ndirim-backend
 
 # Verify
-curl https://api.1indirim.birdir1.com/api/dashboard/stats
+curl https://api.1ndirim.birdir1.com/api/dashboard/stats
 ```
 
 ### Option 3: Step-by-Step (Safest)
 ```bash
 # 1. SSH
-ssh root@37.140.242.105
+ssh <deploy-user>@<server-host>
 
 # 2. Find project
 find / -name "1ndirim" -type d 2>/dev/null
@@ -90,8 +90,8 @@ pm2 restart 1ndirim-api
 # or: sudo systemctl restart 1ndirim-backend
 
 # 10. Verify
-curl https://api.1indirim.birdir1.com/api/health
-curl https://api.1indirim.birdir1.com/api/dashboard/stats | jq
+curl https://api.1ndirim.birdir1.com/api/health
+curl https://api.1ndirim.birdir1.com/api/dashboard/stats | jq
 ```
 
 ---
@@ -100,27 +100,27 @@ curl https://api.1indirim.birdir1.com/api/dashboard/stats | jq
 
 ### 1. Check Backend Health
 ```bash
-curl https://api.1indirim.birdir1.com/api/health
+curl https://api.1ndirim.birdir1.com/api/health
 ```
 
 **Expected:** `{"success": true, "status": "healthy"}`
 
 ### 2. Check Dashboard Stats
 ```bash
-curl https://api.1indirim.birdir1.com/api/dashboard/stats | jq
+curl https://api.1ndirim.birdir1.com/api/dashboard/stats | jq
 ```
 
 **Expected:** JSON with campaign statistics
 
 ### 3. Check Dashboard Sources
 ```bash
-curl https://api.1indirim.birdir1.com/api/dashboard/sources | jq
+curl https://api.1ndirim.birdir1.com/api/dashboard/sources | jq
 ```
 
 **Expected:** Array of sources with campaign counts
 
 ### 4. Check Admin Dashboard
-Open: https://admin.1indirim.birdir1.com/dashboard
+Open: https://admin.1ndirim.birdir1.com/dashboard
 
 **Expected:** Dashboard loads (may need UI update to show new metrics)
 
@@ -132,7 +132,7 @@ After deployment, test the scrapers:
 
 ```bash
 # SSH to server
-ssh root@37.140.242.105
+ssh <deploy-user>@<server-host>
 
 # Navigate to bot directory
 cd /root/1ndirim/bot  # adjust path
@@ -226,9 +226,9 @@ which chromium-browser
 
 ## 📞 Server Info
 
-**IP:** 37.140.242.105  
-**Admin:** https://admin.1indirim.birdir1.com  
-**API:** https://api.1indirim.birdir1.com  
+**Server:** <server-host>  
+**Admin:** https://admin.1ndirim.birdir1.com  
+**API:** https://api.1ndirim.birdir1.com  
 **GitHub:** https://github.com/birdir1/1ndirim
 
 ---

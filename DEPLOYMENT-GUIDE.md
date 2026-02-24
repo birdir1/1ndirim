@@ -1,7 +1,7 @@
 # 🚀 DEPLOYMENT GUIDE - Phase 1
 
 **Date:** 31 Ocak 2026  
-**Target:** Production server (37.140.242.105)  
+**Target:** Production server (<server-host>)  
 **Goal:** Deploy Phase 1 changes and run runtime test
 
 ---
@@ -38,9 +38,9 @@ git push origin main
 
 ### Step 2: SSH to Server
 ```bash
-ssh root@37.140.242.105
+ssh <deploy-user>@<server-host>
 # or
-ssh ubuntu@37.140.242.105
+ssh <deploy-user>@<server-host>
 ```
 
 ### Step 3: Pull Latest Changes
@@ -77,8 +77,8 @@ npm start
 
 #### 4.4: Verify Backend
 ```bash
-curl https://api.1indirim.birdir1.com/api/health
-curl https://api.1indirim.birdir1.com/api/dashboard/stats
+curl https://api.1ndirim.birdir1.com/api/health
+curl https://api.1ndirim.birdir1.com/api/dashboard/stats
 ```
 
 ### Step 5: Bot Deployment
@@ -114,7 +114,7 @@ tail -f /path/to/logs/phase1-test.log
 
 ### 1. Check Backend Health
 ```bash
-curl https://api.1indirim.birdir1.com/api/health | jq '.'
+curl https://api.1ndirim.birdir1.com/api/health | jq '.'
 ```
 
 **Expected:**
@@ -130,7 +130,7 @@ curl https://api.1indirim.birdir1.com/api/health | jq '.'
 
 ### 2. Check Dashboard Stats
 ```bash
-curl https://api.1indirim.birdir1.com/api/dashboard/stats | jq '.'
+curl https://api.1ndirim.birdir1.com/api/dashboard/stats | jq '.'
 ```
 
 **Expected:**
@@ -147,7 +147,7 @@ curl https://api.1indirim.birdir1.com/api/dashboard/stats | jq '.'
 ```
 
 ### 3. Check Admin Dashboard
-Open: https://admin.1indirim.birdir1.com/dashboard
+Open: https://admin.1ndirim.birdir1.com/dashboard
 
 **Verify:**
 - Dashboard loads
@@ -156,7 +156,7 @@ Open: https://admin.1indirim.birdir1.com/dashboard
 
 ### 4. Check Campaign Count by Source
 ```bash
-curl https://api.1indirim.birdir1.com/api/dashboard/sources | jq '.data[] | {name, activeCampaigns}'
+curl https://api.1ndirim.birdir1.com/api/dashboard/sources | jq '.data[] | {name, activeCampaigns}'
 ```
 
 **Expected:** Each Phase 1 source should have 5-20 campaigns
@@ -254,12 +254,12 @@ DB_PORT=5432
 DB_NAME=indirim_db
 DB_USER=your_user
 DB_PASSWORD=your_password
-API_BASE_URL=https://api.1indirim.birdir1.com
+API_BASE_URL=https://api.1ndirim.birdir1.com
 ```
 
 **Bot (.env):**
 ```env
-API_BASE_URL=https://api.1indirim.birdir1.com
+API_BASE_URL=https://api.1ndirim.birdir1.com
 OPENAI_API_KEY=your_key
 SCRAPER_DELAY_MS=3000
 ```

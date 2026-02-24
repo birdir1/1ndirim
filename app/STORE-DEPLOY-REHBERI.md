@@ -103,11 +103,11 @@ open Runner.xcworkspace
 ### 7. Privacy Policy ve Terms of Use
 
 **Privacy Policy:**
-- URL: `https://1indirim.birdir1.com/privacy-policy`
+- URL: `https://1ndirim.birdir1.com/privacy-policy`
 - Dosya: `app/PRIVACY_POLICY.md` (bu rehberle birlikte hazırlanacak)
 
 **Terms of Use:**
-- URL: `https://1indirim.birdir1.com/terms-of-use`
+- URL: `https://1ndirim.birdir1.com/terms-of-use`
 - Dosya: `app/TERMS_OF_USE.md` (bu rehberle birlikte hazırlanacak)
 
 ### 8. App Store Listing Metinleri
@@ -136,8 +136,8 @@ Kullanıcı verileriniz güvende. Detaylı gizlilik politikamızı inceleyebilir
 
 **Keywords:** kampanya,indirim,banka,operatör,kredi,kartı,ödeme,teklif,avantaj
 
-**Support URL:** `https://1indirim.birdir1.com/support`  
-**Marketing URL:** `https://1indirim.birdir1.com`
+**Support URL:** `https://1ndirim.birdir1.com/support`  
+**Marketing URL:** `https://1ndirim.birdir1.com`
 
 ### 9. Build ve Upload
 
@@ -234,11 +234,11 @@ flutter build appbundle --release
 ### 5. Privacy Policy ve Terms of Use
 
 **Privacy Policy:**
-- URL: `https://1indirim.birdir1.com/privacy-policy`
+- URL: `https://1ndirim.birdir1.com/privacy-policy`
 - Google Play Console'da "Store presence" > "Privacy policy" bölümüne ekle
 
 **Terms of Use:**
-- URL: `https://1indirim.birdir1.com/terms-of-use`
+- URL: `https://1ndirim.birdir1.com/terms-of-use`
 
 ### 6. Google Play Listing Metinleri
 

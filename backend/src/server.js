@@ -110,8 +110,8 @@ const isAdminPanelRequest = (req) => {
   const host = (req.headers.host || '').toLowerCase();
   const referer = (req.headers.referer || '').toLowerCase();
   return (
-    host.includes('admin.1indirim.birdir1.com') ||
-    referer.includes('admin.1indirim.birdir1.com')
+    host.includes('admin.1ndirim.birdir1.com') ||
+    referer.includes('admin.1ndirim.birdir1.com')
   );
 };
 
@@ -127,13 +127,25 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+// Admin routes should be stricter than public API routes.
+const adminLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 dakika
+  max: Number(process.env.ADMIN_RATE_LIMIT_MAX || 180),
+  message: {
+    success: false,
+    error: 'Admin endpoint rate limit aşıldı. Lütfen kısa süre sonra tekrar deneyin.',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 // Middleware
 app.use(helmet()); // Security headers
 // CORS: keep public API open, optionally restrict admin routes by origin.
 // Env:
 // - ADMIN_CORS_ORIGINS: comma-separated list of allowed origins for /api/admin/* (optional)
 const publicCors = cors();
-const adminCorsOrigins = (process.env.ADMIN_CORS_ORIGINS || '')
+const adminCorsOrigins = (process.env.ADMIN_CORS_ORIGINS || 'https://admin.1ndirim.birdir1.com')
   .split(',')
   .map((o) => o.trim())
   .filter(Boolean);
@@ -199,7 +211,7 @@ app.use('/api/campaigns', campaignsRouter);
 app.use('/api/sources', sourcesRouter);
 app.use('/api/dashboard', dashboardRouter); // Dashboard Stats
 app.use('/api/health', healthRouter);
-app.use('/api/admin', adminRouter); // FAZ 10: Admin & Control Layer
+app.use('/api/admin', adminLimiter, adminRouter); // FAZ 10: Admin & Control Layer
 app.use('/api/favorites', favoritesRouter); // User Favorites
 app.use('/api/users', usersRouter); // User Management
 app.use('/api/comments', commentsRouter); // Campaign Comments

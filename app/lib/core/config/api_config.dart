@@ -24,9 +24,9 @@ class ApiConfig {
     // Fallback to hardcoded URLs
     switch (_currentEnvironment) {
       case Environment.development:
-        return 'https://api.1indirim.birdir1.com/api';
+        return 'https://api.1ndirim.birdir1.com/api';
       case Environment.production:
-        return 'https://api.1indirim.birdir1.com/api';
+        return 'https://api.1ndirim.birdir1.com/api';
     }
   }
 

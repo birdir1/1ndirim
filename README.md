@@ -14,7 +14,14 @@ MVP aşamasında, temel özellikler çalışıyor. Production için kritik eksik
 - **Backend:** Node.js + Express + PostgreSQL
 - **Auth:** Firebase Authentication
 - **Notifications:** Firebase Cloud Messaging
-- **API:** https://api.1indirim.birdir1.com
+- **API:** https://api.1ndirim.birdir1.com
+
+## 🌐 Domain Standard (Canonical)
+
+- Public landing: `https://1ndirim.birdir1.com`
+- API: `https://api.1ndirim.birdir1.com`
+- Admin: `https://admin.1ndirim.birdir1.com`
+- Legacy hosts (`1indirim`, `api.1indirim`, `admin.1indirim`) are permanently redirected with HTTP `301`.
 
 ## 📋 Dokümantasyon
 
@@ -97,7 +104,7 @@ Detaylı roadmap için [KAPSAMLI_UYGULAMA_RAPORU.md](./KAPSAMLI_UYGULAMA_RAPORU.
 ## 📞 İletişim
 
 - GitHub: [birdir1/1ndirim](https://github.com/birdir1/1ndirim)
-- API: https://api.1indirim.birdir1.com
+- API: https://api.1ndirim.birdir1.com
 
 ## 📄 Lisans
 

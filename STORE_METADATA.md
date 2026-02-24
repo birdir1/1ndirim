@@ -127,8 +127,8 @@ Kampanyalar anlık olarak güncelleniyor. Her zaman en güncel bilgiye ulaş.
 
 📞 Destek
 
-Sorularınız için: support@1ndirim.com
-Web: www.1ndirim.com
+Sorularınız için: support@birdir1.com
+Web: 1ndirim.birdir1.com
 
 🎉 Hemen İndir!
 
@@ -146,19 +146,19 @@ kampanya,indirim,banka,kredi kartı,tasarruf,fırsat,alışveriş,cashback,opera
 ### Support URL
 
 ```
-https://www.1ndirim.com/support
+https://1ndirim.birdir1.com/support
 ```
 
 ### Marketing URL
 
 ```
-https://www.1ndirim.com
+https://1ndirim.birdir1.com
 ```
 
 ### Privacy Policy URL
 
 ```
-https://www.1ndirim.com/privacy
+https://1ndirim.birdir1.com/privacy
 ```
 
 ### Category
@@ -294,8 +294,8 @@ Kampanyalar anlık olarak güncelleniyor. Her zaman en güncel bilgiye ulaş.
 
 📞 Destek
 
-Sorularınız için: support@1ndirim.com
-Web: www.1ndirim.com
+Sorularınız için: support@birdir1.com
+Web: 1ndirim.birdir1.com
 
 🎉 Hemen İndir!
 
@@ -315,14 +315,14 @@ Tasarruf etmeye bugün başla. 1ndirim ile hiçbir kampanyayı kaçırma!
 
 ### Contact Details
 
-**Email:** support@1ndirim.com  
-**Website:** https://www.1ndirim.com  
+**Email:** support@birdir1.com  
+**Website:** https://1ndirim.birdir1.com  
 **Phone:** [Telefon numarası]
 
 ### Privacy Policy
 
 ```
-https://www.1ndirim.com/privacy
+https://1ndirim.birdir1.com/privacy
 ```
 
 ---

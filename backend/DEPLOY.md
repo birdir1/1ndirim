@@ -6,7 +6,7 @@ Bu rehber, backend API'yi sunucuda deploy etmek için adım adım talimatlar iç
 
 ## 📋 Ön Gereksinimler
 
-- ✅ Sunucuya SSH erişimi (`ssh root@37.140.242.105`)
+- ✅ Sunucuya SSH erişimi (`ssh <deploy-user>@<server-host>`)
 - ✅ PM2 kurulu (`npm install -g pm2`)
 - ✅ PostgreSQL çalışıyor ve `.env` dosyasında doğru DB bilgileri var
 
@@ -15,7 +15,7 @@ Bu rehber, backend API'yi sunucuda deploy etmek için adım adım talimatlar iç
 ## 📋 Adım 1: Sunucuya Bağlan
 
 ```bash
-ssh root@37.140.242.105
+ssh <deploy-user>@<server-host>
 ```
 
 ---
@@ -87,7 +87,7 @@ Eğer hata varsa, loglarda "Campaigns/all list error" veya "Campaigns/all stack"
 ## 📋 Adım 7: Health Check
 
 ```bash
-curl https://api.1indirim.birdir1.com/api/health
+curl https://api.1ndirim.birdir1.com/api/health
 ```
 
 Şu yanıtı görmelisin:
@@ -100,7 +100,7 @@ curl https://api.1indirim.birdir1.com/api/health
 ## 📋 Adım 8: Test Endpoint
 
 ```bash
-curl "https://api.1indirim.birdir1.com/api/campaigns/all"
+curl "https://api.1ndirim.birdir1.com/api/campaigns/all"
 ```
 
 200 status code ve kampanya listesi görmelisin (boş liste de olabilir).
