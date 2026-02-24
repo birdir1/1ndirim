@@ -116,6 +116,110 @@ router.get('/terms-of-use', (req, res) => {
 });
 
 /**
+ * GET /support
+ * Public support information page
+ */
+router.get('/support', (req, res) => {
+  const html = `
+<h1>1ndirim Destek</h1>
+<p>Destek talepleri için bize e-posta gönderebilirsin.</p>
+<ul>
+  <li>E-posta: birdir1.app@gmail.com</li>
+  <li>Web: https://1ndirim.birdir1.com</li>
+</ul>
+<h2>Hesap Silme</h2>
+<p>Mobil uygulama içindeki hesap silme akışını kullanabilir veya destek e-postasına kayıtlı e-posta adresinle talep gönderebilirsin.</p>
+`;
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.send(wrapHTML(html));
+});
+
+/**
+ * GET /1ben/privacy-policy
+ * 1ben privacy policy page
+ */
+router.get('/1ben/privacy-policy', (req, res) => {
+  try {
+    const possiblePaths = [
+      path.join(__dirname, '../../../../../../1ben/PRIVACY_POLICY.md'),
+      path.join(__dirname, '../../../../../1ben/PRIVACY_POLICY.md'),
+      '/var/www/1indirim-api/../1ben/PRIVACY_POLICY.md',
+      '/var/www/1indirim-api/1ben/PRIVACY_POLICY.md',
+    ];
+
+    let content = null;
+    for (const p of possiblePaths) {
+      try {
+        if (fs.existsSync(p)) {
+          content = fs.readFileSync(p, 'utf8');
+          break;
+        }
+      } catch (e) {
+        // continue
+      }
+    }
+
+    if (!content) {
+      content = `
+# 1Ben Gizlilik Politikası
+
+1Ben uygulaması MVP sürümünde verileri öncelikle cihaz üzerinde tutar.
+
+- Destek: birdir1.app@gmail.com
+- Hesap silme: uygulama içinden \"Demo Sil / Veriyi Sıfırla\" aksiyonu
+`;
+    }
+
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.send(wrapHTML(convertMarkdownToHTML(content)));
+  } catch (error) {
+    console.error('1ben privacy policy error:', error);
+    res.status(500).send('Privacy policy yüklenemedi');
+  }
+});
+
+/**
+ * GET /1ben/terms-of-use
+ * 1ben terms page
+ */
+router.get('/1ben/terms-of-use', (req, res) => {
+  const markdown = `
+# 1Ben Kullanım Şartları
+
+1Ben, kişisel farkındalık ve günlük takip amaçlı bir mobil uygulamadır.
+
+- Bu sürüm MVP kapsamındadır.
+- Ticari/finansal tavsiye sunmaz.
+- Destek: birdir1.app@gmail.com
+`;
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.send(wrapHTML(convertMarkdownToHTML(markdown)));
+});
+
+/**
+ * GET /1ben/account-deletion
+ * 1ben account deletion info page (store compliance)
+ */
+router.get('/1ben/account-deletion', (req, res) => {
+  const markdown = `
+# 1Ben Hesap ve Veri Silme
+
+MVP sürümünde veriler cihazında tutulur.
+
+## Uygulama içinden silme
+1. Profil ekranını aç.
+2. \"Demo Sil\" aksiyonunu kullan.
+3. Tüm lokal kayıtlar temizlenir.
+
+## Destek ile silme
+- E-posta: birdir1.app@gmail.com
+- Konu: \"1Ben Veri Silme Talebi\"
+`;
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.send(wrapHTML(convertMarkdownToHTML(markdown)));
+});
+
+/**
  * Markdown'ı basit HTML'e çevir
  */
 function convertMarkdownToHTML(markdown) {

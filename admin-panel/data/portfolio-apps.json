@@ -10,6 +10,7 @@
     "owner": "birdir1",
     "last_release_at": "2026-02-22",
     "health_url": "https://api.1ndirim.birdir1.com/api/health",
+    "public_url": "https://1ndirim.birdir1.com",
     "notes": "Backend güçlü, mobil app kırıkları kapanıyor."
   },
   {
@@ -23,6 +24,7 @@
     "owner": "birdir1",
     "last_release_at": "2026-02-22",
     "health_url": null,
+    "public_url": "https://1ben.birdir1.com",
     "notes": "Demo auth ile ilerliyor, store blokörleri kapanıyor."
   },
   {
@@ -36,6 +38,7 @@
     "owner": "birdir1",
     "last_release_at": "N/A",
     "health_url": null,
+    "public_url": null,
     "notes": "UI prototype aşamasında, backend ve kalıcı veri katmanı planlanacak."
   },
   {
@@ -49,6 +52,7 @@
     "owner": "birdir1",
     "last_release_at": "N/A",
     "health_url": null,
+    "public_url": null,
     "notes": "Repo/bootstrap planlama aşamasında."
   }
 ]

@@ -1,0 +1,49 @@
+{
+  "generated_at": "2026-02-24T11:18:06.622Z",
+  "apps": [
+    {
+      "app_id": "1ndirim",
+      "status": "in_progress",
+      "store_health": "yellow",
+      "build_health": "red",
+      "runtime": "up",
+      "domain": "green",
+      "ci_status": "completed",
+      "ci_conclusion": "failure",
+      "ci_run_url": "https://github.com/birdir1/1ndirim/actions/runs/22347760609"
+    },
+    {
+      "app_id": "1ben",
+      "status": "in_progress",
+      "store_health": "yellow",
+      "build_health": "yellow",
+      "runtime": "unknown",
+      "domain": "red",
+      "ci_status": null,
+      "ci_conclusion": null,
+      "ci_run_url": null
+    },
+    {
+      "app_id": "1dovme",
+      "status": "planning",
+      "store_health": "red",
+      "build_health": "red",
+      "runtime": "unknown",
+      "domain": "unknown",
+      "ci_status": null,
+      "ci_conclusion": null,
+      "ci_run_url": null
+    },
+    {
+      "app_id": "tar1f",
+      "status": "planning",
+      "store_health": "unknown",
+      "build_health": "unknown",
+      "runtime": "unknown",
+      "domain": "unknown",
+      "ci_status": null,
+      "ci_conclusion": null,
+      "ci_run_url": null
+    }
+  ]
+}

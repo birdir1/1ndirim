@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../config/database');
+const firebaseAdmin = require('firebase-admin');
 const { firebaseAuth } = require('../middleware/firebaseAuth');
 const GamificationService = require('../services/gamificationService');
 const { validateFCMToken } = require('../middleware/validation');
@@ -85,6 +86,79 @@ router.delete('/fcm-token', firebaseAuth, async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'FCM token silme hatası',
+    });
+  } finally {
+    client.release();
+  }
+});
+
+/**
+ * DELETE /api/users/account
+ * Kullanıcının uygulama verilerini ve Firebase Auth hesabını siler
+ */
+router.delete('/account', firebaseAuth, async (req, res) => {
+  const client = await pool.connect();
+
+  async function safeExec(query, params = []) {
+    try {
+      await client.query(query, params);
+      return true;
+    } catch (error) {
+      // Tablo yoksa release sürecini bloklamayalım, diğer verileri temizlemeye devam edelim.
+      if (error && error.code === '42P01') {
+        console.warn('⚠️ Account delete skip (table missing):', query.split('\n')[0]);
+        return false;
+      }
+      throw error;
+    }
+  }
+
+  try {
+    const userId = req.user.uid;
+    await client.query('BEGIN');
+
+    await safeExec('DELETE FROM user_fcm_tokens WHERE user_id = $1', [userId]);
+    await safeExec('DELETE FROM user_favorites WHERE user_id = $1', [userId]);
+    await safeExec('DELETE FROM campaign_ratings WHERE user_id = $1', [userId]);
+    await safeExec(
+      'UPDATE campaign_comments SET is_deleted = true, updated_at = NOW() WHERE user_id = $1',
+      [userId]
+    );
+    await safeExec('DELETE FROM user_points WHERE user_id = $1', [userId]);
+    await safeExec('DELETE FROM user_badges WHERE user_id = $1', [userId]);
+
+    await client.query('COMMIT');
+
+    let firebaseDeleted = false;
+    let firebaseWarning = null;
+    try {
+      if (firebaseAdmin.apps.length) {
+        await firebaseAdmin.auth().deleteUser(userId);
+        firebaseDeleted = true;
+      } else {
+        firebaseWarning = 'Firebase Admin app initialized değil';
+      }
+    } catch (firebaseError) {
+      firebaseWarning = firebaseError.message;
+      console.error('❌ Firebase user delete error:', firebaseError.message);
+    }
+
+    res.json({
+      success: true,
+      message: 'Hesap ve kullanıcı verileri temizlendi',
+      data: {
+        userId,
+        firebaseDeleted,
+        firebaseWarning,
+      },
+    });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('❌ Hesap silme hatası:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Hesap silinemedi',
+      message: error.message,
     });
   } finally {
     client.release();

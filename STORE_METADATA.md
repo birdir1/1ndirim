@@ -158,7 +158,13 @@ https://1ndirim.birdir1.com
 ### Privacy Policy URL
 
 ```
-https://1ndirim.birdir1.com/privacy
+https://1ndirim.birdir1.com/privacy-policy
+```
+
+### Terms of Use URL
+
+```
+https://1ndirim.birdir1.com/terms-of-use
 ```
 
 ### Category
@@ -322,7 +328,13 @@ Tasarruf etmeye bugün başla. 1ndirim ile hiçbir kampanyayı kaçırma!
 ### Privacy Policy
 
 ```
-https://1ndirim.birdir1.com/privacy
+https://1ndirim.birdir1.com/privacy-policy
+```
+
+### Terms of Use
+
+```
+https://1ndirim.birdir1.com/terms-of-use
 ```
 
 ---
