@@ -24,8 +24,6 @@ set -euo pipefail
 
 # Backend
 cd /var/www/1indirim-api/backend
-mkdir -p /root/server-scripts
-mv scripts/dnsSslExpiryCheck.sh scripts/legalHealthCheck.sh scripts/uptimeCheck.sh /root/server-scripts/ 2>/dev/null || true
 if ! git diff --quiet || ! git diff --cached --quiet; then
   echo "Backend has local changes; aborting."
   git status -sb
