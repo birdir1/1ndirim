@@ -122,20 +122,44 @@ class AdminSourceService {
       type = null,
       isActive = null,
       q = null,
+      scope = null,
+      includeExpired = false,
     } = filters;
-    
-    let query = 'SELECT * FROM sources WHERE 1=1';
+
+    const hasScope = scope === 'flow' || scope === 'discover';
+    let query = hasScope
+      ? 'SELECT DISTINCT s.* FROM sources s JOIN campaigns c ON c.source_id = s.id WHERE 1=1'
+      : 'SELECT * FROM sources s WHERE 1=1';
     const params = [];
     let paramIndex = 1;
+
+    if (hasScope) {
+      if (scope === 'discover') {
+        query += ` AND c.campaign_type = 'category' AND c.show_in_category_feed = true`;
+      } else {
+        query += ` AND (
+          ((c.campaign_type = 'main' OR c.campaign_type IS NULL)
+            AND (c.campaign_type != 'category' OR c.campaign_type IS NULL)
+            AND (c.campaign_type != 'light' OR c.campaign_type IS NULL)
+            AND (c.value_level = 'high' OR c.value_level IS NULL))
+          OR (c.campaign_type = 'light' AND c.show_in_light_feed = true)
+          OR (c.value_level = 'low')
+        )`;
+      }
+
+      if (!includeExpired) {
+        query += ' AND c.expires_at > NOW()';
+      }
+    }
     
     if (status) {
-      query += ` AND source_status = $${paramIndex}`;
+      query += ` AND s.source_status = $${paramIndex}`;
       params.push(status);
       paramIndex++;
     }
     
     if (type) {
-      query += ` AND type = $${paramIndex}`;
+      query += ` AND s.type = $${paramIndex}`;
       params.push(type);
       paramIndex++;
 
@@ -149,25 +173,25 @@ class AdminSourceService {
           'bimcell',
           'pttcell',
         ];
-        query += ` AND LOWER(name) = ANY($${paramIndex})`;
+        query += ` AND LOWER(s.name) = ANY($${paramIndex})`;
         params.push(allowedOperators);
         paramIndex++;
       }
     }
     
     if (isActive !== null) {
-      query += ` AND is_active = $${paramIndex}`;
+      query += ` AND s.is_active = $${paramIndex}`;
       params.push(isActive);
       paramIndex++;
     }
 
     if (q && String(q).trim().length > 0) {
-      query += ` AND (name ILIKE $${paramIndex} OR website_url ILIKE $${paramIndex})`;
+      query += ` AND (s.name ILIKE $${paramIndex} OR s.website_url ILIKE $${paramIndex})`;
       params.push(`%${String(q).trim()}%`);
       paramIndex++;
     }
     
-    query += ` ORDER BY source_status, type, name`;
+    query += ` ORDER BY s.source_status, s.type, s.name`;
     
     const result = await pool.query(query, params);
     return result.rows;

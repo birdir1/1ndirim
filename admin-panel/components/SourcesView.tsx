@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import AdminLayout from '@/components/AdminLayout';
 import { getAuth } from '@/lib/auth';
@@ -19,11 +19,6 @@ type Source = {
   is_active: boolean;
 };
 
-type CampaignLite = {
-  source_id?: string | null;
-  sourceId?: string | null;
-};
-
 type SourcesViewProps = {
   title: string;
   scope?: 'all' | 'flow' | 'discover';
@@ -39,7 +34,6 @@ export default function SourcesView({ title, scope = 'all', description }: Sourc
   const [reason, setReason] = useState('');
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [scopeIds, setScopeIds] = useState<Set<string> | null>(null);
 
   // Filters
   const [statusFilter, setStatusFilter] = useState<string>('');
@@ -56,44 +50,13 @@ export default function SourcesView({ title, scope = 'all', description }: Sourc
   }, [searchQuery]);
 
   useEffect(() => {
-    if (scope === 'all') {
-      setScopeIds(null);
-      return;
-    }
-    const a = getAuth();
-    if (!a) return;
-
-    const loadScope = async () => {
-      setScopeIds(null);
-      try {
-        const filters = scope === 'discover' ? ['category'] : ['main', 'light', 'low'];
-        const ids = new Set<string>();
-        for (const filter of filters) {
-          const res = await apiFetch<CampaignLite[]>(`/campaigns?filter=${filter}&limit=500&offset=0`, a);
-          if (Array.isArray(res.data)) {
-            res.data.forEach((c) => {
-              const id = c.source_id || c.sourceId;
-              if (id) ids.add(id);
-            });
-          }
-        }
-        setScopeIds(ids);
-      } catch (e) {
-        console.error('Scope sources error', e);
-        setScopeIds(new Set());
-      }
-    };
-
-    loadScope();
-  }, [scope]);
-
-  useEffect(() => {
     const a = getAuth();
     if (!a) return;
     setLoading(true);
     setErr('');
 
     const params = new URLSearchParams();
+    if (scope !== 'all') params.append('scope', scope);
     if (statusFilter) params.append('status', statusFilter);
     if (typeFilter) params.append('type', typeFilter);
     if (isActiveFilter !== '') params.append('isActive', isActiveFilter);
@@ -111,12 +74,6 @@ export default function SourcesView({ title, scope = 'all', description }: Sourc
       }
     });
   }, [statusFilter, typeFilter, isActiveFilter, debouncedSearchQuery]);
-
-  const visibleList = useMemo(() => {
-    if (scope === 'all') return list;
-    if (!scopeIds) return [];
-    return list.filter((s) => scopeIds.has(s.id));
-  }, [list, scopeIds, scope]);
 
   const openModal = (source: Source, newStatus: string) => {
     setModal({ source, newStatus });
@@ -236,11 +193,7 @@ export default function SourcesView({ title, scope = 'all', description }: Sourc
       </div>
 
       <div className="mb-4 text-sm text-gray-600">
-        {scope !== 'all' && !scopeIds
-          ? 'Kaynaklar hesaplanıyor...'
-          : searchQuery
-          ? `${visibleList.length} sonuç bulundu`
-          : `${visibleList.length} kaynak gösteriliyor`}
+        {searchQuery ? `${list.length} sonuç bulundu` : `${list.length} kaynak gösteriliyor`}
       </div>
 
       {loading ? (
@@ -266,7 +219,7 @@ export default function SourcesView({ title, scope = 'all', description }: Sourc
                 </tr>
               </thead>
               <tbody>
-                {visibleList.map((s) => (
+                {list.map((s) => (
                   <tr key={s.id} className="border-t">
                     <td className="p-2">{s.logo_url ? <img src={s.logo_url} alt="" className="w-6 h-6" /> : '—'}</td>
                     <td className="p-2 font-medium">{s.name}</td>
@@ -302,7 +255,7 @@ export default function SourcesView({ title, scope = 'all', description }: Sourc
           </div>
 
           <div className="lg:hidden space-y-3">
-            {visibleList.map((s) => (
+            {list.map((s) => (
               <div key={s.id} className="border rounded-lg p-3 bg-white">
                 <div className="flex items-center justify-between">
                   <div>

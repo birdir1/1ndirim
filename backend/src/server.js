@@ -127,10 +127,17 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-// Admin routes should be stricter than public API routes.
+// Admin routes should be protected but not too tight for dashboard usage.
 const adminLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 dakika
-  max: Number(process.env.ADMIN_RATE_LIMIT_MAX || 180),
+  max: Number(
+    process.env.ADMIN_RATE_LIMIT_MAX || (process.env.NODE_ENV === 'production' ? 1200 : 300)
+  ),
+  keyGenerator: (req) => {
+    const email = req.headers['x-admin-email'];
+    if (email) return `admin:${String(email).trim().toLowerCase()}`;
+    return `ip:${req.ip}`;
+  },
   message: {
     success: false,
     error: 'Admin endpoint rate limit aşıldı. Lütfen kısa süre sonra tekrar deneyin.',
