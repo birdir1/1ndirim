@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import AdminLayout from '@/components/AdminLayout';
 import { getAuth } from '@/lib/auth';
 import { apiFetch } from '@/lib/api';
@@ -53,7 +54,6 @@ export default function DiscoverAdminPage() {
       setLoading(true);
       setError('');
       try {
-        // 1) Discover categories (public endpoint)
         const discoverRes = await fetch(`${BACKEND_BASE}/api/campaigns/discover?limit=20&sort=latest`);
         const discoverJson = await discoverRes.json();
         if (!discoverRes.ok || discoverJson?.success !== true) {
@@ -65,7 +65,6 @@ export default function DiscoverAdminPage() {
           );
         }
 
-        // 2) Operator/gaming/ott kaynakları (admin endpoint)
         if (auth) {
           const names = ['steam', 'epic', 'nvidia', 'geforce', 'netflix', 'spotify', 'playstation', 'xbox', 'ea', 'ubisoft'];
           const res = await apiFetch<Source[]>(
@@ -107,13 +106,22 @@ export default function DiscoverAdminPage() {
     return cat.campaigns.map((c) => ({ ...c, category: cat.name }));
   }, [selectedCategoryId, flattened, categories]);
 
-  const emptyCategories = categories.filter((c) => c.isEmpty || c.campaigns.length === 0);
-
   return (
     <AdminLayout>
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-semibold">Keşfet (Discover)</h1>
-        {loading && <span className="text-sm text-gray-500">Yükleniyor...</span>}
+      <div className="mb-6">
+        <h1 className="text-2xl font-semibold">Keşfet Dashboard</h1>
+        <p className="text-sm text-gray-500 mt-1">Kategori bazlı keşfet kampanyaları ve kaynaklar.</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <Link href="/discover/campaigns" className="border rounded-lg p-4 bg-white hover:border-blue-400">
+          <div className="font-medium">Keşfet Kampanyaları</div>
+          <div className="text-sm text-gray-500">Category feed kampanyalarını listele.</div>
+        </Link>
+        <Link href="/discover/sources" className="border rounded-lg p-4 bg-white hover:border-blue-400">
+          <div className="font-medium">Keşfet Kaynakları</div>
+          <div className="text-sm text-gray-500">Keşfet kaynaklarını görüntüle.</div>
+        </Link>
       </div>
 
       {error && (
@@ -199,14 +207,11 @@ export default function DiscoverAdminPage() {
           <h2 className="font-semibold">Son Keşfet Kampanyaları</h2>
           <span className="text-xs text-gray-500">
             {tableData.length} kayıt
-            {selectedCategoryId
-              ? ` • ${categories.find((c) => c.id === selectedCategoryId)?.name || ''}`
-              : ''}
           </span>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-100 text-left">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-gray-100">
               <tr>
                 <th className="p-2">Başlık</th>
                 <th className="p-2">Kaynak</th>
@@ -216,55 +221,32 @@ export default function DiscoverAdminPage() {
               </tr>
             </thead>
             <tbody>
-              {tableData.slice(0, 100).map((c) => (
-                <tr
-                  key={c.id}
-                  className="border-b last:border-0 hover:bg-gray-50 cursor-pointer"
-                  onClick={() => (window.location.href = `/dashboard/campaigns/${c.id}`)}
-                >
-                  <td className="p-2">{c.title}</td>
+              {tableData.map((c) => (
+                <tr key={c.id} className="border-t">
+                  <td className="p-2 font-medium">{c.title}</td>
                   <td className="p-2">{c.sourceName}</td>
-                  <td className="p-2 text-gray-600">{c.category}</td>
-                  <td className="p-2">{c.platform || '—'}</td>
-                  <td className="p-2 text-xs">
-                    {c.sponsored ? (
-                      <span className="bg-amber-100 text-amber-700 px-2 py-1 rounded">Sponsor</span>
-                    ) : c.isFree ? (
-                      <span className="bg-green-100 text-green-700 px-2 py-1 rounded">Ücretsiz</span>
+                  <td className="p-2">{c.category || '—'}</td>
+                  <td className="p-2 text-xs text-gray-600">{c.platform || '—'}</td>
+                  <td className="p-2">
+                    {c.isFree ? (
+                      <span className="px-2 py-1 rounded text-xs bg-green-100 text-green-700">Ücretsiz</span>
                     ) : c.discountPercentage ? (
-                      <span className="bg-red-100 text-red-700 px-2 py-1 rounded">
-                        %{Math.round(c.discountPercentage)}
-                      </span>
+                      <span className="px-2 py-1 rounded text-xs bg-red-100 text-red-700">%{c.discountPercentage}</span>
                     ) : (
-                      '—'
+                      <span className="px-2 py-1 rounded text-xs bg-gray-100 text-gray-600">—</span>
                     )}
                   </td>
                 </tr>
               ))}
-              {!tableData.length && (
+              {!tableData.length && !loading && (
                 <tr>
-                  <td colSpan={5} className="p-4 text-center text-gray-500">
-                    Keşfet kampanyası bulunamadı
-                  </td>
+                  <td className="p-2 text-sm text-gray-500" colSpan={5}>Kampanya bulunamadı</td>
                 </tr>
               )}
             </tbody>
           </table>
         </div>
       </div>
-
-      {emptyCategories.length > 0 && (
-        <div className="rounded-lg border bg-amber-50 border-amber-200 text-amber-800 p-4">
-          <h3 className="font-semibold mb-2">Boş / fallback kategoriler</h3>
-          <ul className="list-disc list-inside space-y-1 text-sm">
-            {emptyCategories.map((c) => (
-              <li key={c.id}>
-                {c.name} — {c.fallbackMessage || 'içerik yok, kaynak ekleyin'}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
     </AdminLayout>
   );
 }
