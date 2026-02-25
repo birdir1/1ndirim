@@ -14,6 +14,7 @@
     "backup": "node src/scripts/backup.js",
     "cron": "node src/jobs/cronWorker.js",
     "add-sources": "node src/scripts/add-missing-sources.js",
+    "add-categories": "node src/scripts/upsert-discovery-categories.js",
     "fix-operators": "node src/scripts/fix_operator_sources.js",
     "reprocess-campaigns": "node scripts/reprocessCampaigns.js",
     "import:feed": "node scripts/manualFeedImport.js",

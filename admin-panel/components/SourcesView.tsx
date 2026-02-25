@@ -157,8 +157,12 @@ export default function SourcesView({ title, scope = 'all', description }: Sourc
               className="w-full border rounded px-3 py-2 text-sm"
             >
               <option value="">Tümü</option>
-              <option value="bank">Bank</option>
-              <option value="operator">Operator</option>
+              <option value="bank">Banka</option>
+              <option value="operator">Operatör</option>
+              <option value="fashion">Giyim</option>
+              <option value="cosmetics">Kozmetik</option>
+              <option value="travel">Seyahat</option>
+              <option value="entertainment">Eğlence</option>
             </select>
           </div>
 

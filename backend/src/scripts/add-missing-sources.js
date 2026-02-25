@@ -49,34 +49,64 @@ async function addMissingSources() {
       { name: 'Hayat Finans', type: 'bank', logoUrl: null, websiteUrl: 'https://www.hayatfinans.com.tr' },
       { name: 'TOM Bank', type: 'bank', logoUrl: null, websiteUrl: 'https://www.tombank.com.tr' },
       // Giyim (Top 10)
-      { name: 'Zara', type: 'operator', logoUrl: null, websiteUrl: 'https://www.zara.com/tr/' },
-      { name: 'H&M', type: 'operator', logoUrl: null, websiteUrl: 'https://www2.hm.com/tr_tr/index.html' },
-      { name: 'Bershka', type: 'operator', logoUrl: null, websiteUrl: 'https://www.bershka.com/tr/' },
-      { name: 'Pull&Bear', type: 'operator', logoUrl: null, websiteUrl: 'https://www.pullandbear.com/tr/' },
-      { name: 'LCW', type: 'operator', logoUrl: null, websiteUrl: 'https://www.lcwaikiki.com/tr-TR/TR' },
-      { name: 'Koton', type: 'operator', logoUrl: null, websiteUrl: 'https://www.koton.com/tr/' },
-      { name: 'Mavi', type: 'operator', logoUrl: null, websiteUrl: 'https://www.mavi.com/' },
-      { name: 'DeFacto', type: 'operator', logoUrl: null, websiteUrl: 'https://www.defacto.com.tr/' },
-      { name: 'Collins', type: 'operator', logoUrl: null, websiteUrl: 'https://www.collins.com.tr/' },
-      { name: 'Beymen', type: 'operator', logoUrl: null, websiteUrl: 'https://www.beymen.com/tr' },
-      // Makyaj (Top 5)
-      { name: 'Sephora', type: 'operator', logoUrl: null, websiteUrl: 'https://www.sephora.com.tr/' },
-      { name: 'Gratis', type: 'operator', logoUrl: null, websiteUrl: 'https://www.gratis.com/' },
-      { name: 'Watsons', type: 'operator', logoUrl: null, websiteUrl: 'https://www.watsons.com.tr/' },
-      { name: 'MAC Cosmetics', type: 'operator', logoUrl: null, websiteUrl: 'https://www.maccosmetics.com.tr/' },
-      { name: 'Flormar', type: 'operator', logoUrl: null, websiteUrl: 'https://www.flormar.com.tr/' },
+      { name: 'Zara', type: 'fashion', logoUrl: null, websiteUrl: 'https://www.zara.com/tr/' },
+      { name: 'H&M', type: 'fashion', logoUrl: null, websiteUrl: 'https://www2.hm.com/tr_tr/index.html' },
+      { name: 'Bershka', type: 'fashion', logoUrl: null, websiteUrl: 'https://www.bershka.com/tr/' },
+      { name: 'Pull&Bear', type: 'fashion', logoUrl: null, websiteUrl: 'https://www.pullandbear.com/tr/' },
+      { name: 'LCW', type: 'fashion', logoUrl: null, websiteUrl: 'https://www.lcwaikiki.com/tr-TR/TR' },
+      { name: 'Koton', type: 'fashion', logoUrl: null, websiteUrl: 'https://www.koton.com/tr/' },
+      { name: 'Mavi', type: 'fashion', logoUrl: null, websiteUrl: 'https://www.mavi.com/' },
+      { name: 'DeFacto', type: 'fashion', logoUrl: null, websiteUrl: 'https://www.defacto.com.tr/' },
+      { name: 'Collins', type: 'fashion', logoUrl: null, websiteUrl: 'https://www.collins.com.tr/' },
+      { name: 'Beymen', type: 'fashion', logoUrl: null, websiteUrl: 'https://www.beymen.com/tr' },
+      // Kozmetik (Top 5)
+      { name: 'Sephora', type: 'cosmetics', logoUrl: null, websiteUrl: 'https://www.sephora.com.tr/' },
+      { name: 'Gratis', type: 'cosmetics', logoUrl: null, websiteUrl: 'https://www.gratis.com/' },
+      { name: 'Watsons', type: 'cosmetics', logoUrl: null, websiteUrl: 'https://www.watsons.com.tr/' },
+      { name: 'MAC Cosmetics', type: 'cosmetics', logoUrl: null, websiteUrl: 'https://www.maccosmetics.com.tr/' },
+      { name: 'Flormar', type: 'cosmetics', logoUrl: null, websiteUrl: 'https://www.flormar.com.tr/' },
+      // Seyahat
+      { name: 'Pegasus', type: 'travel', logoUrl: null, websiteUrl: 'https://www.flypgs.com/kampanyalar' },
+      { name: 'Setur', type: 'travel', logoUrl: null, websiteUrl: 'https://www.setur.com.tr/kampanyalar' },
+      { name: 'ETS', type: 'travel', logoUrl: null, websiteUrl: 'https://www.etstur.com/kampanyalar' },
+      { name: 'Odamax', type: 'travel', logoUrl: null, websiteUrl: 'https://www.odamax.com/kampanyalar' },
+      // Eğlence / Bilet
+      { name: 'Passo', type: 'entertainment', logoUrl: null, websiteUrl: 'https://www.passo.com.tr/kampanyalar' },
+      { name: 'Müzekart', type: 'entertainment', logoUrl: null, websiteUrl: 'https://www.muze.gov.tr/muzekart' },
+      { name: 'Biletix', type: 'entertainment', logoUrl: null, websiteUrl: 'https://www.biletix.com/kampanyalar' },
     ];
 
     // Mevcut source'ları kontrol et
     const existingSources = await Source.findAll();
-    const existingNames = existingSources.map(s => s.name.toLowerCase().trim());
+    const existingByName = new Map(
+      existingSources.map(s => [s.name.toLowerCase().trim(), s])
+    );
 
     for (const sourceData of sources) {
       const normalizedName = sourceData.name.toLowerCase().trim();
       
       // Eğer zaten varsa atla
-      if (existingNames.includes(normalizedName)) {
-        console.log(`⏭️  Source zaten mevcut: ${sourceData.name}`);
+      if (existingByName.has(normalizedName)) {
+        const existing = existingByName.get(normalizedName);
+        const shouldUpdateType = existing && existing.type !== sourceData.type;
+        const shouldUpdateWebsite =
+          sourceData.websiteUrl &&
+          existing &&
+          sourceData.websiteUrl !== existing.website_url;
+
+        if (shouldUpdateType || shouldUpdateWebsite) {
+          await client.query(
+            `UPDATE sources
+             SET type = $1,
+                 website_url = COALESCE($2, website_url),
+                 updated_at = NOW()
+             WHERE id = $3`,
+            [sourceData.type, sourceData.websiteUrl || null, existing.id]
+          );
+          console.log(`🔁 Source güncellendi: ${sourceData.name} (${sourceData.type})`);
+        } else {
+          console.log(`⏭️  Source zaten mevcut: ${sourceData.name}`);
+        }
         continue;
       }
 

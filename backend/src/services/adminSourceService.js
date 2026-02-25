@@ -127,17 +127,16 @@ class AdminSourceService {
     } = filters;
 
     const hasScope = scope === 'flow' || scope === 'discover';
-    let query = hasScope
-      ? 'SELECT DISTINCT s.* FROM sources s JOIN campaigns c ON c.source_id = s.id WHERE 1=1'
-      : 'SELECT * FROM sources s WHERE 1=1';
+    let query = 'SELECT DISTINCT s.* FROM sources s WHERE 1=1';
     const params = [];
     let paramIndex = 1;
 
     if (hasScope) {
+      let campaignFilter = '';
       if (scope === 'discover') {
-        query += ` AND c.campaign_type = 'category' AND c.show_in_category_feed = true`;
+        campaignFilter = `c.campaign_type = 'category' AND c.show_in_category_feed = true`;
       } else {
-        query += ` AND (
+        campaignFilter = `(
           ((c.campaign_type = 'main' OR c.campaign_type IS NULL)
             AND (c.campaign_type != 'category' OR c.campaign_type IS NULL)
             AND (c.campaign_type != 'light' OR c.campaign_type IS NULL)
@@ -148,7 +147,26 @@ class AdminSourceService {
       }
 
       if (!includeExpired) {
-        query += ' AND c.expires_at > NOW()';
+        campaignFilter += ' AND c.expires_at > NOW()';
+      }
+
+      if (scope === 'discover') {
+        query += ` AND (
+          EXISTS (
+            SELECT 1 FROM campaigns c
+            WHERE c.source_id = s.id AND ${campaignFilter}
+          )
+          OR s.name IN (
+            SELECT jsonb_array_elements_text(fixed_sources)
+            FROM campaign_categories
+            WHERE is_active = true AND fixed_sources IS NOT NULL
+          )
+        )`;
+      } else {
+        query += ` AND EXISTS (
+          SELECT 1 FROM campaigns c
+          WHERE c.source_id = s.id AND ${campaignFilter}
+        )`;
       }
     }
     
