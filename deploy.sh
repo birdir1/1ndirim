@@ -19,7 +19,7 @@ fi
 
 git push origin main
 
-ssh root@37.140.242.105 <<'SERVER'
+ssh -i ~/.ssh/id_ed25519 -o IdentitiesOnly=yes root@37.140.242.105 <<'SERVER'
 set -euo pipefail
 
 # Backend
@@ -28,6 +28,7 @@ mkdir -p /root/server-scripts
 mv scripts/dnsSslExpiryCheck.sh scripts/legalHealthCheck.sh scripts/uptimeCheck.sh /root/server-scripts/ 2>/dev/null || true
 if ! git diff --quiet || ! git diff --cached --quiet; then
   echo "Backend has local changes; aborting."
+  git status -sb
   exit 1
 fi
 
@@ -40,6 +41,7 @@ pm2 restart 0 --update-env
 cd /var/www/1indirim-bot/bot
 if ! git diff --quiet || ! git diff --cached --quiet; then
   echo "Bot has local changes; aborting."
+  git status -sb
   exit 1
 fi
 
@@ -51,6 +53,7 @@ pm2 restart 2 --update-env
 cd /var/www/1indirim-admin/admin-panel
 if ! git diff --quiet || ! git diff --cached --quiet; then
   echo "Admin has local changes; aborting."
+  git status -sb
   exit 1
 fi
 
