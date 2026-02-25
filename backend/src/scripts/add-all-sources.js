@@ -33,6 +33,23 @@ const sources = [
   { name: 'CEPTETEB', type: 'bank', websiteUrl: 'https://www.cepteteb.com' },
   { name: 'N Kolay', type: 'bank', websiteUrl: 'https://www.nkolay.com' },
   { name: 'PTTcell', type: 'operator', websiteUrl: 'https://www.pttcell.com.tr' },
+  // Fashion (Top 10)
+  { name: 'Zara', type: 'operator', websiteUrl: 'https://www.zara.com/tr/' },
+  { name: 'H&M', type: 'operator', websiteUrl: 'https://www2.hm.com/tr_tr/index.html' },
+  { name: 'Bershka', type: 'operator', websiteUrl: 'https://www.bershka.com/tr/' },
+  { name: 'Pull&Bear', type: 'operator', websiteUrl: 'https://www.pullandbear.com/tr/' },
+  { name: 'LCW', type: 'operator', websiteUrl: 'https://www.lcwaikiki.com/tr-TR/TR' },
+  { name: 'Koton', type: 'operator', websiteUrl: 'https://www.koton.com/tr/' },
+  { name: 'Mavi', type: 'operator', websiteUrl: 'https://www.mavi.com/' },
+  { name: 'DeFacto', type: 'operator', websiteUrl: 'https://www.defacto.com.tr/' },
+  { name: 'Collins', type: 'operator', websiteUrl: 'https://www.collins.com.tr/' },
+  { name: 'Beymen', type: 'operator', websiteUrl: 'https://www.beymen.com/tr' },
+  // Beauty/Make-up (Top 5)
+  { name: 'Sephora', type: 'operator', websiteUrl: 'https://www.sephora.com.tr/' },
+  { name: 'Gratis', type: 'operator', websiteUrl: 'https://www.gratis.com/' },
+  { name: 'Watsons', type: 'operator', websiteUrl: 'https://www.watsons.com.tr/' },
+  { name: 'MAC Cosmetics', type: 'operator', websiteUrl: 'https://www.maccosmetics.com.tr/' },
+  { name: 'Flormar', type: 'operator', websiteUrl: 'https://www.flormar.com.tr/' },
 ];
 
 async function addAllSources() {

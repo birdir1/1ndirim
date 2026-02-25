@@ -68,6 +68,21 @@ const OdamaxFetchScraper = require('./scrapers/fetch/odamax-fetch-scraper');
 const PassoFetchScraper = require('./scrapers/fetch/passo-fetch-scraper');
 const MuzekartFetchScraper = require('./scrapers/fetch/muzekart-fetch-scraper');
 const BiletixFetchScraper = require('./scrapers/fetch/biletix-fetch-scraper');
+const ZaraFetchScraper = require('./scrapers/fetch/zara-fetch-scraper');
+const HMFetchScraper = require('./scrapers/fetch/hm-fetch-scraper');
+const BershkaFetchScraper = require('./scrapers/fetch/bershka-fetch-scraper');
+const PullBearFetchScraper = require('./scrapers/fetch/pullbear-fetch-scraper');
+const LCWFetchScraper = require('./scrapers/fetch/lcw-fetch-scraper');
+const KotonFetchScraper = require('./scrapers/fetch/koton-fetch-scraper');
+const MaviFetchScraper = require('./scrapers/fetch/mavi-fetch-scraper');
+const DeFactoFetchScraper = require('./scrapers/fetch/defacto-fetch-scraper');
+const CollinsFetchScraper = require('./scrapers/fetch/collins-fetch-scraper');
+const BeymenFetchScraper = require('./scrapers/fetch/beymen-fetch-scraper');
+const SephoraFetchScraper = require('./scrapers/fetch/sephora-fetch-scraper');
+const GratisFetchScraper = require('./scrapers/fetch/gratis-fetch-scraper');
+const WatsonsFetchScraper = require('./scrapers/fetch/watsons-fetch-scraper');
+const MacCosmeticsFetchScraper = require('./scrapers/fetch/maccosmetics-fetch-scraper');
+const FlormarFetchScraper = require('./scrapers/fetch/flormar-fetch-scraper');
 const { startScheduler } = require('./scheduler');
 
 const SCRAPER_DELAY_MS = parseInt(process.env.SCRAPER_DELAY_MS || '3000', 10);
@@ -195,6 +210,23 @@ async function runScrapers() {
     new PassoFetchScraper(),
     new MuzekartFetchScraper(),
     new BiletixFetchScraper(),
+    // Fashion (Top 10)
+    new ZaraFetchScraper(),
+    new HMFetchScraper(),
+    new BershkaFetchScraper(),
+    new PullBearFetchScraper(),
+    new LCWFetchScraper(),
+    new KotonFetchScraper(),
+    new MaviFetchScraper(),
+    new DeFactoFetchScraper(),
+    new CollinsFetchScraper(),
+    new BeymenFetchScraper(),
+    // Beauty/Make-up (Top 5)
+    new SephoraFetchScraper(),
+    new GratisFetchScraper(),
+    new WatsonsFetchScraper(),
+    new MacCosmeticsFetchScraper(),
+    new FlormarFetchScraper(),
   ];
 
   console.log(`\n🤖 Bot başlatıldı: ${scrapers.length} scraper çalıştırılacak\n`);

@@ -48,6 +48,23 @@ async function addMissingSources() {
       { name: 'HSBC Türkiye', type: 'bank', logoUrl: null, websiteUrl: 'https://www.hsbc.com.tr' },
       { name: 'Hayat Finans', type: 'bank', logoUrl: null, websiteUrl: 'https://www.hayatfinans.com.tr' },
       { name: 'TOM Bank', type: 'bank', logoUrl: null, websiteUrl: 'https://www.tombank.com.tr' },
+      // Giyim (Top 10)
+      { name: 'Zara', type: 'operator', logoUrl: null, websiteUrl: 'https://www.zara.com/tr/' },
+      { name: 'H&M', type: 'operator', logoUrl: null, websiteUrl: 'https://www2.hm.com/tr_tr/index.html' },
+      { name: 'Bershka', type: 'operator', logoUrl: null, websiteUrl: 'https://www.bershka.com/tr/' },
+      { name: 'Pull&Bear', type: 'operator', logoUrl: null, websiteUrl: 'https://www.pullandbear.com/tr/' },
+      { name: 'LCW', type: 'operator', logoUrl: null, websiteUrl: 'https://www.lcwaikiki.com/tr-TR/TR' },
+      { name: 'Koton', type: 'operator', logoUrl: null, websiteUrl: 'https://www.koton.com/tr/' },
+      { name: 'Mavi', type: 'operator', logoUrl: null, websiteUrl: 'https://www.mavi.com/' },
+      { name: 'DeFacto', type: 'operator', logoUrl: null, websiteUrl: 'https://www.defacto.com.tr/' },
+      { name: 'Collins', type: 'operator', logoUrl: null, websiteUrl: 'https://www.collins.com.tr/' },
+      { name: 'Beymen', type: 'operator', logoUrl: null, websiteUrl: 'https://www.beymen.com/tr' },
+      // Makyaj (Top 5)
+      { name: 'Sephora', type: 'operator', logoUrl: null, websiteUrl: 'https://www.sephora.com.tr/' },
+      { name: 'Gratis', type: 'operator', logoUrl: null, websiteUrl: 'https://www.gratis.com/' },
+      { name: 'Watsons', type: 'operator', logoUrl: null, websiteUrl: 'https://www.watsons.com.tr/' },
+      { name: 'MAC Cosmetics', type: 'operator', logoUrl: null, websiteUrl: 'https://www.maccosmetics.com.tr/' },
+      { name: 'Flormar', type: 'operator', logoUrl: null, websiteUrl: 'https://www.flormar.com.tr/' },
     ];
 
     // Mevcut source'ları kontrol et

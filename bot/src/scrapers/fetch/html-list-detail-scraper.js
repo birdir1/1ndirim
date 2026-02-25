@@ -245,11 +245,25 @@ class HtmlListDetailScraper {
       if (!Number.isNaN(parsed.getTime())) endDate = parsed;
     }
 
+    let category = 'finance';
     let subCategory = this.sourceName;
     const lower = text.toLowerCase();
     if (lower.match(/kredi kart|kart|visa|mastercard|troy/)) subCategory = 'Kredi Kartı';
     else if (lower.match(/kredi|konut|tasi?t|ihtiyac/)) subCategory = 'Kredi';
     else if (lower.match(/mevduat|faiz|vadeli/)) subCategory = 'Mevduat';
+
+    // Subclass override hook (travel/fashion/beauty etc.)
+    if (typeof this.normalizeCategory === 'function') {
+      try {
+        const mapped = this.normalizeCategory(text, { title: t, description, detailText, url });
+        if (mapped && typeof mapped === 'object') {
+          if (mapped.category) category = mapped.category;
+          if (mapped.subCategory) subCategory = mapped.subCategory;
+        }
+      } catch (_) {
+        // Keep defaults if subclass mapping fails.
+      }
+    }
 
     return {
       sourceName: this.sourceName,
@@ -262,7 +276,7 @@ class HtmlListDetailScraper {
       startDate: new Date().toISOString().split('T')[0],
       endDate: endDate.toISOString().split('T')[0],
       howToUse: [],
-      category: 'finance',
+      category,
       tags: [this.sourceName, subCategory].filter((x, i, a) => a.indexOf(x) === i),
       channel: 'online',
     };

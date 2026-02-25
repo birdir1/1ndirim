@@ -1003,7 +1003,24 @@ router.post('/', requireBotAuth, validateCampaignQuality, async (req, res) => {
     }
 
     // Validasyon: category allowlist (opsiyonel)
-    const allowedCategories = ['discount', 'cashback', 'points', 'gift', 'other', 'finance', 'travel', 'food', 'entertainment', 'shopping', 'transport'];
+    const allowedCategories = [
+      'discount',
+      'cashback',
+      'points',
+      'gift',
+      'other',
+      'finance',
+      'travel',
+      'food',
+      'entertainment',
+      'shopping',
+      'transport',
+      'gaming',
+      'fashion',
+      'culture',
+      'cosmetics',
+      'beauty',
+    ];
     if (category && !allowedCategories.includes(category)) {
       return res.status(400).json({
         success: false,
@@ -1022,8 +1039,38 @@ router.post('/', requireBotAuth, validateCampaignQuality, async (req, res) => {
       });
     }
 
-    // Source name'den source ID'ye çevir (case-insensitive)
-    const sourceId = await Campaign.getSourceIdByName(sourceName);
+    // Source name'den source ID'ye çevir (case-insensitive).
+    // Bot için missing source durumunda kaynağı otomatik oluştur.
+    let sourceId = await Campaign.getSourceIdByName(sourceName);
+    if (!sourceId) {
+      const Source = require('../models/Source');
+      const sourceNameLower = (sourceName || '').toLowerCase();
+      const inferredType = category === 'finance' ||
+        /(bank|banka|finans|katilim|kredi|akbank|garanti|ziraat|halkbank|vakifbank|is bankasi|yapi kredi|qnb|teb|ing|hsbc)/i.test(sourceNameLower)
+        ? 'bank'
+        : 'operator';
+
+      const inferredWebsite = `${parsedUrl.protocol}//${parsedUrl.hostname}`;
+
+      try {
+        const createdSource = await Source.create({
+          name: sourceName,
+          type: inferredType,
+          logoUrl: null,
+          websiteUrl: inferredWebsite,
+          isActive: true,
+        });
+        sourceId = createdSource.id;
+        console.log(`[BOT] Source auto-created: ${sourceName} (${inferredType}) -> ${inferredWebsite}`);
+      } catch (createErr) {
+        // Race condition / duplicate create: source was created by another request.
+        if (createErr && (String(createErr.message).includes('duplicate') || String(createErr.message).includes('UNIQUE'))) {
+          sourceId = await Campaign.getSourceIdByName(sourceName);
+        } else {
+          throw createErr;
+        }
+      }
+    }
     if (!sourceId) {
       return res.status(400).json({
         success: false,
