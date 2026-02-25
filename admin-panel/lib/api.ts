@@ -21,10 +21,19 @@ export async function apiFetch<T>(
   opts?: RequestInit
 ): Promise<{ data?: T; error?: string; message?: string; status: number; pagination?: unknown }> {
   const url = `${BASE.replace(/\/$/, '')}/api/admin${path.startsWith('/') ? path : `/${path}`}`;
-  const res = await fetch(url, {
-    ...opts,
-    headers: { ...headers(auth), ...(opts?.headers as Record<string, string>) },
-  });
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      ...opts,
+      headers: { ...headers(auth), ...(opts?.headers as Record<string, string>) },
+    });
+  } catch (error) {
+    return {
+      error: `Network error: ${(error as Error).message}`,
+      message: 'Backend API erişilemedi',
+      status: 0,
+    };
+  }
   const body = await res.text();
   let json: Record<string, unknown> = {};
   try {
@@ -56,4 +65,3 @@ export async function apiFetch<T>(
 export function apiUrl(path: string): string {
   return `${BASE.replace(/\/$/, '')}/api/admin${path.startsWith('/') ? path : `/${path}`}`;
 }
-

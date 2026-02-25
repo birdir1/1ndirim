@@ -20,15 +20,20 @@ export default function LoginPage() {
       return;
     }
     setLoading(true);
-    const auth = { admin_email: admin_email.trim(), admin_api_key: admin_api_key.trim() };
-    const out = await apiFetch<unknown>('/sources', auth, { method: 'GET' });
-    setLoading(false);
-    if (out.error || (out.status >= 400)) {
-      setError(out.message || out.error || `HTTP ${out.status}`);
-      return;
+    try {
+      const auth = { admin_email: admin_email.trim(), admin_api_key: admin_api_key.trim() };
+      const out = await apiFetch<unknown>('/sources', auth, { method: 'GET' });
+      if (out.error || (out.status >= 400)) {
+        setError(out.message || out.error || `HTTP ${out.status}`);
+        return;
+      }
+      setAuth(auth);
+      router.replace('/sources');
+    } catch (err) {
+      setError((err as Error).message || 'Beklenmeyen bir hata oluştu');
+    } finally {
+      setLoading(false);
     }
-    setAuth(auth);
-    router.replace('/sources');
   };
 
   return (
