@@ -73,7 +73,7 @@ export default function SourcesView({ title, scope = 'all', description }: Sourc
         showToast(errorMsg, 'error');
       }
     });
-  }, [statusFilter, typeFilter, isActiveFilter, debouncedSearchQuery]);
+  }, [statusFilter, typeFilter, isActiveFilter, debouncedSearchQuery, scope]);
 
   const openModal = (source: Source, newStatus: string) => {
     setModal({ source, newStatus });
