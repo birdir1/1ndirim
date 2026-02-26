@@ -131,7 +131,7 @@ const authLimiter = rateLimit({
 const adminLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 dakika
   max: Number(
-    process.env.ADMIN_RATE_LIMIT_MAX || (process.env.NODE_ENV === 'production' ? 1200 : 300)
+    process.env.ADMIN_RATE_LIMIT_MAX || (process.env.NODE_ENV === 'production' ? 10000 : 1500)
   ),
   keyGenerator: (req) => {
     const email = req.headers['x-admin-email'];
