@@ -21,6 +21,7 @@ async function dedupeByUrl() {
         COUNT(*) OVER (PARTITION BY source_id, original_url) AS cnt
       FROM campaigns
       WHERE original_url IS NOT NULL AND original_url <> ''
+        AND title IS NOT NULL AND TRIM(title) <> ''
     )
     UPDATE campaigns c
     SET is_hidden = true,
@@ -52,6 +53,7 @@ async function dedupeByTitleExpires() {
         COUNT(*) OVER (PARTITION BY source_id, LOWER(TRIM(title)), expires_at) AS cnt
       FROM campaigns
       WHERE (original_url IS NULL OR original_url = '')
+        AND title IS NOT NULL AND TRIM(title) <> ''
     )
     UPDATE campaigns c
     SET is_hidden = true,
