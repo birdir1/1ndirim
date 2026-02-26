@@ -9,7 +9,7 @@ const { runSafetyChecks } = require('../utils/safetyGuards');
 const DEDUPE_KEY_SQL = `
   COALESCE(
     NULLIF(c.data_hash, ''),
-    NULLIF(REGEXP_REPLACE(LOWER(TRIM(COALESCE(c.title, c.normalized_content->>'title', ''))), '\\s+', ' ', 'g'), ''),
+    NULLIF(REGEXP_REPLACE(LOWER(TRIM(COALESCE(c.title, ''))), '\\s+', ' ', 'g'), ''),
     c.id::text
   )
 `;
