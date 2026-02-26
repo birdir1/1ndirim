@@ -34,6 +34,7 @@ git pull
 npm ci
 npm run add-sources
 npm run add-categories
+npm run dedupe:campaigns
 pm2 restart 0 --update-env
 
 # Bot

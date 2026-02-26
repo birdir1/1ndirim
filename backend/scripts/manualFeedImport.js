@@ -89,6 +89,36 @@ async function main() {
       .filter(Boolean);
     const expires = row.endAt || row.startAt || null;
     try {
+      const expiresAt = expires || new Date(Date.now() + 7 * 24 * 3600 * 1000);
+      const duplicate = await Campaign.findDuplicate(
+        row.originalUrl || null,
+        sourceId,
+        row.title,
+        null,
+        expiresAt
+      );
+
+      if (duplicate) {
+        await Campaign.update(duplicate.id, {
+          title: row.title,
+          description: row.description || row.subtitle || row.title,
+          category: row.category || duplicate.category || 'gaming',
+          subCategory: row.subCategory || duplicate.sub_category || null,
+          platform: row.platform || duplicate.platform || null,
+          contentType: row.contentType || duplicate.content_type || null,
+          expiresAt,
+          isFree: String(row.isFree || '').toLowerCase() === 'true',
+          discountPercent: row.discountPercent ? Number(row.discountPercent) : null,
+          tags,
+          originalUrl: row.originalUrl || duplicate.original_url || null,
+          affiliateUrl: row.affiliateUrl || duplicate.affiliate_url || null,
+          isActive: true,
+          status: 'active',
+        });
+        ok++;
+        continue;
+      }
+
       await Campaign.rawInsertMinimal({
         sourceId,
         title: row.title,
@@ -97,7 +127,7 @@ async function main() {
         subCategory: row.subCategory || null,
         platform: row.platform || null,
         contentType: row.contentType || null,
-        expiresAt: expires || new Date(Date.now() + 7 * 24 * 3600 * 1000),
+        expiresAt,
         isFree: String(row.isFree || '').toLowerCase() === 'true',
         discountPercent: row.discountPercent ? Number(row.discountPercent) : null,
         tags,
