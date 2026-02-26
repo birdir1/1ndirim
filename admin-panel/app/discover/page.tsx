@@ -54,15 +54,34 @@ export default function DiscoverAdminPage() {
       setLoading(true);
       setError('');
       try {
-        const discoverRes = await fetch(`${BACKEND_BASE}/api/campaigns/discover?limit=20&sort=latest`);
+        const cacheBust = Date.now();
+        const discoverRes = await fetch(
+          `${BACKEND_BASE}/api/campaigns/discover?limit=20&sort=latest&cb=${cacheBust}`,
+          { cache: 'no-store' }
+        );
         const discoverJson = await discoverRes.json();
         if (!discoverRes.ok || discoverJson?.success !== true) {
           throw new Error(discoverJson?.error || 'Discover endpoint başarısız');
         }
         if (!cancelled) {
-          setCategories(
-            Array.isArray(discoverJson.data) ? (discoverJson.data as DiscoveryCategory[]) : []
-          );
+          const list = Array.isArray(discoverJson.data)
+            ? (discoverJson.data as DiscoveryCategory[])
+            : [];
+          const deduped = list.map((cat) => {
+            const seen = new Set<string>();
+            const campaigns = Array.isArray(cat.campaigns) ? cat.campaigns : [];
+            const filtered = campaigns.filter((c) => {
+              const source = (c.sourceName || '').toLowerCase().trim();
+              const title = (c.title || '').toLowerCase().replace(/\s+/g, ' ').trim();
+              const key = `${source}||${title}`;
+              if (!title) return true;
+              if (seen.has(key)) return false;
+              seen.add(key);
+              return true;
+            });
+            return { ...cat, campaigns: filtered };
+          });
+          setCategories(deduped);
         }
 
         if (auth) {
