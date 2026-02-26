@@ -35,7 +35,7 @@ npm ci
 npm run add-sources
 npm run add-categories
 npm run dedupe:campaigns
-pm2 restart 0 --update-env
+pm2 restart 1indirim-api --update-env
 
 # Bot
 cd /var/www/1indirim-bot/bot
@@ -47,7 +47,7 @@ fi
 
 git pull
 npm ci
-pm2 restart 2 --update-env
+pm2 restart 1indirim-bot --update-env
 
 # Admin panel
 cd /var/www/1indirim-admin/admin-panel
@@ -60,5 +60,5 @@ fi
 git pull
 npm ci
 npm run build
-pm2 restart 1 --update-env
+pm2 restart 1indirim-admin --update-env
 SERVER

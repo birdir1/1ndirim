@@ -33,6 +33,7 @@ const sources = [
   { name: 'CEPTETEB', type: 'bank', websiteUrl: 'https://www.cepteteb.com' },
   { name: 'N Kolay', type: 'bank', websiteUrl: 'https://www.nkolay.com' },
   { name: 'PTTcell', type: 'operator', websiteUrl: 'https://www.pttcell.com.tr' },
+  { name: 'Türk Telekom Prime', type: 'operator', websiteUrl: 'https://bireysel.turktelekom.com.tr/prime' },
   // Fashion (Top 10)
   { name: 'Zara', type: 'operator', websiteUrl: 'https://www.zara.com/tr/en/woman-special-prices-l1314.html' },
   { name: 'H&M', type: 'operator', websiteUrl: 'https://www2.hm.com/tr_tr/ladies/deals/deal.html' },
@@ -52,13 +53,25 @@ const sources = [
   { name: 'Flormar', type: 'operator', websiteUrl: 'https://www.flormar.com.tr/kampanyalar/' },
   // Travel
   { name: 'Pegasus', type: 'operator', websiteUrl: 'https://www.flypgs.com/kampanyalar' },
+  { name: 'Türk Hava Yolları', type: 'operator', websiteUrl: 'https://www.turkishairlines.com/tr-tr/kampanyalar/' },
+  { name: 'AJet', type: 'operator', websiteUrl: 'https://www.ajet.com.tr/' },
   { name: 'Setur', type: 'operator', websiteUrl: 'https://www.setur.com.tr/kampanyalar' },
   { name: 'ETS', type: 'operator', websiteUrl: 'https://www.etstur.com/kampanyalar' },
   { name: 'Odamax', type: 'operator', websiteUrl: 'https://www.odamax.com/kampanyalar' },
   // Entertainment / Ticketing
-  { name: 'Passo', type: 'operator', websiteUrl: 'https://www.passo.com.tr/kampanyalar' },
+  { name: 'Passo', type: 'operator', websiteUrl: 'https://www.passo.com.tr/tr/kampanyalar' },
   { name: 'Müzekart', type: 'operator', websiteUrl: 'https://www.muze.gov.tr/muzekart' },
-  { name: 'Biletix', type: 'operator', websiteUrl: 'https://www.biletix.com/kampanyalar' },
+  { name: 'Biletix', type: 'operator', websiteUrl: 'https://www.biletix.com/anasayfa/kampanyalar-tr' },
+  // Entertainment (OTT / Music / Gaming)
+  { name: 'Netflix', type: 'operator', websiteUrl: 'https://www.vodafonepay.com.tr/kampanyalar/netflix-ve-spotify-uyelikleriniz-1-ay-bedava' },
+  { name: 'Gain', type: 'operator', websiteUrl: 'https://www.vodafonepay.com.tr/kampanyalar/netflix-ve-spotify-uyelikleriniz-1-ay-bedava' },
+  { name: 'Spotify', type: 'operator', websiteUrl: 'https://www.spotify.com/tr/student/' },
+  { name: 'Disney+', type: 'operator', websiteUrl: 'https://www.disneyplus.com/tr-tr' },
+  { name: 'Amazon Prime', type: 'operator', websiteUrl: 'https://www.mastercard.com.tr/tr-tr/consumer/offers-promotions/amazon-prime-uyeligini-3-ay-ucretsiz-deneyin.html' },
+  { name: 'BluTV', type: 'operator', websiteUrl: 'https://www.blutv.com/yardim-kampanya/' },
+  { name: 'Steam', type: 'operator', websiteUrl: 'https://store.steampowered.com/specials' },
+  { name: 'Epic Games', type: 'operator', websiteUrl: 'https://store.epicgames.com/tr/free-games' },
+  { name: 'Nvidia', type: 'operator', websiteUrl: 'https://www.nvidia.com/en-us/geforce-now/' },
 ];
 
 async function addAllSources() {

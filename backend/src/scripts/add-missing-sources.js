@@ -67,13 +67,27 @@ async function addMissingSources() {
       { name: 'Flormar', type: 'operator', logoUrl: null, websiteUrl: 'https://www.flormar.com.tr/kampanyalar/' },
       // Seyahat
       { name: 'Pegasus', type: 'operator', logoUrl: null, websiteUrl: 'https://www.flypgs.com/kampanyalar' },
+      { name: 'Türk Hava Yolları', type: 'operator', logoUrl: null, websiteUrl: 'https://www.turkishairlines.com/tr-tr/kampanyalar/' },
+      { name: 'AJet', type: 'operator', logoUrl: null, websiteUrl: 'https://www.ajet.com.tr/' },
       { name: 'Setur', type: 'operator', logoUrl: null, websiteUrl: 'https://www.setur.com.tr/kampanyalar' },
       { name: 'ETS', type: 'operator', logoUrl: null, websiteUrl: 'https://www.etstur.com/kampanyalar' },
       { name: 'Odamax', type: 'operator', logoUrl: null, websiteUrl: 'https://www.odamax.com/kampanyalar' },
       // Eğlence / Bilet
-      { name: 'Passo', type: 'operator', logoUrl: null, websiteUrl: 'https://www.passo.com.tr/kampanyalar' },
+      { name: 'Passo', type: 'operator', logoUrl: null, websiteUrl: 'https://www.passo.com.tr/tr/kampanyalar' },
       { name: 'Müzekart', type: 'operator', logoUrl: null, websiteUrl: 'https://www.muze.gov.tr/muzekart' },
-      { name: 'Biletix', type: 'operator', logoUrl: null, websiteUrl: 'https://www.biletix.com/kampanyalar' },
+      { name: 'Biletix', type: 'operator', logoUrl: null, websiteUrl: 'https://www.biletix.com/anasayfa/kampanyalar-tr' },
+      // Entertainment (OTT / Music / Gaming)
+      { name: 'Netflix', type: 'operator', logoUrl: null, websiteUrl: 'https://www.vodafonepay.com.tr/kampanyalar/netflix-ve-spotify-uyelikleriniz-1-ay-bedava' },
+      { name: 'Gain', type: 'operator', logoUrl: null, websiteUrl: 'https://www.vodafonepay.com.tr/kampanyalar/netflix-ve-spotify-uyelikleriniz-1-ay-bedava' },
+      { name: 'Spotify', type: 'operator', logoUrl: null, websiteUrl: 'https://www.spotify.com/tr/student/' },
+      { name: 'Disney+', type: 'operator', logoUrl: null, websiteUrl: 'https://www.disneyplus.com/tr-tr' },
+      { name: 'Amazon Prime', type: 'operator', logoUrl: null, websiteUrl: 'https://www.mastercard.com.tr/tr-tr/consumer/offers-promotions/amazon-prime-uyeligini-3-ay-ucretsiz-deneyin.html' },
+      { name: 'BluTV', type: 'operator', logoUrl: null, websiteUrl: 'https://www.blutv.com/yardim-kampanya/' },
+      { name: 'Steam', type: 'operator', logoUrl: null, websiteUrl: 'https://store.steampowered.com/specials' },
+      { name: 'Epic Games', type: 'operator', logoUrl: null, websiteUrl: 'https://store.epicgames.com/tr/free-games' },
+      { name: 'Nvidia', type: 'operator', logoUrl: null, websiteUrl: 'https://www.nvidia.com/en-us/geforce-now/' },
+      // Türk Telekom Prime (separate source name used by bot)
+      { name: 'Türk Telekom Prime', type: 'operator', logoUrl: null, websiteUrl: 'https://bireysel.turktelekom.com.tr/prime' },
     ];
 
     // Mevcut source'ları kontrol et
