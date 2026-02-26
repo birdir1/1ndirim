@@ -548,13 +548,16 @@ class Campaign {
         c.id::text
       )
     `;
+    const dedupePartition = category === 'gaming'
+      ? `${dedupeKeySql}`
+      : `c.source_id, ${dedupeKeySql}`;
 
     let query = `
       WITH filtered AS (
         SELECT
           c.*,
           ROW_NUMBER() OVER (
-            PARTITION BY c.source_id, ${dedupeKeySql}
+            PARTITION BY ${dedupePartition}
             ORDER BY c.created_at DESC, c.expires_at DESC, c.id DESC
           ) AS rn
         FROM campaigns c
@@ -640,12 +643,15 @@ class Campaign {
         c.id::text
       )
     `;
+    const dedupePartition = category === 'gaming'
+      ? `${dedupeKeySql}`
+      : `c.source_id, ${dedupeKeySql}`;
     const query = `
       WITH filtered AS (
         SELECT
           c.*,
           ROW_NUMBER() OVER (
-            PARTITION BY c.source_id, ${dedupeKeySql}
+            PARTITION BY ${dedupePartition}
             ORDER BY c.created_at DESC, c.expires_at DESC, c.id DESC
           ) AS rn
         FROM campaigns c
@@ -693,6 +699,9 @@ class Campaign {
         c.id::text
       )
     `;
+    const dedupePartition = category === 'gaming'
+      ? `${dedupeKeySql}`
+      : `c.source_id, ${dedupeKeySql}`;
     const query = includeExpired
       ? `
         SELECT COUNT(*)::int AS count
@@ -701,7 +710,7 @@ class Campaign {
           FROM campaigns c
           WHERE c.category = $1
             AND (c.is_hidden = false OR c.is_hidden IS NULL)
-          GROUP BY c.source_id, ${dedupeKeySql}
+          GROUP BY ${dedupePartition}
         ) t
       `
       : `
@@ -713,7 +722,7 @@ class Campaign {
             AND c.is_active = true
             AND c.expires_at > NOW()
             AND (c.is_hidden = false OR c.is_hidden IS NULL)
-          GROUP BY c.source_id, ${dedupeKeySql}
+          GROUP BY ${dedupePartition}
         ) t
       `;
 
@@ -737,6 +746,7 @@ class Campaign {
       iconBgColor,
       tags,
       sourceUrl,
+      videoThumbnailUrl,
       rawContent,
       normalizedContent,
       isValid,
@@ -789,7 +799,7 @@ class Campaign {
       'campaign_type', 'show_in_light_feed', 'show_in_category_feed', 'value_level', // FAZ 7.3, FAZ 7.2, FAZ 7.5
       'category', 'sub_category', 'discount_percentage', 'is_personalized', 'scraped_at', 'data_hash', // NEW
       'platform', 'content_type', 'start_at', 'end_at', 'is_free', 'discount_percent', 'city', 'district', 'lat', 'lng', 'sponsored', 'sponsored_weight',
-      'source_url', 'raw_content', 'normalized_content', 'is_valid', 'needs_review', 'invalid_reason'
+      'source_url', 'video_thumbnail_url', 'raw_content', 'normalized_content', 'is_valid', 'needs_review', 'invalid_reason'
       // created_at ve updated_at DEFAULT NOW() ile otomatik set ediliyor
     ];
     
@@ -802,13 +812,7 @@ class Campaign {
       iconColor || '#DC2626',
       iconBgColor || '#FEE2E2',
       tagsJson,
-      sourceUrl || originalUrl || null,
-      rawContent || null,
-      normalizedContent ? JSON.stringify(normalizedContent) : JSON.stringify({}),
-      typeof isValid === 'boolean' ? isValid : true,
-      typeof needsReview === 'boolean' ? needsReview : false,
-      invalidReason || null,
-      originalUrl,
+      originalUrl || sourceUrl || null,
       affiliateUrl || null, // YENİ
       expiresAt,
       howToUseJson,
@@ -838,6 +842,7 @@ class Campaign {
       typeof sponsored === 'boolean' ? sponsored : false,
       sponsoredWeight || 0,
       sourceUrl || originalUrl || null,
+      videoThumbnailUrl || null,
       rawContent || null,
       normalizedContent ? JSON.stringify(normalizedContent) : JSON.stringify({}),
       typeof isValid === 'boolean' ? isValid : true,
@@ -905,6 +910,7 @@ class Campaign {
       lng: 'lng',
       sponsored: 'sponsored',
       sponsoredWeight: 'sponsored_weight',
+      videoThumbnailUrl: 'video_thumbnail_url',
     };
 
     // JSONB alanlar: explicit stringify

@@ -126,16 +126,16 @@ const CATEGORY_REGISTRY = {
     priority: 'medium',
     sources: [
       // Top 10 giyim markası
-      { name: 'Zara', url: 'https://www.zara.com/tr/', type: 'spa', scraperClass: 'ZaraFetchScraper', enabled: true },
-      { name: 'H&M', url: 'https://www2.hm.com/tr_tr/index.html', type: 'spa', scraperClass: 'HMFetchScraper', enabled: true },
-      { name: 'Bershka', url: 'https://www.bershka.com/tr/', type: 'spa', scraperClass: 'BershkaFetchScraper', enabled: true },
-      { name: 'Pull&Bear', url: 'https://www.pullandbear.com/tr/', type: 'spa', scraperClass: 'PullBearFetchScraper', enabled: true },
-      { name: 'LCW', url: 'https://www.lcwaikiki.com/tr-TR/TR', type: 'spa', scraperClass: 'LCWFetchScraper', enabled: true },
-      { name: 'Koton', url: 'https://www.koton.com/tr/', type: 'spa', scraperClass: 'KotonFetchScraper', enabled: true },
+      { name: 'Zara', url: 'https://www.zara.com/tr/en/woman-special-prices-l1314.html', type: 'spa', scraperClass: 'ZaraFetchScraper', enabled: true },
+      { name: 'H&M', url: 'https://www2.hm.com/tr_tr/ladies/deals/deal.html', type: 'spa', scraperClass: 'HMFetchScraper', enabled: true },
+      { name: 'Bershka', url: 'https://www.bershka.com/tr/erkek/sale/bershka-c1010747948.html', type: 'spa', scraperClass: 'BershkaFetchScraper', enabled: true },
+      { name: 'Pull&Bear', url: 'https://www.pullandbear.com/tr/kadin/kampanyalar-n6492', type: 'spa', scraperClass: 'PullBearFetchScraper', enabled: true },
+      { name: 'LCW', url: 'https://www.lcw.com/kampanyalar', type: 'spa', scraperClass: 'LCWFetchScraper', enabled: true },
+      { name: 'Koton', url: 'https://www.koton.com/kampanyalarimiz', type: 'spa', scraperClass: 'KotonFetchScraper', enabled: true },
       { name: 'Mavi', url: 'https://www.mavi.com/', type: 'spa', scraperClass: 'MaviFetchScraper', enabled: true },
-      { name: 'DeFacto', url: 'https://www.defacto.com.tr/', type: 'spa', scraperClass: 'DeFactoFetchScraper', enabled: true },
+      { name: 'DeFacto', url: 'https://www.defacto.com.tr/statik/kampanyalar', type: 'spa', scraperClass: 'DeFactoFetchScraper', enabled: true },
       { name: "Collins", url: 'https://www.collins.com.tr/', type: 'spa', scraperClass: 'CollinsFetchScraper', enabled: true },
-      { name: 'Beymen', url: 'https://www.beymen.com/tr', type: 'spa', scraperClass: 'BeymenFetchScraper', enabled: true },
+      { name: 'Beymen', url: 'https://www.beymen.com/tr/sale-kampanyalar-beymen-ozel-markalarda-indirim--101090', type: 'spa', scraperClass: 'BeymenFetchScraper', enabled: true },
     ],
   },
 
@@ -147,11 +147,11 @@ const CATEGORY_REGISTRY = {
     priority: 'medium',
     sources: [
       // Top 5 makyaj markası
-      { name: 'Sephora', url: 'https://www.sephora.com.tr/', type: 'spa', scraperClass: 'SephoraFetchScraper', enabled: true },
-      { name: 'Gratis', url: 'https://www.gratis.com/', type: 'spa', scraperClass: 'GratisFetchScraper', enabled: true },
-      { name: 'Watsons', url: 'https://www.watsons.com.tr/', type: 'spa', scraperClass: 'WatsonsFetchScraper', enabled: true },
+      { name: 'Sephora', url: 'https://www.sephora.com.tr/buyuk-indirim/', type: 'spa', scraperClass: 'SephoraFetchScraper', enabled: true },
+      { name: 'Gratis', url: 'https://www.gratis.com/kampanyalar', type: 'spa', scraperClass: 'GratisFetchScraper', enabled: true },
+      { name: 'Watsons', url: 'https://www.watsons.com.tr/kampanyalar', type: 'spa', scraperClass: 'WatsonsFetchScraper', enabled: true },
       { name: 'MAC Cosmetics', url: 'https://www.maccosmetics.com.tr/', type: 'spa', scraperClass: 'MacCosmeticsFetchScraper', enabled: true },
-      { name: 'Flormar', url: 'https://www.flormar.com.tr/', type: 'spa', scraperClass: 'FlormarFetchScraper', enabled: true },
+      { name: 'Flormar', url: 'https://www.flormar.com.tr/kampanyalar/', type: 'spa', scraperClass: 'FlormarFetchScraper', enabled: true },
     ],
   },
 

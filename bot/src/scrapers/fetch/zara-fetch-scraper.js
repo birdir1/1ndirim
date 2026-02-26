@@ -2,7 +2,7 @@ const HtmlListDetailScraper = require('./html-list-detail-scraper');
 
 class ZaraFetchScraper extends HtmlListDetailScraper {
   constructor() {
-    super('Zara', 'https://www.zara.com/tr/', {
+    super('Zara', 'https://www.zara.com/tr/en/woman-special-prices-l1314.html', {
       maxLinks: 30,
       linkInclude: /(kampanya|indirim|firsat|fırsat|sale|promosyon|campaign|outlet)/i,
       sameOriginOnly: true,

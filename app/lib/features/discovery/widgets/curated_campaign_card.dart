@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/source_logo_helper.dart';
@@ -182,6 +183,35 @@ class CuratedCampaignCard extends StatelessWidget {
                       ],
                     ),
                   ),
+
+                  if (campaign.videoThumbnailUrl != null &&
+                      campaign.videoThumbnailUrl!.isNotEmpty) ...[
+                    const SizedBox(width: 12),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: CachedNetworkImage(
+                        imageUrl: campaign.videoThumbnailUrl!,
+                        width: 96,
+                        height: 72,
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) => Container(
+                          width: 96,
+                          height: 72,
+                          color: AppColors.surfaceLight,
+                        ),
+                        errorWidget: (context, url, error) => Container(
+                          width: 96,
+                          height: 72,
+                          color: AppColors.surfaceLight,
+                          child: Icon(
+                            Icons.image_not_supported,
+                            color: AppColors.textSecondaryLight,
+                            size: 24,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
 
                   const SizedBox(width: 12),
 

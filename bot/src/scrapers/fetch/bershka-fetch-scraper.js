@@ -2,7 +2,7 @@ const HtmlListDetailScraper = require('./html-list-detail-scraper');
 
 class BershkaFetchScraper extends HtmlListDetailScraper {
   constructor() {
-    super('Bershka', 'https://www.bershka.com/tr/', {
+    super('Bershka', 'https://www.bershka.com/tr/erkek/sale/bershka-c1010747948.html', {
       maxLinks: 30,
       linkInclude: /(kampanya|indirim|firsat|fırsat|sale|promosyon|campaign|outlet)/i,
       sameOriginOnly: true,

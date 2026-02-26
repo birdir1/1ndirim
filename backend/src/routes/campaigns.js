@@ -911,10 +911,17 @@ router.post('/', requireBotAuth, validateCampaignQuality, async (req, res) => {
       detailText,
       campaignUrl,
       affiliateUrl, // YENİ
+      videoThumbnailUrl,
       startDate,
       endDate,
       howToUse,
       category,
+      subCategory,
+      platform,
+      contentType,
+      isFree,
+      discountPercent,
+      discountPercentage,
       tags,
       channel,
       campaignType, // FAZ 7.3: 'main' | 'light' | 'category'
@@ -1123,12 +1130,13 @@ router.post('/', requireBotAuth, validateCampaignQuality, async (req, res) => {
 	        expires_at: expiresAt,
 	        status: 'active',
 	        is_active: true,
-          source_url: normalizedPayload.sourceUrl || campaignUrl,
-          raw_content: normalizedPayload.rawContent || null,
-          normalized_content: normalizedContent || {},
-          is_valid: normalizedPayload.isValid,
-          needs_review: normalizedPayload.needsReview,
-          invalid_reason: normalizedPayload.invalidReason,
+        source_url: normalizedPayload.sourceUrl || campaignUrl,
+        video_thumbnail_url: videoThumbnailUrl || duplicate.video_thumbnail_url || null,
+        raw_content: normalizedPayload.rawContent || null,
+        normalized_content: normalizedContent || {},
+        is_valid: normalizedPayload.isValid,
+        needs_review: normalizedPayload.needsReview,
+        invalid_reason: normalizedPayload.invalidReason,
 	      };
 
 	      // Discover wiring: persist category when provided (or keep existing).
@@ -1137,6 +1145,44 @@ router.post('/', requireBotAuth, validateCampaignQuality, async (req, res) => {
 	      } else if (duplicate.category) {
 	        updates.category = duplicate.category;
 	      }
+
+      if (typeof subCategory === 'string' && subCategory.trim()) {
+        updates.sub_category = subCategory.trim();
+      } else if (duplicate.sub_category) {
+        updates.sub_category = duplicate.sub_category;
+      }
+
+      if (typeof platform === 'string' && platform.trim()) {
+        updates.platform = platform.trim();
+      } else if (duplicate.platform) {
+        updates.platform = duplicate.platform;
+      }
+
+      if (typeof contentType === 'string' && contentType.trim()) {
+        updates.content_type = contentType.trim();
+      } else if (duplicate.content_type) {
+        updates.content_type = duplicate.content_type;
+      }
+
+      if (typeof isFree === 'boolean') {
+        updates.is_free = isFree;
+      } else if (duplicate.is_free != null) {
+        updates.is_free = duplicate.is_free;
+      }
+
+      if (discountPercent != null && discountPercent !== '') {
+        updates.discount_percent = Number(discountPercent);
+      } else if (discountPercentage != null && discountPercentage !== '') {
+        updates.discount_percent = Number(discountPercentage);
+      } else if (duplicate.discount_percent != null) {
+        updates.discount_percent = duplicate.discount_percent;
+      }
+
+      if (discountPercentage != null && discountPercentage !== '') {
+        updates.discount_percentage = Number(discountPercentage);
+      } else if (duplicate.discount_percentage != null) {
+        updates.discount_percentage = duplicate.discount_percentage;
+      }
 
       // JSONB alanlar: explicit stringify
       if (howToUse && Array.isArray(howToUse)) {
@@ -1213,6 +1259,7 @@ router.post('/', requireBotAuth, validateCampaignQuality, async (req, res) => {
 	      tags: Array.isArray(tags) ? tags : [],
 	      originalUrl: campaignUrl,
         sourceUrl: normalizedPayload.sourceUrl || campaignUrl,
+        videoThumbnailUrl: videoThumbnailUrl || null,
         rawContent: normalizedPayload.rawContent || null,
         normalizedContent,
         isValid: normalizedPayload.isValid,
@@ -1229,6 +1276,12 @@ router.post('/', requireBotAuth, validateCampaignQuality, async (req, res) => {
 	      valueLevel: applied_action === 'downgrade' ? 'low' : (valueLevel || 'high'), // FAZ 13.3: confidence < 40 → low
 	      // Discover wiring: persist category for /campaigns/discover/:category
 	      category: (typeof category === 'string' && category.trim()) ? category.trim() : null,
+	      subCategory: (typeof subCategory === 'string' && subCategory.trim()) ? subCategory.trim() : null,
+	      platform: (typeof platform === 'string' && platform.trim()) ? platform.trim() : null,
+	      contentType: (typeof contentType === 'string' && contentType.trim()) ? contentType.trim() : null,
+	      isFree: typeof isFree === 'boolean' ? isFree : undefined,
+	      discountPercent: discountPercent != null && discountPercent !== '' ? Number(discountPercent) : undefined,
+	      discountPercentage: discountPercentage != null && discountPercentage !== '' ? Number(discountPercentage) : undefined,
 	    };
 
     if (startsAt) {

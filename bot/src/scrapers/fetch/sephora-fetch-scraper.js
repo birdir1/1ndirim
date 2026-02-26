@@ -2,7 +2,7 @@ const HtmlListDetailScraper = require('./html-list-detail-scraper');
 
 class SephoraFetchScraper extends HtmlListDetailScraper {
   constructor() {
-    super('Sephora', 'https://www.sephora.com.tr/', {
+    super('Sephora', 'https://www.sephora.com.tr/buyuk-indirim/', {
       maxLinks: 30,
       linkInclude: /(kampanya|indirim|firsat|fırsat|sale|promosyon|campaign|outlet)/i,
       sameOriginOnly: true,

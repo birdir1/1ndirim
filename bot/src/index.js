@@ -56,12 +56,17 @@ const BurganbankScraper = require('./scrapers/burganbank-scraper');
 const HsbcScraper = require('./scrapers/hsbc-scraper');
 const HayatFinansScraper = require('./scrapers/hayatfinans-scraper');
 const TombankScraper = require('./scrapers/tombank-scraper');
+const SteamScraper = require('./scrapers/steam-scraper');
+const EpicGamesScraper = require('./scrapers/epicgames-scraper');
+const EpicDiscountScraper = require('./scrapers/epic-discount-scraper');
 // FAZ 7: Fetch-based scrapers (SPA kaynaklar için)
 const TebFetchScraper = require('./scrapers/fetch/teb-fetch-scraper');
 const AkbankFetchScraper = require('./scrapers/fetch/akbank-fetch-scraper');
 const TurktelekomPrimeFetch = require('./scrapers/fetch/turktelekom-prime-fetch');
 const TurktelekomBiDunyaFirsatFetch = require('./scrapers/fetch/turktelekom-bdf-fetch');
 const PegasusFetchScraper = require('./scrapers/fetch/pegasus-fetch-scraper');
+const ThyFetchScraper = require('./scrapers/fetch/thy-fetch-scraper');
+const AJetFetchScraper = require('./scrapers/fetch/ajet-fetch-scraper');
 const SeturFetchScraper = require('./scrapers/fetch/setur-fetch-scraper');
 const EtsFetchScraper = require('./scrapers/fetch/ets-fetch-scraper');
 const OdamaxFetchScraper = require('./scrapers/fetch/odamax-fetch-scraper');
@@ -83,6 +88,7 @@ const GratisFetchScraper = require('./scrapers/fetch/gratis-fetch-scraper');
 const WatsonsFetchScraper = require('./scrapers/fetch/watsons-fetch-scraper');
 const MacCosmeticsFetchScraper = require('./scrapers/fetch/maccosmetics-fetch-scraper');
 const FlormarFetchScraper = require('./scrapers/fetch/flormar-fetch-scraper');
+const StaticCampaignScraper = require('./scrapers/static-campaign-scraper');
 const { startScheduler } = require('./scheduler');
 
 const SCRAPER_DELAY_MS = parseInt(process.env.SCRAPER_DELAY_MS || '3000', 10);
@@ -204,12 +210,18 @@ async function runScrapers() {
     new TurktelekomPrimeFetch(),
     new TurktelekomBiDunyaFirsatFetch(),
     new PegasusFetchScraper(),
+    new ThyFetchScraper(),
+    new AJetFetchScraper(),
     new SeturFetchScraper(),
     new EtsFetchScraper(),
     new OdamaxFetchScraper(),
     new PassoFetchScraper(),
     new MuzekartFetchScraper(),
     new BiletixFetchScraper(),
+    // Gaming freebies
+    new SteamScraper(),
+    new EpicGamesScraper(),
+    new EpicDiscountScraper(),
     // Fashion (Top 10)
     new ZaraFetchScraper(),
     new HMFetchScraper(),
@@ -227,6 +239,163 @@ async function runScrapers() {
     new WatsonsFetchScraper(),
     new MacCosmeticsFetchScraper(),
     new FlormarFetchScraper(),
+    // Entertainment promos (static/partner pages)
+    new StaticCampaignScraper({
+      sourceName: 'Netflix',
+      sourceUrl: 'https://www.vodafonepay.com.tr/kampanyalar/netflix-ve-spotify-uyelikleriniz-1-ay-bedava',
+      campaigns: [
+        {
+          title: 'Vodafone Pay ile Netflix 1 ay bedava',
+          description: 'Vodafone Pay Faturana Yansıt ile Netflix üyeliğinde 1 ay bedava, her ay en fazla 190 TL indirim.',
+          detailText: 'Kampanya 01.02.2026-28.02.2026 tarihleri arasında geçerli. KATIL DİJİTAL yazıp 2020’ye SMS göndererek katılabilirsiniz.',
+          campaignUrl: 'https://www.vodafonepay.com.tr/kampanyalar/netflix-ve-spotify-uyelikleriniz-1-ay-bedava',
+          startDate: '2026-02-01',
+          endDate: '2026-02-28',
+          howToUse: [
+            'KATIL DİJİTAL yazıp 2020’ye SMS gönderin',
+            'Netflix üyeliğinde ödeme yöntemi olarak Vodafone Faturana Yansıt seçin',
+            'İndirim mobil faturaya yansıtılır',
+          ],
+          category: 'entertainment',
+          subCategory: 'ott',
+          platform: 'ott',
+          contentType: 'ott',
+          isFree: true,
+          discountPercent: 100,
+          tags: ['Netflix', 'Vodafone Pay', 'Faturana Yansıt'],
+          channel: 'online',
+        },
+      ],
+    }),
+    new StaticCampaignScraper({
+      sourceName: 'Gain',
+      sourceUrl: 'https://www.vodafonepay.com.tr/kampanyalar/netflix-ve-spotify-uyelikleriniz-1-ay-bedava',
+      campaigns: [
+        {
+          title: 'Vodafone Pay ile GAİN 1 ay bedava',
+          description: 'Vodafone Pay Faturana Yansıt ile GAİN üyeliğinde 1 ay bedava, her ay en fazla 249 TL indirim.',
+          detailText: 'Kampanya 01.02.2026-28.02.2026 tarihleri arasında geçerli. KATIL DİJİTAL yazıp 2020’ye SMS göndererek katılabilirsiniz.',
+          campaignUrl: 'https://www.vodafonepay.com.tr/kampanyalar/netflix-ve-spotify-uyelikleriniz-1-ay-bedava',
+          startDate: '2026-02-01',
+          endDate: '2026-02-28',
+          howToUse: [
+            'KATIL DİJİTAL yazıp 2020’ye SMS gönderin',
+            'GAİN üyeliğinde ödeme yöntemi olarak Vodafone Faturana Yansıt seçin',
+            'İndirim mobil faturaya yansıtılır',
+          ],
+          category: 'entertainment',
+          subCategory: 'ott',
+          platform: 'ott',
+          contentType: 'ott',
+          isFree: true,
+          discountPercent: 100,
+          tags: ['Gain', 'Vodafone Pay', 'Faturana Yansıt'],
+          channel: 'online',
+        },
+      ],
+    }),
+    new StaticCampaignScraper({
+      sourceName: 'Spotify',
+      sourceUrl: 'https://www.spotify.com/tr/student/',
+      campaigns: [
+        {
+          title: 'Spotify Premium Öğrenci: İlk 1 ay ücretsiz',
+          description: 'Öğrenciler için Premium ilk 1 ay ücretsiz, ardından ₺55/ay.',
+          detailText: 'Uygun öğrenciler SheerID ile doğrulama yapar. Kampanya koşulları Spotify öğrenci sayfasında.',
+          campaignUrl: 'https://www.spotify.com/tr/student/',
+          endDate: '2026-12-31',
+          howToUse: [
+            'Spotify öğrenci sayfasından Premium Öğrenci planını seçin',
+            'SheerID doğrulamasını tamamlayın',
+            'Ödeme yöntemi ekleyerek üyeliği başlatın',
+          ],
+          category: 'entertainment',
+          subCategory: 'music',
+          platform: 'music',
+          contentType: 'music',
+          isFree: true,
+          discountPercent: 100,
+          tags: ['Spotify', 'Öğrenci', 'Müzik'],
+          channel: 'online',
+        },
+      ],
+    }),
+    new StaticCampaignScraper({
+      sourceName: 'Disney+',
+      sourceUrl: 'https://www.disneyplus.com/tr-tr',
+      campaigns: [
+        {
+          title: 'Disney+ yıllık plan: 10 ay öde 12 ay izle',
+          description: 'Yıllık üyelikte 10 ay öde 12 ay izle. Reklamlı yıllık 2.499 TL, reklamsız yıllık 4.499 TL.',
+          detailText: 'Aylık fiyatlara göre yıllık planda avantaj bulunur. Kampanya tarihi belirtilmemiştir.',
+          campaignUrl: 'https://www.disneyplus.com/tr-tr',
+          endDate: '2026-12-31',
+          howToUse: [
+            'Disney+ sayfasında yıllık planı seçin',
+            'Ödeme adımlarını tamamlayın',
+            '12 ay boyunca izleyin',
+          ],
+          category: 'entertainment',
+          subCategory: 'ott',
+          platform: 'ott',
+          contentType: 'ott',
+          isFree: false,
+          tags: ['Disney+', 'Yıllık', 'OTT'],
+          channel: 'online',
+        },
+      ],
+    }),
+    new StaticCampaignScraper({
+      sourceName: 'Amazon Prime',
+      sourceUrl: 'https://www.mastercard.com.tr/tr-tr/consumer/offers-promotions/amazon-prime-uyeligini-3-ay-ucretsiz-deneyin.html',
+      campaigns: [
+        {
+          title: 'Amazon Prime: 30 gün ücretsiz + 2. ay %100 iade',
+          description: 'Mastercard kampanyası: 30 gün ücretsiz deneme ve 2. ay üyelik ücretinin %100 iadesi (7,90 TL).',
+          detailText: 'Kayıt tarihleri 15.01.2026-15.03.2026 aralığındadır. Kampanya belirli bankalardaki Mastercard/Maestro kartlar için geçerlidir.',
+          campaignUrl: 'https://www.mastercard.com.tr/tr-tr/consumer/offers-promotions/amazon-prime-uyeligini-3-ay-ucretsiz-deneyin.html',
+          startDate: '2026-01-15',
+          endDate: '2026-03-15',
+          howToUse: [
+            'Kampanya koşullarındaki bankalardan Mastercard/Maestro kartla kayıt olun',
+            'Amazon Prime üyeliğini başlatın ve 30 gün ücretsiz deneyin',
+            '2. ay üyelik ücreti kartınıza iade edilir',
+          ],
+          category: 'entertainment',
+          subCategory: 'ott',
+          platform: 'ott',
+          contentType: 'ott',
+          isFree: true,
+          discountPercent: 100,
+          tags: ['Amazon Prime', 'Mastercard', 'OTT'],
+          channel: 'online',
+        },
+      ],
+    }),
+    new StaticCampaignScraper({
+      sourceName: 'BluTV',
+      sourceUrl: 'https://www.blutv.com/yardim-kampanya/',
+      campaigns: [
+        {
+          title: 'BluTV Vodafone mobil ödeme indirimli fiyat',
+          description: 'Vodafone mobil ödeme ile BluTV aylık/yıllık üyelikte indirimli fiyat kampanyası.',
+          detailText: 'BLUTVAY veya BLUTVYIL yazıp 5678’e gönderin. SMS ile gelen linkten üyeliği başlatın.',
+          campaignUrl: 'https://www.blutv.com/yardim-kampanya/',
+          endDate: '2026-12-31',
+          howToUse: [
+            'BLUTVAY (aylık) veya BLUTVYIL (yıllık) yazıp 5678’e SMS gönderin',
+            'SMS ile gelen link üzerinden üyeliği tamamlayın',
+          ],
+          category: 'entertainment',
+          subCategory: 'ott',
+          platform: 'ott',
+          contentType: 'ott',
+          isFree: false,
+          tags: ['BluTV', 'Vodafone', 'Mobil Ödeme'],
+          channel: 'online',
+        },
+      ],
+    }),
   ];
 
   console.log(`\n🤖 Bot başlatıldı: ${scrapers.length} scraper çalıştırılacak\n`);

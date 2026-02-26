@@ -34,8 +34,17 @@ function isObviousSpamOrClickbait(c) {
 }
 
 function dedupeKey(c) {
-  const url = (c.originalUrl || c.campaignUrl || '').toString().trim();
   const t = normalizeTitle(c.title || '');
+  const discount = Number(c.discountPercent || c.discountPercentage || 0);
+  const isFreeGame =
+    (c.category === 'gaming' || c.subCategory === 'gaming') &&
+    (c.isFree === true || discount >= 100);
+
+  if (isFreeGame && t) {
+    return `game:${t}`.toLowerCase();
+  }
+
+  const url = (c.originalUrl || c.campaignUrl || '').toString().trim();
   return `${url}|${t}`.toLowerCase();
 }
 
