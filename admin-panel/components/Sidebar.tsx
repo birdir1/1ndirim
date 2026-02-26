@@ -41,7 +41,6 @@ const sections: NavSection[] = [
       { href: '/suggestions', label: 'Öneriler' },
       { href: '/governance/timeline', label: 'Governance Zaman Çizelgesi' },
       { href: '/scrapers/health', label: 'Scraper Health' },
-      { href: '/portfolio', label: 'Portföy' },
     ],
   },
 ];
