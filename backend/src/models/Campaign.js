@@ -544,8 +544,7 @@ class Campaign {
     const radiusKm = options.radiusKm || 50;
     const dedupeKeySql = `
       COALESCE(
-        NULLIF(c.data_hash, ''),
-        NULLIF(LOWER(TRIM(c.title)) || '|' || COALESCE(NULLIF(c.original_url, ''), ''), '|'),
+        NULLIF(LOWER(TRIM(c.title)), ''),
         c.id::text
       )
     `;
@@ -637,8 +636,7 @@ class Campaign {
     // Fallback: Get last known campaigns (even if expired)
     const dedupeKeySql = `
       COALESCE(
-        NULLIF(c.data_hash, ''),
-        NULLIF(LOWER(TRIM(c.title)) || '|' || COALESCE(NULLIF(c.original_url, ''), ''), '|'),
+        NULLIF(LOWER(TRIM(c.title)), ''),
         c.id::text
       )
     `;
@@ -691,8 +689,7 @@ class Campaign {
   static async countByCategory(category, { includeExpired = false } = {}) {
     const dedupeKeySql = `
       COALESCE(
-        NULLIF(c.data_hash, ''),
-        NULLIF(LOWER(TRIM(c.title)) || '|' || COALESCE(NULLIF(c.original_url, ''), ''), '|'),
+        NULLIF(LOWER(TRIM(c.title)), ''),
         c.id::text
       )
     `;
