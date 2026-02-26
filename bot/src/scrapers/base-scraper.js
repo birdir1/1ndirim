@@ -4,6 +4,7 @@
  */
 
 const puppeteer = require('puppeteer');
+const { ensureWaitForTimeout } = require('../utils/puppeteerCompat');
 const { tryTieredLinks, tryTieredSelector } = require('../utils/domSelectors');
 
 class BaseScraper {
@@ -23,6 +24,7 @@ class BaseScraper {
     if (options.browserManager && options.runLogCtx) {
       const { page, release } = await options.browserManager.getPage(options.runLogCtx, this.sourceName);
       this.page = page;
+      ensureWaitForTimeout(this.page);
       this._releasePage = release;
       this.browser = null;
       return;
@@ -38,6 +40,7 @@ class BaseScraper {
       ],
     });
     this.page = await this.browser.newPage();
+    ensureWaitForTimeout(this.page);
     this._releasePage = null;
 
     const userAgents = [

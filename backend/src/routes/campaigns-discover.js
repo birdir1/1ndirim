@@ -124,6 +124,31 @@ function mapDbCategoryToContract(cat) {
   };
 }
 
+function normalizeDedupeText(value) {
+  return (value || '')
+    .toString()
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .replace(/[^\p{L}\p{N}]+/gu, '')
+    .trim();
+}
+
+function dedupeCampaigns(campaigns) {
+  const seen = new Set();
+  const result = [];
+  for (const campaign of campaigns || []) {
+    const source = normalizeDedupeText(campaign.sourceName || campaign.source_name);
+    const title = normalizeDedupeText(campaign.title);
+    if (title) {
+      const key = `${source}::${title}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+    }
+    result.push(campaign);
+  }
+  return result;
+}
+
 async function getActiveCategoriesWithFallback() {
   try {
     const dbCategories = await fetchActiveCategories();
@@ -181,7 +206,7 @@ router.get('/discover', cacheMiddleware(CacheService.TTL.CAMPAIGNS_LIST), async 
       });
 
       // Format campaigns for Flutter
-      const formattedCampaigns = campaigns.map((campaign) => ({
+      const formattedCampaigns = dedupeCampaigns(campaigns.map((campaign) => ({
         id: campaign.id,
         title: campaign.title,
         subtitle: campaign.description || `${campaign.source_name}`,
@@ -215,7 +240,7 @@ router.get('/discover', cacheMiddleware(CacheService.TTL.CAMPAIGNS_LIST), async 
         sponsored: campaign.sponsored,
         sponsoredWeight: campaign.sponsored_weight,
         isExpired: campaign.is_expired || false,
-      }));
+      })));
 
       result.push({
         id: category.id,
@@ -299,7 +324,7 @@ router.get('/discover/:category', cacheMiddleware(CacheService.TTL.CAMPAIGNS_LIS
     const hasMore = offset + campaigns.length < totalCount;
 
     // Format campaigns for Flutter
-    const formattedCampaigns = campaigns.map((campaign) => ({
+    const formattedCampaigns = dedupeCampaigns(campaigns.map((campaign) => ({
       id: campaign.id,
       title: campaign.title,
       subtitle: campaign.description || `${campaign.source_name}`,
@@ -333,7 +358,7 @@ router.get('/discover/:category', cacheMiddleware(CacheService.TTL.CAMPAIGNS_LIS
       sponsored: campaign.sponsored,
       sponsoredWeight: campaign.sponsored_weight,
       isExpired: campaign.is_expired || false,
-    }));
+    })));
 
     res.json({
       success: true,

@@ -6,6 +6,14 @@ const {
 } = require('../utils/mainFeedGuard');
 const { runSafetyChecks } = require('../utils/safetyGuards');
 
+const DEDUPE_KEY_SQL = `
+  COALESCE(
+    NULLIF(c.data_hash, ''),
+    NULLIF(REGEXP_REPLACE(LOWER(TRIM(COALESCE(c.title, c.normalized_content->>'title', ''))), '\\s+', ' ', 'g'), ''),
+    c.id::text
+  )
+`;
+
 class Campaign {
   /**
    * Tüm aktif kampanyaları getirir (SADECE campaign_type = 'main')
@@ -542,12 +550,7 @@ class Campaign {
     const lat = options.lat;
     const lng = options.lng;
     const radiusKm = options.radiusKm || 50;
-    const dedupeKeySql = `
-      COALESCE(
-        NULLIF(LOWER(TRIM(c.title)), ''),
-        c.id::text
-      )
-    `;
+    const dedupeKeySql = DEDUPE_KEY_SQL;
     const dedupePartition = category === 'gaming'
       ? `${dedupeKeySql}`
       : `c.source_id, ${dedupeKeySql}`;
@@ -637,12 +640,7 @@ class Campaign {
     }
 
     // Fallback: Get last known campaigns (even if expired)
-    const dedupeKeySql = `
-      COALESCE(
-        NULLIF(LOWER(TRIM(c.title)), ''),
-        c.id::text
-      )
-    `;
+    const dedupeKeySql = DEDUPE_KEY_SQL;
     const dedupePartition = category === 'gaming'
       ? `${dedupeKeySql}`
       : `c.source_id, ${dedupeKeySql}`;
@@ -693,12 +691,7 @@ class Campaign {
    * @returns {Promise<number>}
    */
   static async countByCategory(category, { includeExpired = false } = {}) {
-    const dedupeKeySql = `
-      COALESCE(
-        NULLIF(LOWER(TRIM(c.title)), ''),
-        c.id::text
-      )
-    `;
+    const dedupeKeySql = DEDUPE_KEY_SQL;
     const dedupePartition = category === 'gaming'
       ? `${dedupeKeySql}`
       : `c.source_id, ${dedupeKeySql}`;
@@ -970,9 +963,23 @@ class Campaign {
    * @param {Date} expiresAt - Bitiş tarihi
    * @returns {Promise<Object|null>} - Varsa mevcut kampanya, yoksa null
    */
-  static async findDuplicate(originalUrl, sourceId, title, startDate, expiresAt) {
+  static async findDuplicate(originalUrl, sourceId, title, startDate, expiresAt, dataHash = null) {
     // Normalize title (trim + lower for comparison)
     const normalizedTitle = (title || '').trim().toLowerCase();
+
+    // Öncelik 0: data_hash ile kontrol (en stabil)
+    if (dataHash) {
+      const hashQuery = `
+        SELECT * FROM campaigns
+        WHERE data_hash = $1 AND source_id = $2
+        ORDER BY created_at DESC
+        LIMIT 1
+      `;
+      const hashResult = await pool.query(hashQuery, [dataHash, sourceId]);
+      if (hashResult.rows.length > 0) {
+        return hashResult.rows[0];
+      }
+    }
 
     // Öncelik 1: originalUrl ile kontrol
     if (originalUrl) {

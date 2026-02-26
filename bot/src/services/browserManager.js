@@ -5,6 +5,7 @@
  */
 
 const puppeteer = require('puppeteer');
+const { ensureWaitForTimeout } = require('../utils/puppeteerCompat');
 
 const MAX_CONCURRENT_PAGES = Math.max(1, Math.min(10, parseInt(process.env.MAX_CONCURRENT_PAGES || '4', 10)));
 const LAUNCH_ARGS = [
@@ -118,6 +119,7 @@ function createBrowserManager(runLogCtx, runLog) {
     try {
       const b = await getBrowser();
       page = await b.newPage();
+      ensureWaitForTimeout(page);
       pagesOpened += 1;
       costUnits += 1;
 

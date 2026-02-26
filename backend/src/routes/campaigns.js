@@ -1,4 +1,5 @@
 const express = require('express');
+const crypto = require('crypto');
 const router = express.Router();
 const Campaign = require('../models/Campaign');
 const CampaignClick = require('../models/CampaignClick');
@@ -1114,9 +1115,16 @@ router.post('/', requireBotAuth, validateCampaignQuality, async (req, res) => {
     const finalDetailText = (normalizedContent.detailText || detailText || description || title || '').trim();
     const persistedTitle = finalTitle || trimmedTitle;
     const titleForDuplicate = persistedTitle;
+    const dataHashInput = [
+      sourceName || '',
+      persistedTitle || '',
+      startsAt ? startsAt.toISOString() : '',
+      expiresAt ? expiresAt.toISOString() : '',
+    ].join('|');
+    const dataHash = crypto.createHash('md5').update(dataHashInput).digest('hex');
 
     // Duplicate kontrolü (startDate dahil)
-    const duplicate = await Campaign.findDuplicate(campaignUrl, sourceId, titleForDuplicate, startsAt, expiresAt);
+    const duplicate = await Campaign.findDuplicate(campaignUrl, sourceId, titleForDuplicate, startsAt, expiresAt, dataHash);
 
 	    if (duplicate) {
 	      // Duplicate varsa güncelle (PUT davranışı)
@@ -1203,6 +1211,8 @@ router.post('/', requireBotAuth, validateCampaignQuality, async (req, res) => {
         updates.tags = duplicate.tags;
       }
 
+      updates.data_hash = dataHash;
+
       if (startsAt) {
         updates.starts_at = startsAt;
       }
@@ -1282,6 +1292,7 @@ router.post('/', requireBotAuth, validateCampaignQuality, async (req, res) => {
 	      isFree: typeof isFree === 'boolean' ? isFree : undefined,
 	      discountPercent: discountPercent != null && discountPercent !== '' ? Number(discountPercent) : undefined,
 	      discountPercentage: discountPercentage != null && discountPercentage !== '' ? Number(discountPercentage) : undefined,
+        dataHash,
 	    };
 
     if (startsAt) {
