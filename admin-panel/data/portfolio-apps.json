@@ -1,0 +1,58 @@
+[
+  {
+    "app_id": "1ndirim",
+    "repo_url": "https://github.com/birdir1/1ndirim",
+    "platforms": ["ios", "android", "web", "backend"],
+    "status": "in_progress",
+    "build_health": "yellow",
+    "store_health": "yellow",
+    "domain_health": "green",
+    "owner": "birdir1",
+    "last_release_at": "2026-02-22",
+    "health_url": "https://api.1ndirim.birdir1.com/api/health",
+    "public_url": "https://1ndirim.birdir1.com",
+    "notes": "Backend güçlü, mobil app kırıkları kapanıyor."
+  },
+  {
+    "app_id": "1ben",
+    "repo_url": "https://github.com/birdir1/1ben",
+    "platforms": ["ios", "android"],
+    "status": "in_progress",
+    "build_health": "yellow",
+    "store_health": "yellow",
+    "domain_health": "unknown",
+    "owner": "birdir1",
+    "last_release_at": "2026-02-22",
+    "health_url": null,
+    "public_url": "https://1ben.birdir1.com",
+    "notes": "Demo auth ile ilerliyor, store blokörleri kapanıyor."
+  },
+  {
+    "app_id": "1dovme",
+    "repo_url": "https://github.com/birdir1/1dovme",
+    "platforms": ["ios", "android"],
+    "status": "planning",
+    "build_health": "red",
+    "store_health": "red",
+    "domain_health": "unknown",
+    "owner": "birdir1",
+    "last_release_at": "N/A",
+    "health_url": null,
+    "public_url": null,
+    "notes": "UI prototype aşamasında, backend ve kalıcı veri katmanı planlanacak."
+  },
+  {
+    "app_id": "tar1f",
+    "repo_url": "https://github.com/birdir1/tar1f",
+    "platforms": ["ios", "android"],
+    "status": "planning",
+    "build_health": "unknown",
+    "store_health": "unknown",
+    "domain_health": "unknown",
+    "owner": "birdir1",
+    "last_release_at": "N/A",
+    "health_url": null,
+    "public_url": null,
+    "notes": "Repo/bootstrap planlama aşamasında."
+  }
+]
