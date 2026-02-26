@@ -231,7 +231,7 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
     final semanticLabel = '$displayTitle • ${widget.opportunity.sourceName}'
         '${primaryTag != null ? ' • $primaryTag' : ''}';
 
-    return Semantics(
+    final card = Semantics(
       button: true,
       label: semanticLabel,
       child: InkWell(
@@ -652,6 +652,25 @@ class _OpportunityCardV2State extends State<OpportunityCardV2> {
           ),
         ),
       ),
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.hasBoundedHeight && constraints.maxHeight < 200) {
+          final width = constraints.maxWidth.isFinite
+              ? constraints.maxWidth
+              : 280.0;
+          return FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.topLeft,
+            child: SizedBox(
+              width: width,
+              child: card,
+            ),
+          );
+        }
+        return card;
+      },
     );
   }
 }

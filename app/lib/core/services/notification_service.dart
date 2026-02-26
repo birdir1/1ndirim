@@ -156,6 +156,13 @@ class NotificationService {
       _fcmToken = null;
       AppLogger.info('🔕 Bildirimler devre dışı bırakıldı');
     } catch (e) {
+      final errorText = e.toString();
+      if (errorText.contains('apns-token-not-set')) {
+        AppLogger.warning(
+          '⚠️ APNS token henüz hazır değil, bildirim devre dışı bırakma atlandı',
+        );
+        return;
+      }
       AppLogger.error('❌ Bildirim devre dışı bırakma hatası: $e');
     }
   }
