@@ -28,7 +28,10 @@ async function dedupeByUrl() {
         is_active = false,
         updated_at = NOW()
     FROM ranked r
-    WHERE c.id = r.id AND r.cnt > 1 AND r.rn > 1
+    WHERE c.id = r.id
+      AND r.cnt > 1
+      AND r.rn > 1
+      AND c.title IS NOT NULL AND TRIM(c.title) <> ''
     RETURNING c.id;
   `;
 
@@ -60,7 +63,10 @@ async function dedupeByTitleExpires() {
         is_active = false,
         updated_at = NOW()
     FROM ranked r
-    WHERE c.id = r.id AND r.cnt > 1 AND r.rn > 1
+    WHERE c.id = r.id
+      AND r.cnt > 1
+      AND r.rn > 1
+      AND c.title IS NOT NULL AND TRIM(c.title) <> ''
     RETURNING c.id;
   `;
 
