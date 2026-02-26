@@ -34,7 +34,7 @@ git pull
 npm ci
 npm run add-sources
 npm run add-categories
-npm run dedupe:campaigns
+npm run dedupe:campaigns || echo "Dedupe failed; continuing deploy."
 pm2 restart 1indirim-api --update-env
 
 # Bot
