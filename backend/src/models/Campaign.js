@@ -542,40 +542,57 @@ class Campaign {
     const lat = options.lat;
     const lng = options.lng;
     const radiusKm = options.radiusKm || 50;
+    const dedupeKeySql = `
+      COALESCE(
+        NULLIF(c.data_hash, ''),
+        NULLIF(LOWER(TRIM(c.title)) || '|' || COALESCE(NULLIF(c.original_url, ''), ''), '|'),
+        c.id::text
+      )
+    `;
 
     let query = `
+      WITH filtered AS (
+        SELECT
+          c.*,
+          ROW_NUMBER() OVER (
+            PARTITION BY c.source_id, ${dedupeKeySql}
+            ORDER BY c.created_at DESC, c.expires_at DESC, c.id DESC
+          ) AS rn
+        FROM campaigns c
+        WHERE c.is_active = true
+          AND c.expires_at > NOW()
+          AND (c.is_hidden = false OR c.is_hidden IS NULL)
+          AND c.category = $1
+      )
       SELECT 
-        c.*,
+        f.*,
         s.name as source_name,
         s.type as source_type,
         s.logo_url as source_logo_url
-      FROM campaigns c
-      INNER JOIN sources s ON c.source_id = s.id
-      WHERE c.is_active = true
-        AND c.expires_at > NOW()
-        AND (c.is_hidden = false OR c.is_hidden IS NULL)
-        AND c.category = $1
+      FROM filtered f
+      INNER JOIN sources s ON f.source_id = s.id
+      WHERE f.rn = 1
     `;
 
     const params = [category];
     let paramIndex = 2;
 
     if (platform) {
-      query += ` AND LOWER(c.platform) = LOWER($${paramIndex})`;
+      query += ` AND LOWER(f.platform) = LOWER($${paramIndex})`;
       params.push(platform);
       paramIndex++;
     }
 
     if (sort === 'free_week') {
-      query += ` AND (c.is_free = true OR (c.discount_percent IS NOT NULL AND c.discount_percent >= 90))`;
-      query += ` AND c.expires_at <= NOW() + INTERVAL '7 days'`;
+      query += ` AND (f.is_free = true OR (f.discount_percent IS NOT NULL AND f.discount_percent >= 90))`;
+      query += ` AND f.expires_at <= NOW() + INTERVAL '7 days'`;
     }
 
     if (lat !== undefined && lng !== undefined) {
-      query += ` AND c.lat IS NOT NULL AND c.lng IS NOT NULL
+      query += ` AND f.lat IS NOT NULL AND f.lng IS NOT NULL
         AND (
           111.045 * DEGREES(ACOS(
-            LEAST(1.0, COS(RADIANS($${paramIndex})) * COS(RADIANS(c.lat)) * COS(RADIANS($${paramIndex + 1}) - RADIANS(c.lng)) + SIN(RADIANS($${paramIndex})) * SIN(RADIANS(c.lat)))
+            LEAST(1.0, COS(RADIANS($${paramIndex})) * COS(RADIANS(f.lat)) * COS(RADIANS($${paramIndex + 1}) - RADIANS(f.lng)) + SIN(RADIANS($${paramIndex})) * SIN(RADIANS(f.lat)))
           ))
         ) <= $${paramIndex + 2}`;
       params.push(lat, lng, radiusKm);
@@ -583,13 +600,13 @@ class Campaign {
     }
 
     if (sort === 'expiring') {
-      query += ` ORDER BY c.expires_at ASC, c.is_pinned DESC, c.created_at DESC`;
+      query += ` ORDER BY f.expires_at ASC, f.is_pinned DESC, f.created_at DESC`;
     } else if (sort === 'popular') {
-      query += ` ORDER BY c.sponsored DESC, c.sponsored_weight DESC, c.discount_percent DESC NULLS LAST, c.is_pinned DESC, c.created_at DESC`;
+      query += ` ORDER BY f.sponsored DESC, f.sponsored_weight DESC, f.discount_percent DESC NULLS LAST, f.is_pinned DESC, f.created_at DESC`;
     } else if (sort === 'free_week') {
-      query += ` ORDER BY c.expires_at ASC, c.discount_percent DESC NULLS LAST, c.created_at DESC`;
+      query += ` ORDER BY f.expires_at ASC, f.discount_percent DESC NULLS LAST, f.created_at DESC`;
     } else {
-      query += ` ORDER BY c.is_pinned DESC, c.pinned_at DESC NULLS LAST, c.created_at DESC`;
+      query += ` ORDER BY f.is_pinned DESC, f.pinned_at DESC NULLS LAST, f.created_at DESC`;
     }
 
     query += ` LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
@@ -618,18 +635,35 @@ class Campaign {
     }
 
     // Fallback: Get last known campaigns (even if expired)
+    const dedupeKeySql = `
+      COALESCE(
+        NULLIF(c.data_hash, ''),
+        NULLIF(LOWER(TRIM(c.title)) || '|' || COALESCE(NULLIF(c.original_url, ''), ''), '|'),
+        c.id::text
+      )
+    `;
     const query = `
+      WITH filtered AS (
+        SELECT
+          c.*,
+          ROW_NUMBER() OVER (
+            PARTITION BY c.source_id, ${dedupeKeySql}
+            ORDER BY c.created_at DESC, c.expires_at DESC, c.id DESC
+          ) AS rn
+        FROM campaigns c
+        WHERE c.category = $1
+          AND (c.is_hidden = false OR c.is_hidden IS NULL)
+      )
       SELECT 
-        c.*,
+        f.*,
         s.name as source_name,
         s.type as source_type,
         s.logo_url as source_logo_url,
         true as is_expired
-      FROM campaigns c
-      INNER JOIN sources s ON c.source_id = s.id
-      WHERE c.category = $1
-        AND (c.is_hidden = false OR c.is_hidden IS NULL)
-      ORDER BY c.created_at DESC
+      FROM filtered f
+      INNER JOIN sources s ON f.source_id = s.id
+      WHERE f.rn = 1
+      ORDER BY f.created_at DESC
       LIMIT $2
       OFFSET $3
     `;
@@ -655,20 +689,35 @@ class Campaign {
    * @returns {Promise<number>}
    */
   static async countByCategory(category, { includeExpired = false } = {}) {
+    const dedupeKeySql = `
+      COALESCE(
+        NULLIF(c.data_hash, ''),
+        NULLIF(LOWER(TRIM(c.title)) || '|' || COALESCE(NULLIF(c.original_url, ''), ''), '|'),
+        c.id::text
+      )
+    `;
     const query = includeExpired
       ? `
         SELECT COUNT(*)::int AS count
-        FROM campaigns c
-        WHERE c.category = $1
-          AND (c.is_hidden = false OR c.is_hidden IS NULL)
+        FROM (
+          SELECT 1
+          FROM campaigns c
+          WHERE c.category = $1
+            AND (c.is_hidden = false OR c.is_hidden IS NULL)
+          GROUP BY c.source_id, ${dedupeKeySql}
+        ) t
       `
       : `
         SELECT COUNT(*)::int AS count
-        FROM campaigns c
-        WHERE c.category = $1
-          AND c.is_active = true
-          AND c.expires_at > NOW()
-          AND (c.is_hidden = false OR c.is_hidden IS NULL)
+        FROM (
+          SELECT 1
+          FROM campaigns c
+          WHERE c.category = $1
+            AND c.is_active = true
+            AND c.expires_at > NOW()
+            AND (c.is_hidden = false OR c.is_hidden IS NULL)
+          GROUP BY c.source_id, ${dedupeKeySql}
+        ) t
       `;
 
     const result = await pool.query(query, [category]);
