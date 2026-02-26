@@ -6,8 +6,7 @@
     "dev": "next dev -p 3001",
     "build": "next build",
     "start": "next start -p 3002",
-    "lint": "eslint . --max-warnings=0",
-    "report:weekly": "node ./scripts/generate-weekly-portfolio-report.mjs"
+    "lint": "eslint . --max-warnings=0"
   },
   "dependencies": {
     "next": "^15.5.10",

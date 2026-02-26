@@ -18,17 +18,6 @@ npm run dev
 
 App listens on port 3001.
 
-## Portfolio Ops Data
-
-- `/portfolio` now reads live runtime/domain/CI status from `/api/portfolio-status`.
-- Weekly report generator:
-
-```bash
-npm run report:weekly
-```
-
-- Output path: `data/reports/weekly-status-YYYY-MM-DD.{md,json}`
-
 ## Auth
 
 - Login stores `admin_email` and `admin_api_key` in localStorage.
